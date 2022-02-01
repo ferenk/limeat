@@ -1,0 +1,325 @@
+function isNumeric(str) {
+    if (typeof str != "string")
+        return false;
+    return !isNaN(str) && !isNaN(parseFloat(str));
+}
+
+function toNumericOrZero(str)
+{
+    try {
+        let retVal = parseFloat(str);
+        if (isNaN(retVal))
+            retVal = 0;
+        return retVal;
+    }
+    catch {
+        return 0;
+    }
+}
+
+let dayParts =
+    [{ pattern: '  |***    ***|***(reggeli,tízórai)***', kcal: 0, g:0 },
+     { pattern: '  |***    ***|***(ebéd,uzsonna)***', kcal:0, g:0 },
+     { pattern: '  |***    ***|***(vacsora,nasik)***', kcal:0, g:0 },
+     { pattern: '  | **    ** |', kcal:0, g:0 }];
+
+let currentDayPart;
+let foodOutputStr;
+
+function initCounters()
+{
+    for (let i = 0; i < dayParts.length; i++) {
+        dayParts[i].kcal = 0;
+        dayParts[i].g = 0;
+    }
+    currentDayPart = 0;
+    foodOutputStr = '';
+}
+
+/* Process entered text*/
+function processInput()
+{
+    let foodLines = $('#inputText').val().split('\n');
+    
+    for (let i = 0; i < foodLines.length; i++)
+    {
+        // foodLine: "10:25 apple 10g, banana 20g"
+        let foodLine = foodLines[i];
+
+        // print summary
+        if (foodLine.startsWith('---'))
+        {
+            appendSeparator();
+            continue;
+        }
+
+        // parse time stamp (@ beginning of the string)
+        let timeSepCol = 0, timestampStr = null;
+        if (foodLine.length > 5 && ((foodLine[1] == ':' && foodLine[timeSepCol = 4] == ' ') || (foodLine[2] == ':' && foodLine[timeSepCol = 5] == ' ')))
+        {
+            timestampStr = foodLine.substring(0, timeSepCol);
+            foodLine = foodLine.substring(timeSepCol + 1);
+        }
+
+        // parse food (name, quantity, unit)
+        let foodParts = [];
+        let foodNamePrefixStr = '';
+        // foodPartStrs: ["apple 40g", "banana 20g"]
+        let foodPartStrs = foodLine.replaceAll("(", "").replaceAll(")", "").split(',');
+        foodPartStrs.forEach(foodPartStr => {
+            // foodPartStr: "apple 40g"
+            let foodPartArr = foodPartStr.split(/[' ']+/);
+            // foodPartArr: ["apple", "40g"]
+            let foodName = null,
+                foodQuantity = null,
+                foodQuantityUnit = null,
+                foodKCal = null;
+            let newFoodPart = {};
+
+            for (let j = 0; j < foodPartArr.length; j++)
+            {
+                let foodPartNameStrRaw = foodPartArr[j];
+                // foodPartNameStr: first run: "apple" (or a label: "fish_n_chips:") second run: "40g"
+                let foodPartNameStr = foodPartNameStrRaw.trim();
+
+                // Skip empty strings. They are not 'parts'. Wrong input, effect of String.split() - duplicate separators result empty values, e.g '40g  apple'.
+                if (foodPartNameStr.length == 0)
+                    continue;
+
+                // handling labels (e.g "fish_n_chips:")
+                if (foodPartNameStr.endsWith(':'))
+                {
+                    foodNamePrefixStr = `___${foodPartNameStr}___ `;
+                    continue;
+                }
+
+                let foodPartNameISQuantity = foodPartNameStr[0] >= '0' && foodPartNameStr[0] <= '9';
+                let u = 0, op;
+                if (foodPartNameISQuantity && (op=foodPartNameStr.search(/[\+-]/)) > 0) {
+                    foodPartNameArr = foodPartNameStr.replaceAll('g', '').split(/[\+-]/);
+                    if (foodPartNameArr.length == 2) {
+                        let amount1 = toNumericOrZero(foodPartNameArr[0]);
+                        let amount2 = toNumericOrZero(foodPartNameArr[1]);
+                        if (amount1 != 0 && amount2 != 0) {
+                            if (foodPartNameStr[op] == '-')
+                                newFoodPart.quantity = amount1 - amount2;
+                            else
+                                newFoodPart.quantity = amount1 + amount2;
+                            newFoodPart.quantityunit = 'g';
+                        }
+                    }
+                }
+                else if (foodPartNameISQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
+                    newFoodPart.kcalunit = 'kcal';
+                    newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
+                }
+                else if (foodPartNameISQuantity && (foodPartNameStr.endsWith(u = 'kc/') || foodPartNameStr.endsWith(u = 'kcal/'))) {
+                    newFoodPart.kcalunit = 'kcal/100g';
+                    newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
+                }
+                else {
+                    if (!processQuantity(foodPartNameStr, newFoodPart) && newFoodPart.name == null)
+                        newFoodPart.name = foodPartNameStr.toLowerCase();
+                }
+            }
+            if (newFoodPart.name != null && newFoodPart.name != '') {
+                //if (foodQuantity == null && foodKCal == null) {
+                    //foodQuantity = 1;
+                    //foodQuantityUnit = 'db';
+                //}
+                if (newFoodPart.quantity == null) {
+                    newFoodPart.quantity = 1;
+                    newFoodPart.quantityunit = 'db';
+                }
+                foodParts.push(newFoodPart);
+            }
+        });
+
+        // print the currently processed food
+        if (foodParts.length > 0) {
+            let foodOutputLineStr = '';
+            let foodKCal = 0, foodG = 0;
+            foodParts.forEach(foodPart => {
+                let partKCal = toNumericOrZero(foodPart.kcal);
+                if (partKCal != 0) {
+                    if (foodPart.kcalunit == 'kcal/100g' && foodPart.quantityunit == 'g') {
+                        partKCal = (partKCal * foodPart.quantity) / 100;
+                    }
+                }
+                else
+                    partKCal = calcFoodKcal(foodPart);
+                foodKCal += partKCal;
+                if (foodPart.quantityunit == 'g')
+                    foodG += Math.round(foodPart.quantity);
+
+                if (foodOutputLineStr.length > 0)
+                    foodOutputLineStr += ', ';
+
+                if (foodPart.kcal != null) {
+                    foodOutputLineStr += `${foodPart.name} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
+                }
+                else {
+                    if (partKCal == 0) foodOutputLineStr += '<font color="red">';
+                    foodOutputLineStr += `${foodPart.name} (${foodPart.quantity}${foodPart.quantityunit})`;
+                    if (partKCal == 0) foodOutputLineStr += '</font>';
+                }
+            });
+            foodOutputStr += formatFoodData(foodKCal, timestampStr, foodNamePrefixStr + foodOutputLineStr) + '\n';
+
+            dayParts[currentDayPart].kcal += foodKCal;
+            dayParts[currentDayPart].g += foodG;
+        }
+    }
+
+    // day part separator handling
+    appendSeparator();
+    if (currentDayPart == dayParts.length -1) {
+        let allKCal = 0;
+        let allG = 0;
+        for (let i = 0; i < dayParts.length; i++) {
+            allKCal += dayParts[i].kcal;
+            allG += dayParts[i].g;
+        }
+        dayParts[currentDayPart].kcal = allKCal;
+        dayParts[currentDayPart].g = allG;
+        appendSeparator();
+    }
+
+    // display the result
+    $('#divOutput').html('<pre>' + foodOutputStr + '</pre>');
+}
+
+function processQuantity(quantityStr, foodObj)
+{
+    let foodPartNameISQuantity = quantityStr >= '0' && quantityStr <= '9';
+    let u = 0, unit = null;
+    let quantityNumStr = quantityStr;
+    if (quantityStr.endsWith(u = 'g') || quantityStr.endsWith(u = 'ml') || quantityStr.endsWith(u = 'l') || quantityStr.endsWith(u = 'db')) {
+        quantityNumStr = quantityStr.substring(0, quantityStr.length - u.length);
+        unit = u;
+    }
+    if (quantityNumStr.length == 0)
+        quantityNumStr = '1';
+    if (unit == null)
+        unit = 'db';
+
+    if (isNumeric(quantityNumStr)) {
+            foodObj.quantity = quantityNumStr;
+            foodObj.quantityunit = (unit != null ? unit : 'db');
+            return true;
+    }
+    return false;
+}
+
+function appendSeparator() {
+    let outputKCal = '' + Math.round(dayParts[currentDayPart].kcal);
+    outputKCal = ' '.repeat(4 - outputKCal.length) + outputKCal;
+    let pattern = dayParts[currentDayPart].pattern;
+    foodOutputStr += `${pattern.slice(0, 6) + outputKCal + pattern.slice(10)} ${Math.round(dayParts[currentDayPart].g)}g\n`;
+    currentDayPart++;
+}
+
+function calcFoodKcal(foodPart)
+{
+    for (let i = 0; i < calcDb.length; i++) {
+        let dbFood = calcDb[i];
+        if (dbFood.name == foodPart.name && dbFood.quantityunit == foodPart.quantityunit) {
+            return ((foodPart.quantity / dbFood.quantity) * dbFood.kcal);
+        }
+    }
+    return 0;
+}
+
+function formatFoodData(kcal, timestamp, foodDetails)
+{
+    let COL_KCAL_END = 10, COL_TIMESTAMP_END = 19;
+    let resultStr = "  |"
+    timestamp = (timestamp == null) ? "" : timestamp;
+    // Column: kCal
+    let kcalStr = Math.round(kcal).toString();
+    resultStr += " ".repeat(COL_KCAL_END - kcalStr.length - resultStr.length);
+    resultStr += kcalStr + "   |";
+    // Column: timeStamp
+    resultStr += " ".repeat(COL_TIMESTAMP_END - timestamp.length - resultStr.length);
+    resultStr += timestamp + "    | ";
+    // Column: foodDetails
+    resultStr += foodDetails;
+    return resultStr;
+}
+
+
+/* Process DB file */
+let calcDb = [];
+function processDbFile(content)
+{
+    let str = '';
+    let dbLines = content.split('\r\n');
+    dbLines.forEach(element => {
+        dbLineParts = element.split('|');
+        if (dbLineParts.length >= 3) {
+            //str += 'LINE: ' + element + '\n';  // orig line
+            let foodName = dbLineParts[1].trim();
+            let foodInfo = dbLineParts[2].trim();
+            let foodInfoParts = foodInfo.split(' ');
+            if (foodInfoParts.length >= 2) {
+                let foodDbEntry = { name: foodName.toLowerCase(), kcal: foodInfoParts[0], quantity: 100, quantityunit: 'g' };
+                if (foodInfoParts[1].startsWith('kcal')) {
+                    if (foodInfoParts[1][4] == '/') {
+                        processQuantity(foodInfoParts[1].slice(5), foodDbEntry);
+                    }
+                }
+                calcDb.push(foodDbEntry);
+            }
+        }
+    });
+    calcDb.forEach((dbItem) => {
+        let kcal2ndPart = (dbItem.quantity == 100 && dbItem.quantityunit == 'g' ? '' : `${dbItem.quantity}${dbItem.quantityunit}`);
+        str += `${dbItem.name}: ${dbItem.kcal} kCal/${kcal2ndPart}\n`;
+    } );
+
+    $('#divDbContent').html('<pre>' + str + '</pre>');
+}
+
+/* Communication */
+function onCalcDbArrived(content)
+{
+    processDbFile(content);
+}
+
+function nodeXHRComm(path, cb)
+{
+    let xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", function xhrCB() {
+        if (cb != null)
+            cb(this.responseText);
+    });
+    xhr.open("GET", path);
+    xhr.send();
+}
+
+function nodeXHRPost(path, reqObj, cb) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", path, true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.addEventListener("load", function xhrCB() {
+        if (cb != null)
+            cb(this.responseText);
+    });
+    xhr.send(JSON.stringify(reqObj));
+
+}
+
+function onPageLoaded()
+{
+    // initiate DB reload
+    nodeXHRComm("node_api/read_calcdb", onCalcDbArrived);
+    $('#inputText').on('input', onInputChanged);
+}
+
+function onInputChanged()
+{
+    initCounters();
+    processInput();
+}
+
+window.addEventListener("load", onPageLoaded);
