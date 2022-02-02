@@ -18,10 +18,10 @@ function toNumericOrZero(str)
 }
 
 let dayParts =
-    [{ pattern: '  |***    ***|***(reggeli,tízórai)***', kcal: 0, g:0 },
-     { pattern: '  |***    ***|***(ebéd,uzsonna)***', kcal:0, g:0 },
-     { pattern: '  |***    ***|***(vacsora,nasik)***', kcal:0, g:0 },
-     { pattern: '  | **    ** |', kcal:0, g:0 }];
+    [{ pattern: '  |          |***(reggeli,tízórai)***', kcal: 0, g:0 },
+     { pattern: '  |          |***(ebéd,uzsonna)***', kcal:0, g:0 },
+     { pattern: '  |          |***(vacsora,nasik)***', kcal:0, g:0 },
+     { pattern: '  |          |', kcal:0, g:0 }];
 
 let currentDayPart;
 let foodOutputStr;
@@ -74,7 +74,7 @@ function processInput()
                 foodQuantity = null,
                 foodQuantityUnit = null,
                 foodKCal = null;
-            let newFoodPart = {};
+            let newFoodPart = { };
 
             for (let j = 0; j < foodPartArr.length; j++)
             {
@@ -89,7 +89,7 @@ function processInput()
                 // handling labels (e.g "fish_n_chips:")
                 if (foodPartNameStr.endsWith(':'))
                 {
-                    foodNamePrefixStr = `___${foodPartNameStr}___ `;
+                    foodNamePrefixStr = `___${foodPartNameStr.replaceAll('_', ' ')}___ `;
                     continue;
                 }
 
@@ -118,8 +118,19 @@ function processInput()
                     newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
                 }
                 else {
-                    if (!processQuantity(foodPartNameStr, newFoodPart) && newFoodPart.name == null)
-                        newFoodPart.name = foodPartNameStr.toLowerCase();
+                    if (!processQuantity(foodPartNameStr, newFoodPart))
+                    {
+                        if (newFoodPart.name == null)
+                            newFoodPart.name = foodPartNameStr;
+                        else {
+                            // not processed input
+                            if (newFoodPart.unprocessed == null)
+                                newFoodPart.unprocessed = '';
+                            else
+                                newFoodPart.unprocessed += ' ';
+                            newFoodPart.unprocessed += `<font color="peru">${foodPartNameStr}</font>`;
+                        }
+                    } 
                 }
             }
             if (newFoodPart.name != null && newFoodPart.name != '') {
@@ -156,15 +167,17 @@ function processInput()
                     foodOutputLineStr += ', ';
 
                 if (foodPart.kcal != null) {
-                    foodOutputLineStr += `${foodPart.name} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
+                    foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
                 }
                 else {
                     if (partKCal == 0) foodOutputLineStr += '<font color="red">';
-                    foodOutputLineStr += `${foodPart.name} (${foodPart.quantity}${foodPart.quantityunit})`;
+                    foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit})`;
                     if (partKCal == 0) foodOutputLineStr += '</font>';
                 }
+                if (foodPart.unprocessed != null)
+                    foodOutputLineStr += ` ***${foodPart.unprocessed}***`;
             });
-            foodOutputStr += formatFoodData(foodKCal, timestampStr, foodNamePrefixStr + foodOutputLineStr) + '\n';
+            foodOutputStr += formatFoodData(foodKCal, timestampStr, foodNamePrefixStr + foodOutputLineStr) + '  \n';
 
             dayParts[currentDayPart].kcal += foodKCal;
             dayParts[currentDayPart].g += foodG;
@@ -212,18 +225,19 @@ function processQuantity(quantityStr, foodObj)
 }
 
 function appendSeparator() {
-    let outputKCal = '' + Math.round(dayParts[currentDayPart].kcal);
-    outputKCal = ' '.repeat(4 - outputKCal.length) + outputKCal;
+    let outputKCal = `***${Math.round(dayParts[currentDayPart].kcal)}***`;
+    outputKCal = ' '.repeat(10 - outputKCal.length) + outputKCal;
     let pattern = dayParts[currentDayPart].pattern;
-    foodOutputStr += `${pattern.slice(0, 6) + outputKCal + pattern.slice(10)} ${Math.round(dayParts[currentDayPart].g)}g\n`;
+    foodOutputStr += `${pattern.slice(0, 3) + outputKCal + pattern.slice(13)} ${Math.round(dayParts[currentDayPart].g)}g  \n`;
     currentDayPart++;
 }
 
 function calcFoodKcal(foodPart)
 {
+    let foodPartNameLower = foodPart.name.toLowerCase();
     for (let i = 0; i < calcDb.length; i++) {
         let dbFood = calcDb[i];
-        if (dbFood.name == foodPart.name && dbFood.quantityunit == foodPart.quantityunit) {
+        if (dbFood.name == foodPartNameLower && dbFood.quantityunit == foodPart.quantityunit) {
             return ((foodPart.quantity / dbFood.quantity) * dbFood.kcal);
         }
     }
