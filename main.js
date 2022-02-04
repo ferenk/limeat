@@ -7,7 +7,7 @@ function isNumeric(str) {
 function toNumericOrZero(str)
 {
     try {
-        let retVal = parseFloat(str);
+        let retVal = toFixedFloat(str);
         if (isNaN(retVal))
             retVal = 0;
         return retVal;
@@ -15,6 +15,13 @@ function toNumericOrZero(str)
     catch {
         return 0;
     }
+}
+
+function toFixedFloat(num) {
+    let realNum = num;
+    if (typeof (num) == 'string')
+        realNum = parseFloat(num);
+    return Math.round(realNum * 10) / 10;
 }
 
 let dayParts =
@@ -95,18 +102,12 @@ function processInput()
 
                 let foodPartNameISQuantity = foodPartNameStr[0] >= '0' && foodPartNameStr[0] <= '9';
                 let u = 0, op;
-                if (foodPartNameISQuantity && (op=foodPartNameStr.search(/[\+-]/)) > 0) {
-                    foodPartNameArr = foodPartNameStr.replaceAll('g', '').split(/[\+-]/);
-                    if (foodPartNameArr.length == 2) {
-                        let amount1 = toNumericOrZero(foodPartNameArr[0]);
-                        let amount2 = toNumericOrZero(foodPartNameArr[1]);
-                        if (amount1 != 0 && amount2 != 0) {
-                            if (foodPartNameStr[op] == '-')
-                                newFoodPart.quantity = amount1 - amount2;
-                            else
-                                newFoodPart.quantity = amount1 + amount2;
-                            newFoodPart.quantityunit = 'g';
-                        }
+                if (foodPartNameISQuantity && (op = foodPartNameStr.search(/[\+-]/)) > 0) {
+                    let foodPartGramCalcStr = foodPartNameStr.replaceAll('g', '');
+                    if (/^[0-9\+\.-]+$/.test(foodPartGramCalcStr)) {
+                        let foodGrams = toFixedFloat(eval(foodPartGramCalcStr));
+                        newFoodPart.quantity = foodGrams;
+                        newFoodPart.quantityunit = 'g';
                     }
                 }
                 else if (foodPartNameISQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
@@ -159,9 +160,9 @@ function processInput()
                 }
                 else
                     partKCal = calcFoodKcal(foodPart);
-                foodKCal += partKCal;
+                foodKCal += toFixedFloat(partKCal);
                 if (foodPart.quantityunit == 'g')
-                    foodG += Math.round(foodPart.quantity);
+                    foodG += toFixedFloat(foodPart.quantity);
 
                 if (foodOutputLineStr.length > 0)
                     foodOutputLineStr += ', ';
