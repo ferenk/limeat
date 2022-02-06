@@ -10,15 +10,13 @@ const bodyParser = require('body-parser');
 
 var app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.static('.'));
-app.set('views', '.');
-//app.register('.html', require('ejs'));
+app.use(express.static(path.join(__dirname, '../client'), { extensions: ['html', 'js', 'png'] }));
+app.set('views', path.join(__dirname, '../client'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
 app.get('/', function (req, res) {
+    console.log('Rendering page... (main.html)');
     res.render('main');
 });
 
@@ -38,7 +36,7 @@ function readFile(filename)
 
 app.get('/node_api/read_calcdb', function (req, res) {
     console.log(`Query: /node_api/read_calcdb`);
-    res.send( readFile('kcal_db.md') );
+    res.send( readFile(path.join(__dirname, '../server/kcal_db.md')) );
 });
 
 
