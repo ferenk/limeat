@@ -105,9 +105,14 @@ function processInput()
                 if (foodPartNameISQuantity && (op = foodPartNameStr.search(/[\+-]/)) > 0) {
                     let foodPartGramCalcStr = foodPartNameStr.replaceAll('g', '');
                     if (/^[0-9\+\.-]+$/.test(foodPartGramCalcStr)) {
-                        let foodGrams = toFixedFloat(eval(foodPartGramCalcStr));
-                        newFoodPart.quantity = foodGrams;
-                        newFoodPart.quantityunit = 'g';
+                        try
+                        {
+                            let foodGrams = toFixedFloat(eval(foodPartGramCalcStr));
+                            newFoodPart.quantity = foodGrams;
+                            newFoodPart.quantityunit = 'g';
+                        } catch (e) {
+                            console.log(`Error: Invalid input: ${e}`);
+                        }
                     }
                 }
                 else if (foodPartNameISQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
