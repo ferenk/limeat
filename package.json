@@ -4,12 +4,17 @@
   "description": "KCal calculation helper",
   "main": "server/index.js",
   "scripts": {
+    "debug": "node server/index.js     --inspect=127.0.0.1:11977",
+    "debug-brk": "node server/index.js --inspect-brk=127.0.0.1:11977",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Moricz, Ferenc",
   "license": "ISC",
   "dependencies": {
     "ejs": "^3.1.6",
-    "express": "^4.17.2"
+    "express": "^4.17.2",
+    "knex": "=0.95.15",
+    "path": "^0.12.7",
+    "sqlite3": "^5.0.2"
   }
 }

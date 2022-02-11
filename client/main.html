@@ -21,7 +21,12 @@
 
         <p><b>INPUT (food data)</b><br>
 
-        <textarea rows="40" id="inputText" value="aaa" style="resize:both; width:750px; height:250px"></textarea>
+        User: <input id="tUser" type="text" size="30" maxlength="50" />
+        Day: <input id="tDate" type="text" size="30" maxlength="50" />
+        <button id="btSave">Save</button><span>&nbsp; &nbsp; </span><span id="tSaveMsg" style="padding: 5p;"></span>
+        <br>
+
+        <textarea rows="40" id="tDayFoodsRaw" value="aaa" style="resize:both; width:750px; height:250px"></textarea>
 
         <p><b>OUTPUT (processed food data, as a MD table))</b>:
         <div id="divOutput"></div>

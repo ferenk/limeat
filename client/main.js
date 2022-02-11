@@ -46,7 +46,7 @@ function initCounters()
 /* Process entered text*/
 function processInput()
 {
-    let foodLines = $('#inputText').val().split('\n');
+    let foodLines = $('#tDayFoodsRaw').val().split('\n');
     
     for (let i = 0; i < foodLines.length; i++)
     {
@@ -306,13 +306,28 @@ function onCalcDbArrived(content)
     processDbFile(content);
 }
 
-function nodeXHRComm(path, cb)
+function nodeXHRComm(path, params, cb)
 {
     let xhr = new XMLHttpRequest();
     xhr.addEventListener("load", function xhrCB() {
         if (cb != null)
             cb(this.responseText);
     });
+    if (params != null)
+    {
+        var paramNames = Object.keys(params);
+        if (paramNames.length > 0)
+        {
+            let paramStr = '';
+            paramNames.forEach(paramName =>
+            {
+                if (paramStr.length > 0)
+                    paramStr += '&';
+                paramStr += paramName + '=' + encodeURIComponent(params[paramName]);
+            });
+            path += `?${paramStr}`;
+        }
+    }
     xhr.open("GET", path);
     xhr.send();
 }
@@ -332,14 +347,44 @@ function nodeXHRPost(path, reqObj, cb) {
 function onPageLoaded()
 {
     // initiate DB reload
-    nodeXHRComm("node_api/read_calcdb", onCalcDbArrived);
-    $('#inputText').on('input', onInputChanged);
+    nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
+    $('#tDayFoodsRaw').on('input', onFoodInputChanged);
+    $('#tUser').on('input', onUserOrDateChanged);
+    $('#tDate').on('input', onUserOrDateChanged);
+    $('#btSave').on('click', onSave);
 }
 
-function onInputChanged()
+function onFoodInputChanged()
 {
     initCounters();
     processInput();
+}
+
+function onUserOrDateChanged()
+{
+    nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: $('#tDate').val() }, onFoodRecordRowArrived);
+}
+
+function onFoodRecordRowArrived(content)
+{
+    console.log('foodRecordRowArrived: ' + content);
+    $('#tDayFoodsRaw').val(content.replaceAll('\\n', '\n'));
+    onFoodInputChanged();
+}
+
+function onSave()
+{
+    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: $('#tDate').val(), food_data: $('#tDayFoodsRaw').val().replaceAll('\n', '\\n') }, onSaveResultArrived);
+}
+
+function onSaveResultArrived(content)
+{
+    $('#tSaveMsg').fadeOut(0);
+    if (content != '')
+        $('#tSaveMsg').html("ERROR: " + content);
+    else
+        $('#tSaveMsg').html("SAVED!");
+    $('#tSaveMsg').fadeIn(100).delay(2000).fadeOut(500);
 }
 
 window.addEventListener("load", onPageLoaded);
