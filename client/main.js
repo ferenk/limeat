@@ -173,11 +173,14 @@ function processInput()
                     foodOutputLineStr += ', ';
 
                 if (foodPart.kcal != null) {
-                    foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
+                    if (foodPart.kcalunit != 'kcal')
+                        foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit}, =${Math.round(partKCal)}kc)`;
+                    else
+                        foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
                 }
                 else {
                     if (partKCal == 0) foodOutputLineStr += '<font color="red">';
-                    foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit})`;
+                    foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
                     if (partKCal == 0) foodOutputLineStr += '</font>';
                 }
                 if (foodPart.unprocessed != null)
