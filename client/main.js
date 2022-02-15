@@ -157,13 +157,15 @@ function processInput()
             let foodOutputLineStr = '';
             let foodKCal = 0, foodG = 0;
             foodParts.forEach(foodPart => {
-                let partKCal = toNumericOrZero(foodPart.kcal);
-                if (partKCal != 0) {
+                let partKCal = 0;
+                if (foodPart.kcalunit == 'kcal')
+                    partKCal = toNumericOrZero(foodPart.kcal);
+                if (partKCal == 0) {
                     if (foodPart.kcalunit == 'kcal/100g' && foodPart.quantityunit == 'g') {
-                        partKCal = (partKCal * foodPart.quantity) / 100;
+                        partKCal = (toNumericOrZero(foodPart.kcal) * foodPart.quantity) / 100;
                     }
                 }
-                else
+                if (partKCal == 0)
                     partKCal = calcFoodKcal(foodPart);
                 foodKCal += toFixedFloat(partKCal);
                 if (foodPart.quantityunit == 'g')
@@ -172,6 +174,7 @@ function processInput()
                 if (foodOutputLineStr.length > 0)
                     foodOutputLineStr += ', ';
 
+                if (partKCal == 0) foodOutputLineStr += '<font color="red">';
                 if (foodPart.kcal != null) {
                     if (foodPart.kcalunit != 'kcal')
                         foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit}, =${Math.round(partKCal)}kc)`;
@@ -179,10 +182,9 @@ function processInput()
                         foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
                 }
                 else {
-                    if (partKCal == 0) foodOutputLineStr += '<font color="red">';
                     foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
-                    if (partKCal == 0) foodOutputLineStr += '</font>';
                 }
+                if (partKCal == 0) foodOutputLineStr += '</font>';
                 if (foodPart.unprocessed != null)
                     foodOutputLineStr += ` ***${foodPart.unprocessed}***`;
             });
