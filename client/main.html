@@ -3,6 +3,8 @@
 <head>
     <title>KCal calculator</title> 
     <link rel="icon" type="image/x-icon" href="diet.png">
+    <link rel="stylesheet" href="3rdparty/normalize.css">
+    <link rel="stylesheet" href="3rdparty/skeleton.css">
 </head>
 
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
@@ -15,18 +17,18 @@
 
 <script>
 </script>
-<body style="width: 850px; margin: auto;">
+<body style="width: 640px; margin: auto;">
     <div style="padding: 32px 48px; background: #e9e9e9;">
         <font size="+3"><b>KCal calculator</b></font>
 
         <p><b>INPUT (food data)</b><br>
 
-        User: <input id="tUser" type="text" size="30" maxlength="50" />
-        Day: <input id="tDate" type="text" size="30" maxlength="50" />
+        User: <input id="tUser" type="text" size="10" maxlength="50" />
+        Day: <input id="tDate" type="text" size="10" maxlength="50" />
         <button id="btSave">Save</button><span>&nbsp; &nbsp; </span><span id="tSaveMsg" style="padding: 5p;"></span>
         <br>
 
-        <textarea rows="40" id="tDayFoodsRaw" value="aaa" style="resize:both; width:750px; height:250px"></textarea>
+        <textarea id="tDayFoodsRaw" style="resize:both; width: 100%; height:30%"></textarea>
 
         <p><b>OUTPUT (processed food data, as a MD table))</b>:
         <div id="divOutput"></div>
