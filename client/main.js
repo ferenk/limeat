@@ -47,8 +47,12 @@ function initCounters()
 function processInput()
 {
     let mainTextArea = $('#tDayFoodsRaw');
-    let currentRowNum = mainTextArea.val().substr(0, mainTextArea[0].selectionStart).split("\n").length;
+    let currentTextLines = mainTextArea.val().substr(0, mainTextArea[0].selectionStart).split("\n");
+    let currentRowNum = currentTextLines.length;
+    let currentRowCol = currentTextLines[currentRowNum - 1].length;
+
     let currentSummaryStr = '';
+    let currentSummaryKCal = 0;
 
     let foodLines = $('#tDayFoodsRaw').val().split('\n');
     
@@ -197,10 +201,13 @@ function processInput()
             dayParts[currentDayPart].g += foodG;
 
             // append this line to the main output (and optionally to the summary text)
-            let currentOutputLine = formatFoodData(foodKCal, timestampStr, foodNamePrefixStr + foodOutputLineStr) + '  \n';
+            let foodDetails = foodNamePrefixStr + foodOutputLineStr;
+            let currentOutputLine = formatFoodData(foodKCal, timestampStr, foodDetails) + '  \n';
             foodOutputStr += currentOutputLine;
-            if (i == Math.round(currentRowNum) - 1)
-                currentSummaryStr += currentOutputLine;
+            if (i == Math.round(currentRowNum) - 1) {
+                currentSummaryStr += foodDetails;
+                currentSummaryKCal = foodKCal;
+            }
         }
     }
 
@@ -218,7 +225,9 @@ function processInput()
         appendSeparator();
     }
 
-    $('#currentLine').html(`<pre><b>${dayParts[currentDayPart-1].kcal} kcal</b>  ${currentSummaryStr}</pre>`);
+    $('#currentLine').html(`${currentSummaryStr}`);
+    $('#currentAllKCal').html(`<b>${Math.round(dayParts[currentDayPart - 1].kcal)}kc |</b>`);
+    $('#currentKCal').html(`${Math.round(currentSummaryKCal)}kc`);
 
     // display the result
     $('#divOutput').html('<pre>' + foodOutputStr + '</pre>');

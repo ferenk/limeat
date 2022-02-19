@@ -28,9 +28,14 @@
         <button id="btSave">Save</button><span>&nbsp; &nbsp; </span><span id="tSaveMsg" style="padding: 5p;"></span>
         <br>
 
-        <div id="currentLine"></div>
-        <textarea id="tDayFoodsRaw" style="resize:both; width: 100%; height:20%"></textarea>
+        <div style="display: flex">
+            <font size="+2"><div id="currentAllKCal" style="padding: 6px; white-space: nowrap;">0 | </div></font>
+            <font size="+2"><div id="currentKCal" style="padding: 6px; white-space: nowrap;">0 kc</div></font>
+            
+            <div id="currentLine" style="padding: 16px 6px 0px 6px;"></div>
+        </div>
 
+        <textarea id="tDayFoodsRaw" style="resize:both; width: 100%; height:20%"></textarea>
         <p><b>OUTPUT (processed food data, as a MD table))</b>:
         <div id="divOutput"></div>
 
