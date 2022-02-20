@@ -329,6 +329,8 @@ function processDbFile(content)
 function onCalcDbArrived(content)
 {
     processDbFile(content);
+    onUserOrDateChanged();
+    onFoodInputChanged();
 }
 
 function nodeXHRComm(path, params, cb)
@@ -369,14 +371,67 @@ function nodeXHRPost(path, reqObj, cb) {
 
 }
 
+function getCurrentTimeStr()
+{
+    let date = new Date();
+    date = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+    let currentTimeStr = date.toISOString().slice(11, 16);
+    return currentTimeStr;
+}
+
+function getCurrentDateStr(thresholdTime)
+{
+    let weekdayAbbrs = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo'];
+    let date = new Date();
+    date = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+    let currentTimeStr = date.toISOString().slice(11, 16);
+    if (currentTimeStr < thresholdTime)
+        date.setDate(date.getDate() - 1);
+    let currentDateStr = `${date.toISOString().slice(0, 10)}.${weekdayAbbrs[date.getDay()]}`;
+    return currentDateStr;
+}
+
+//todo Option for auto cleanup (?)
+function onAddMeal() {
+    let wMealEditor = $('#tDayFoodsRaw');
+    let wMealEditorText = wMealEditor.val();
+    // auto cleanup
+    let currentMealTextRows = wMealEditorText.split('\n');
+    // remove the last empty lines
+    let lastRow = '';
+    while (currentMealTextRows.length >= 1) {
+        lastRow = currentMealTextRows.pop();
+        if (lastRow.length != 0)
+            break;
+    }
+    lastRow += `${lastRow.length > 0 ? '\n' : ''}${getCurrentTimeStr()} `;
+    currentMealTextRows.push(lastRow);
+
+    // show the new, extended meal text
+    wMealEditorText = currentMealTextRows.join('\n')
+    wMealEditor.val(wMealEditorText);
+    wMealEditor[0].selectionStart = wMealEditor[0].selectionEnd = wMealEditorText.length;
+    wMealEditor[0].focus();
+}
+
 function onPageLoaded()
 {
+    if (window.localStorage != null) {
+        if (window.localStorage.currentUser != null) {
+            $('#tUser').val(window.localStorage.currentUser);
+        }
+    }
+
+    // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
+    $('#tDate').val(getCurrentDateStr('04:00'));
+
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
     $('#tDayFoodsRaw').on('input', onFoodInputChanged);
     $('#tUser').on('input', onUserOrDateChanged);
     $('#tDate').on('input', onUserOrDateChanged);
     $('#btSave').on('click', onSave);
+    $('#btAddMeal').on('click', onAddMeal);
 }
 
 function onFoodInputChanged()
@@ -387,6 +442,10 @@ function onFoodInputChanged()
 
 function onUserOrDateChanged()
 {
+    if (window.localStorage != null) {
+        window.localStorage.currentUser = $('#tUser').val();
+    }
+
     nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: $('#tDate').val() }, onFoodRecordRowArrived);
 }
 
