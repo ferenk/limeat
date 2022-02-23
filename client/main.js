@@ -80,7 +80,7 @@ function processInput()
         let foodParts = [];
         let foodNamePrefixStr = '';
         // foodPartStrs: ["apple 40g", "banana 20g"]
-        let foodPartStrs = foodLine.replaceAll("(", "").replaceAll(")", "").split(',');
+        let foodPartStrs = foodLine.split(',');
         foodPartStrs.forEach(foodPartStr => {
             // foodPartStr: "apple 40g"
             let foodPartArr = foodPartStr.split(/[' ']+/);
@@ -108,54 +108,55 @@ function processInput()
                     continue;
                 }
 
-                let foodPartNameISQuantity = foodPartNameStr[0] >= '0' && foodPartNameStr[0] <= '9';
+                // test if this part is a gram-based quantity
+                let foodPartUnitGramCalcStr = foodPartNameStr.replaceAll('g', '').replaceAll('db', '');
+                let foodPartNameISQuantity = /^[.*/+-0123456789()]+$/.test(foodPartUnitGramCalcStr);
                 let u = 0, op;
-                if (foodPartNameISQuantity && (op = foodPartNameStr.search(/[\+-]/)) > 0) {
-                    let foodPartGramCalcStr = foodPartNameStr.replaceAll('g', '');
-                    if (/^[0-9\+\.-]+$/.test(foodPartGramCalcStr)) {
-                        try
-                        {
-                            let foodGrams = toFixedFloat(eval(foodPartGramCalcStr));
-                            newFoodPart.quantity = foodGrams;
+                if (foodPartNameISQuantity) {
+                    try {
+                        let foodQuantity = toFixedFloat(eval(foodPartUnitGramCalcStr));
+                        newFoodPart.quantity = foodQuantity;
+                        // without quantityunit the default is now always 'db' (unit)
+                        if (foodPartNameStr.includes('g'))
                             newFoodPart.quantityunit = 'g';
-                        } catch (e) {
-                            console.log(`Error: Invalid input: ${e}`);
-                        }
+                        else if (foodPartNameStr.includes('db'))
+                            newFoodPart.quantityunit = 'db';
+                    } catch (e) {
+                        console.log(`Error: Invalid input: ${e}`);
                     }
                 }
-                else if (foodPartNameISQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
-                    newFoodPart.kcalunit = 'kcal';
-                    newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
-                }
-                else if (foodPartNameISQuantity && (foodPartNameStr.endsWith(u = 'kc/') || foodPartNameStr.endsWith(u = 'kcal/'))) {
-                    newFoodPart.kcalunit = 'kcal/100g';
-                    newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
-                }
                 else {
-                    if (!processQuantity(foodPartNameStr, newFoodPart))
-                    {
-                        if (newFoodPart.name == null)
-                            newFoodPart.name = foodPartNameStr;
-                        else {
-                            // not processed input
-                            if (newFoodPart.unprocessed == null)
-                                newFoodPart.unprocessed = '';
-                            else
-                                newFoodPart.unprocessed += ' ';
-                            newFoodPart.unprocessed += `<font color="peru">${foodPartNameStr}</font>`;
-                        }
-                    } 
+                    let foodPartNameBEGINSWITHQuantity = /^[.0123456789]+/.test(foodPartNameStr);
+                    if (foodPartNameBEGINSWITHQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
+                        newFoodPart.kcalunit = 'kcal';
+                        newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
+                    }
+                    else if (foodPartNameBEGINSWITHQuantity && (foodPartNameStr.endsWith(u = 'kc/') || foodPartNameStr.endsWith(u = 'kcal/'))) {
+                        newFoodPart.kcalunit = 'kcal/100g';
+                        newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
+                    }
+                    else {
+                        if (!processQuantity(foodPartNameStr, newFoodPart))
+                        {
+                            if (newFoodPart.name == null)
+                                newFoodPart.name = foodPartNameStr;
+                            else {
+                                // not processed input
+                                if (newFoodPart.unprocessed == null)
+                                    newFoodPart.unprocessed = '';
+                                else
+                                    newFoodPart.unprocessed += ' ';
+                                newFoodPart.unprocessed += `<font color="peru">${foodPartNameStr}</font>`;
+                            }
+                        } 
+                    }
                 }
             }
             if (newFoodPart.name != null && newFoodPart.name != '') {
-                //if (foodQuantity == null && foodKCal == null) {
-                    //foodQuantity = 1;
-                    //foodQuantityUnit = 'db';
-                //}
-                if (newFoodPart.quantity == null) {
+                if (newFoodPart.quantity == null)
                     newFoodPart.quantity = 1;
+                if (newFoodPart.quantityunit == null)
                     newFoodPart.quantityunit = 'db';
-                }
                 foodParts.push(newFoodPart);
             }
         });
@@ -235,7 +236,6 @@ function processInput()
 
 function processQuantity(quantityStr, foodObj)
 {
-    let foodPartNameISQuantity = quantityStr >= '0' && quantityStr <= '9';
     let u = 0, unit = null;
     let quantityNumStr = quantityStr;
     if (quantityStr.endsWith(u = 'g') || quantityStr.endsWith(u = 'ml') || quantityStr.endsWith(u = 'l') || quantityStr.endsWith(u = 'db')) {
