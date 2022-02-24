@@ -381,14 +381,19 @@ function getCurrentTimeStr()
 
 function getCurrentDateStr(thresholdTime)
 {
-    let weekdayAbbrs = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo'];
-    let date = new Date();
-    date = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
-    let currentTimeStr = date.toISOString().slice(11, 16);
-    if (currentTimeStr < thresholdTime)
-        date.setDate(date.getDate() - 1);
-    let currentDateStr = `${date.toISOString().slice(0, 10)}.${weekdayAbbrs[date.getDay()]}`;
-    return currentDateStr;
+    moment.locale('hu');
+
+    // Switch to yesterday if needed (based on thresholdTime)
+    let currMoment = moment();
+    if (currMoment.format('HH:mm') < thresholdTime)
+        currMoment.milliseconds(currMoment.milliseconds() - 24 * 60*60 * 1000);
+
+    // Field: WeekdaysMin
+    let weekDayMin = moment.localeData().weekdaysMin(currMoment);
+    weekDayMin = weekDayMin.charAt(0).toUpperCase() + weekDayMin.slice(1);
+
+    // Result
+    return `${currMoment.format('YYYY-MM-DD')}.${weekDayMin}`;
 }
 
 //todo Option for auto cleanup (?)
