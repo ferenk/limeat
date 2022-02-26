@@ -30,6 +30,7 @@ let dayParts =
      { pattern: '  |          |***(vacsora,nasik)***', kcal:0, g:0 },
      { pattern: '  |          |', kcal:0, g:0 }];
 
+let currentDayMoment = null;
 let currentDayPart;
 let foodOutputStr;
 
@@ -379,7 +380,7 @@ function getCurrentTimeStr()
     return currentTimeStr;
 }
 
-function getCurrentDateStr(thresholdTime)
+function getCurrentMoment(thresholdTime)
 {
     moment.locale('hu');
 
@@ -388,7 +389,12 @@ function getCurrentDateStr(thresholdTime)
     if (currMoment.format('HH:mm') < thresholdTime)
         currMoment.milliseconds(currMoment.milliseconds() - 24 * 60*60 * 1000);
 
-    // Field: WeekdaysMin
+    return currMoment;
+}
+
+function printMoment(currMoment)
+{
+     // Field: WeekdaysMin
     let weekDayMin = moment.localeData().weekdaysMin(currMoment);
     weekDayMin = weekDayMin.charAt(0).toUpperCase() + weekDayMin.slice(1);
 
@@ -428,13 +434,16 @@ function onPageLoaded()
     }
 
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
-    $('#tDate').val(getCurrentDateStr('04:00'));
+    currentDayMoment = getCurrentMoment('04:00');
+    onUserOrDateChanged();
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
     $('#tDayFoodsRaw').on('input', onFoodInputChanged);
     $('#tUser').on('input', onUserOrDateChanged);
-    $('#tDate').on('input', onUserOrDateChanged);
+    //$('#tDate').on('input', onUserOrDateChanged);
+    $('#btDayUp').on('click', onDayUp);
+    $('#btDayDown').on('click', onDayDown);
     $('#btSave').on('click', onSave);
     $('#btAddMeal').on('click', onAddMeal);
 }
@@ -451,7 +460,23 @@ function onUserOrDateChanged()
         window.localStorage.currentUser = $('#tUser').val();
     }
 
-    nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: $('#tDate').val() }, onFoodRecordRowArrived);
+    let currentDayFormattedStr = printMoment(currentDayMoment);
+    $('#tDate').val(currentDayFormattedStr);
+
+    let currentDayStr = currentDayMoment.format('YYYY-MM-DD');
+    nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: currentDayStr }, onFoodRecordRowArrived);
+}
+
+function onDayUp()
+{
+    currentDayMoment.milliseconds(currentDayMoment.milliseconds() + 24 * 60 * 60 * 1000);
+    onUserOrDateChanged();
+}
+
+function onDayDown()
+{
+    currentDayMoment.milliseconds(currentDayMoment.milliseconds() - 24 * 60 * 60 * 1000);
+    onUserOrDateChanged();
 }
 
 function onFoodRecordRowArrived(content)
@@ -463,7 +488,8 @@ function onFoodRecordRowArrived(content)
 
 function onSave()
 {
-    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: $('#tDate').val(), food_data: $('#tDayFoodsRaw').val().replaceAll('\n', '\\n') }, onSaveResultArrived);
+    let currentDayStr = currentDayMoment.format('YYYY-MM-DD');
+    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: $('#tDayFoodsRaw').val().replaceAll('\n', '\\n') }, onSaveResultArrived);
 }
 
 function onSaveResultArrived(content)

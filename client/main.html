@@ -24,10 +24,15 @@
 
         <p><b>INPUT (food data)</b><br>
 
-        User: <input id="tUser" type="text" size="10" maxlength="50" />
-        Day: <input id="tDate" type="text" size="10" maxlength="50" />
-        <button id="btSave">Save</button><span>&nbsp; &nbsp; </span><span id="tSaveMsg" style="padding: 5p;"></span>
-        <br>
+        <div style="display: flex; align-items: stretch;">
+            <div style="margin-top: 0.8rem;">User:</div><input id="tUser" type="text" size="10" maxlength="50" style="margin-right:1rem" />
+            <div style="margin-top: 0.8rem;">Day:</div><input id="tDate" type="text" size="10" maxlength="50" style="margin-right:1rem" />
+            <div style="display: flex; flex-direction: column; margin-right: 2rem;">
+                <button id="btDayUp" style="width:30px; height: 18px; padding: 0; margin: 0; line-height:0;">&#9650;</button>
+                <button id="btDayDown" style="width:30px; height: 18px; padding: 0; margin: 0; line-height:0;">&#9660;</button>
+            </div>
+            <button id="btSave">Save</button><span>&nbsp; &nbsp; </span><span id="tSaveMsg" style="padding: 5p;"></span>
+        </div>
 
         <div style="display: flex">
             <button id="btAddMeal" style="font-size: x-large; border-radius: 20%; padding: 0 .6vw; color: black; background-color: rgba(0, 128, 0, 0.521);">+</button>
