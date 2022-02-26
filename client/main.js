@@ -213,8 +213,10 @@ function processInput()
         }
     }
 
-    // day part separator handling
-    appendSeparator();
+    // add the last separators...
+    while(currentDayPart < dayParts.length -1)
+        appendSeparator();
+    // ...and add the summary (same appendSeparator() is used as before)
     if (currentDayPart == dayParts.length -1) {
         let allKCal = 0;
         let allG = 0;
