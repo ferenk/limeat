@@ -16,6 +16,60 @@ h1 {
     font-weight: 700;
 }
 
+table {
+    border: 3px solid rgba(110, 110, 110, 0.884);
+}
+
+td, th {
+    padding: 2px;
+    border: 1px solid rgba(110, 110, 110, 0.884);
+}
+
+td {
+    padding: 2px 6px !important;
+}
+
+th {
+    padding: 12px 6px !important;
+    text-decoration: underline;
+}
+
+.trSep {
+    border: 2px solid rgba(77, 77, 77, 0.575);
+}
+
+.preReg {
+    white-space: pre;
+    font-family: 'Inconsolata', monospace;
+    font-weight: 400
+}
+
+.preBold {
+    white-space: pre;
+    font-family: 'Inconsolata', monospace;
+    font-weight: 800
+}
+
+.kcalBg {
+    background: #0091ff36;
+}
+
+.kcalSepBg {
+    background: #0187ee9d;
+}
+
+.timeBg {
+    background: #ffc40027;
+}
+
+.timeSepBg {
+    background: #dfab0054;
+}
+
+.foodSepBg {
+    background: #a7a7a7a4;
+}
+
 #tUser,
 #tDate {
     margin-right: 1rem;

@@ -17,11 +17,28 @@ function toNumericOrZero(str)
     }
 }
 
-function toFixedFloat(num) {
+function toFixedFloat(num, decimals) {
+    if (decimals == null)
+        decimals = 1;
     let realNum = num;
     if (typeof (num) == 'string')
         realNum = parseFloat(num);
-    return Math.round(realNum * 10) / 10;
+    let decimalPower = Math.pow(10, decimals);
+    //debug console.log(`decimalPower: ${decimalPower}`);
+    return Math.round(realNum * decimalPower) / decimalPower;
+}
+
+function printToFixedFloat(num, decimals, padDecimals) {
+    if (decimals == null)
+        decimals = 0;
+    let numStr = toFixedFloat(num, decimals).toString();
+    if (padDecimals == true) {
+        let decimalPointPos = numStr.search('\\.');
+        let paddingNeeded = (decimalPointPos >= 0 ? (numStr.length - decimalPointPos - 1) - decimals : decimals + 1);
+        //debug console.log(`numStr: ${numStr}, decimals: ${decimals}, paddingNeeded: ${paddingNeeded}, decimalpointpos: ${decimalPointPos}`);
+        numStr += ' '.repeat(paddingNeeded);
+    }
+    return numStr;
 }
 
 let dayParts =
@@ -42,6 +59,7 @@ function initCounters()
     }
     currentDayPart = 0;
     foodOutputStr = '';
+    $('.mealRow').remove();
 }
 
 /* Process entered text*/
@@ -164,7 +182,8 @@ function processInput()
 
         // print the currently processed food
         if (foodParts.length > 0) {
-            let foodOutputLineStr = '';
+            let foodOutputLineStr = '',
+                foodOutputLineFormattedStr = '';
             let foodKCal = 0, foodG = 0;
             foodParts.forEach(foodPart => {
                 let partKCal = 0;
@@ -181,35 +200,64 @@ function processInput()
                 if (foodPart.quantityunit == 'g')
                     foodG += toFixedFloat(foodPart.quantity);
 
-                if (foodOutputLineStr.length > 0)
+                if (foodOutputLineStr.length > 0) {
                     foodOutputLineStr += ', ';
+                    foodOutputLineFormattedStr += '\n';
+                }
+                if (foodNamePrefixStr != null && foodNamePrefixStr.length > 0)
+                    foodOutputLineFormattedStr += '  ';
 
-                if (partKCal == 0) foodOutputLineStr += '<font color="red">';
+                if (partKCal == 0) {
+                    foodOutputLineStr += '<font color="red">';
+                    foodOutputLineFormattedStr += '<font color="red">';
+                }
                 if (foodPart.kcal != null) {
-                    if (foodPart.kcalunit != 'kcal')
+                    if (foodPart.kcalunit != 'kcal') {
                         foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit}, =${Math.round(partKCal)}kc)`;
-                    else
+                        foodOutputLineFormattedStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit}, =${Math.round(partKCal)}kc)`;
+                    }
+                    else {
                         foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
+                        foodOutputLineFormattedStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
+                    }
                 }
                 else {
                     foodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
+                    foodOutputLineFormattedStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
                 }
-                if (partKCal == 0) foodOutputLineStr += '</font>';
-                if (foodPart.unprocessed != null)
+                if (partKCal == 0) {
+                    foodOutputLineStr += '</font>';
+                    foodOutputLineFormattedStr += '</font>';
+                }
+                if (foodPart.unprocessed != null) {
                     foodOutputLineStr += ` ***${foodPart.unprocessed}***`;
+                    foodOutputLineFormattedStr += ` <font color="#f00000"><b><i>${foodPart.unprocessed}</i></b></font>`;
+                }
             });
 
             dayParts[currentDayPart].kcal += foodKCal;
             dayParts[currentDayPart].g += foodG;
+            let foodKCalStr = printToFixedFloat(foodKCal, 1, true);
+
+            // update the 'current line' field
+            let currentOutputLine = formatFoodData(foodKCalStr, timestampStr, foodNamePrefixStr + foodOutputLineStr) + '  \n';
+
+            // append this line to the table output
+            let foodKCalStrFormatted = foodKCalStr.replace(/(..)$/, '<span style="font-size:0.85em;">$1</span>');  // decimal characters are smaller
+            let currTableRowStr =
+                `<tr class="mealRow">` +
+                `<td style="text-align:right;" class="preBold kcalBg effectSmallerLast">${foodKCalStrFormatted}</td>` +
+                `<td style="text-align:right; font-size:0.85em;" class="preBold timeBg">${timestampStr?timestampStr:''}</td>` +
+                `<td class="preReg">${(foodNamePrefixStr ? `<u><b>${foodNamePrefixStr.replaceAll('___', '')}</b></u>\n` : '') + foodOutputLineFormattedStr}</td></tr>`;
+            $('#tableOut tr:last').after(currTableRowStr);
 
             // append this line to the main output (and optionally to the summary text)
-            let foodDetails = foodNamePrefixStr + foodOutputLineStr;
-            let currentOutputLine = formatFoodData(foodKCal, timestampStr, foodDetails) + '  \n';
             foodOutputStr += currentOutputLine;
             if (i == Math.round(currentRowNum) - 1) {
-                currentSummaryStr += foodDetails;
+                currentSummaryStr += foodNamePrefixStr + foodOutputLineFormattedStr;
                 currentSummaryKCal = foodKCal;
             }
+
         }
     }
 
@@ -263,6 +311,18 @@ function appendSeparator() {
     outputKCal = ' '.repeat(10 - outputKCal.length) + outputKCal;
     let pattern = dayParts[currentDayPart].pattern;
     foodOutputStr += `${pattern.slice(0, 3) + outputKCal + pattern.slice(13)} ${Math.round(dayParts[currentDayPart].g)}g  \n`;
+
+    // HTML separator
+    let foodKCalStr = printToFixedFloat(dayParts[currentDayPart].kcal, 1, true);
+    let foodKCalStrFormatted = foodKCalStr.replace(/(..)$/, '<span style="font-size:0.85em;">$1</span>');  // decimal characters are smaller
+    let sHtmlSeparator =
+        '<tr class="mealRow trSep">' +
+            `<td style="text-align:right;" class="preBold kcalSepBg"><u>${foodKCalStrFormatted}</u></td>` +
+            `<td style="text-align:right;" class="preBold timeSepBg"></td>` +
+            `<td class="preBold foodSepBg"><u>${Math.round(dayParts[currentDayPart].g)}g ${pattern.slice(14).replaceAll('***', '')}</u></td>` +
+        '</tr>';
+    $('#tableOut tr:last').after(sHtmlSeparator);
+
     currentDayPart++;
 }
 
@@ -278,13 +338,12 @@ function calcFoodKcal(foodPart)
     return 0;
 }
 
-function formatFoodData(kcal, timestamp, foodDetails)
+function formatFoodData(kcalStr, timestamp, foodDetails)
 {
     let COL_KCAL_END = 10, COL_TIMESTAMP_END = 19;
     let resultStr = "  |"
     timestamp = (timestamp == null) ? "" : timestamp;
     // Column: kCal
-    let kcalStr = Math.round(kcal).toString();
     resultStr += " ".repeat(COL_KCAL_END - kcalStr.length - resultStr.length);
     resultStr += kcalStr + "   |";
     // Column: timeStamp
