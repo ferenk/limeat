@@ -229,9 +229,9 @@ function processInput()
         appendSeparator();
     }
 
-    $('#currentLine').html(`${currentSummaryStr}`);
-    $('#currentAllKCal').html(`<b>${Math.round(dayParts[currentDayPart - 1].kcal)}kc |</b>`);
-    $('#currentKCal').html(`${Math.round(currentSummaryKCal)}kc`);
+    $('#tCurrentLine').html(`${currentSummaryStr}`);
+    $('#lbCurrentAllKCal').html(`<b>${Math.round(dayParts[currentDayPart - 1].kcal)}kc |</b>`);
+    $('#lbCurrentKCal').html(`${Math.round(currentSummaryKCal)}kc`);
 
     // display the result
     $('#divOutput').html('<pre>' + foodOutputStr + '</pre>');
