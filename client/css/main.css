@@ -3,7 +3,6 @@ hr {
 }
 
 body {
-    width: 640px;
     margin: auto;
 }
 
@@ -70,13 +69,50 @@ th {
     background: #a7a7a7a4;
 }
 
-#tUser,
-#tDate {
-    margin-right: 1rem;
+#dMainLine,
+#dKCals {
+    display: flex;
+    align-items: baseline;
+    align-content: stretch;
 }
 
-#btDayUp,
-#btDayDown {
+#dMainLine {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#dMainLine *:not(input) {
+    padding: 0 !important;
+}
+
+#lUser,
+#lDate {
+    margin-right: 0.5em;
+}
+
+#tUser,
+#tDate {
+    margin-bottom: 0px;
+    margin-right: 0.2em;
+}
+
+#tUser {
+    margin-right: 1em;
+}
+
+#dDate {
+    display:flex;
+    align-items: center;
+}
+
+#dDateUpDown {
+    display: flex;
+    flex-direction: column;
+    margin-right: 2rem;
+}
+
+#btDateUp,
+#btDateDown {
     width: 30px;
     height: 18px;
     padding: 0;
@@ -84,8 +120,9 @@ th {
     line-height: 0;
 }
 
-#tSaveMsg {
-    padding: 5p;
+#btSave {
+    min-width: 12em;
+    margin-bottom: 0;
 }
 
 #btAddMeal {
@@ -96,14 +133,15 @@ th {
     background-color: rgba(0, 128, 0, 0.521);
 }
 
-#lbCurrentAllKCal,
-#lbCurrentKCal {
-    padding: 6px;
-    white-space: nowrap;
+#dKCals > * {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-#tCurrentLine {
-    padding: 16px 6px 0px 6px;
+#lbCurrentAllKCal,
+#lbCurrentKCal {
+    padding: 0 0.5em !important;
+    white-space: nowrap;
 }
 
 #tDayFoodsRaw {

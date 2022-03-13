@@ -50,6 +50,7 @@ let dayParts =
 let currentDayMoment = null;
 let currentDayPart;
 let foodOutputStr;
+var g_mobileMode = null;
 
 function initCounters()
 {
@@ -486,29 +487,6 @@ function onAddMeal() {
     wMealEditor[0].focus();
 }
 
-function onPageLoaded()
-{
-    if (window.localStorage != null) {
-        if (window.localStorage.currentUser != null) {
-            $('#tUser').val(window.localStorage.currentUser);
-        }
-    }
-
-    // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
-    currentDayMoment = getCurrentMoment('04:00');
-    onUserOrDateChanged();
-
-    // initiate DB reload
-    nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
-    $('#tDayFoodsRaw').on('input', onFoodInputChanged);
-    $('#tUser').on('input', onUserOrDateChanged);
-    //$('#tDate').on('input', onUserOrDateChanged);
-    $('#btDayUp').on('click', onDayUp);
-    $('#btDayDown').on('click', onDayDown);
-    $('#btSave').on('click', onSave);
-    $('#btAddMeal').on('click', onAddMeal);
-}
-
 function onFoodInputChanged()
 {
     initCounters();
@@ -528,13 +506,13 @@ function onUserOrDateChanged()
     nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: currentDayStr }, onFoodRecordRowArrived);
 }
 
-function onDayUp()
+function onDateUp()
 {
     currentDayMoment.milliseconds(currentDayMoment.milliseconds() + 24 * 60 * 60 * 1000);
     onUserOrDateChanged();
 }
 
-function onDayDown()
+function onDateDown()
 {
     currentDayMoment.milliseconds(currentDayMoment.milliseconds() - 24 * 60 * 60 * 1000);
     onUserOrDateChanged();
@@ -549,18 +527,83 @@ function onFoodRecordRowArrived(content)
 
 function onSave()
 {
+    $('#btSave').html("SAVING...");
     let currentDayStr = currentDayMoment.format('YYYY-MM-DD');
     nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: $('#tDayFoodsRaw').val().replaceAll('\n', '\\n') }, onSaveResultArrived);
 }
 
+var saveButtonUpdateTimer = null;
+var saveButtonUpdateMsg = null;
+var saveButtonNormalMsg = null;
+var saveButtonUpdateCounter = 0;
+function showSaveButtonMsg(updateMsg, normalMsg, timeoutSecs)
+{
+    clearInterval(saveButtonUpdateTimer);
+    saveButtonUpdateMsg = updateMsg;
+    saveButtonNormalMsg = normalMsg;
+    saveButtonUpdateCounter = timeoutSecs;
+    onShowSaveButtonMsgUpdate();
+    saveButtonUpdateTimer = setInterval(onShowSaveButtonMsgUpdate, 1000);
+}
+
+function onShowSaveButtonMsgUpdate()
+{
+    $('#btSave').html(`${saveButtonUpdateMsg} (${saveButtonUpdateCounter})`);
+    saveButtonUpdateCounter--;
+    if (saveButtonUpdateCounter < 0) {
+        clearInterval(saveButtonUpdateTimer);
+        $('#btSave').html(saveButtonNormalMsg);
+    }
+}
+
 function onSaveResultArrived(content)
 {
-    $('#tSaveMsg').fadeOut(0);
-    if (content != '')
-        $('#tSaveMsg').html("ERROR: " + content);
+    if (content != '') {
+        showSaveButtonMsg('<span style="color: red"><b>ERROR!</b></span>', 'SAVE', 8);
+    }
+    else {
+        showSaveButtonMsg('<span style="color: green"><b>SAVED!</b></span>', 'SAVE', 3);
+    }
+}
+
+function handleMobileMode() {
+    md = new MobileDetect(window.navigator.userAgent);
+    window.navigator.scree
+    g_mobileMode = md.mobile() != null;
+    if (g_mobileMode) {
+    //if (g_mobileMode || true) {           // mobile layout on browser, too
+        $('body').css('margin', '0px');
+        let screenScale = document.documentElement.clientWidth / 640;
+        $('head').append(`<meta name="viewport" content="width=640px">`);
+        $('body div').css('padding', '1em');
+    }
     else
-        $('#tSaveMsg').html("SAVED!");
-    $('#tSaveMsg').fadeIn(100).delay(2000).fadeOut(500);
+        $('body').css('width', '640px');
+}
+
+function onPageLoaded()
+{
+    if (window.localStorage != null) {
+        if (window.localStorage.currentUser != null) {
+            $('#tUser').val(window.localStorage.currentUser);
+        }
+    }
+
+    // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
+    currentDayMoment = getCurrentMoment('04:00');
+    onUserOrDateChanged();
+
+    // initiate DB reload
+    nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
+    $('#tDayFoodsRaw').on('input', onFoodInputChanged);
+    $('#tUser').on('input', onUserOrDateChanged);
+    //$('#tDate').on('input', onUserOrDateChanged);
+    $('#btDateUp').on('click', onDateUp);
+    $('#btDateDown').on('click', onDateDown);
+    $('#btSave').on('click', onSave);
+    $('#btAddMeal').on('click', onAddMeal);
+
+    handleMobileMode();
 }
 
 window.addEventListener("load", onPageLoaded);
