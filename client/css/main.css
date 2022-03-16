@@ -125,6 +125,12 @@ th {
     margin-bottom: 0;
 }
 
+#lSaveErrorMsg {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}
+
 #btAddMeal {
     font-size: x-large;
     border-radius: 20%;

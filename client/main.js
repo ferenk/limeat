@@ -389,20 +389,18 @@ function processDbFile(content)
 }
 
 /* Communication */
-function onCalcDbArrived(content)
+function onCalcDbArrived(xhr, ev)
 {
-    processDbFile(content);
-    onUserOrDateChanged();
-    onFoodInputChanged();
+    if (ev.type == 'load') {
+        let content = xhr.responseText;
+        processDbFile(content);
+        onUserOrDateChanged();
+        onFoodInputChanged();
+    }
 }
 
 function nodeXHRComm(path, params, cb)
 {
-    let xhr = new XMLHttpRequest();
-    xhr.addEventListener("load", function xhrCB() {
-        if (cb != null)
-            cb(this.responseText);
-    });
     if (params != null)
     {
         var paramNames = Object.keys(params);
@@ -418,8 +416,22 @@ function nodeXHRComm(path, params, cb)
             path += `?${paramStr}`;
         }
     }
-    xhr.open("GET", path);
-    xhr.send();
+    try {
+        let xhr = new XMLHttpRequest();
+        xhr.addEventListener('load', (e) => {
+            console.log(`XHR result: OK, URL: ${xhr.responseURL} - Response length: ${xhr.responseText.length}`);
+            cb(xhr, e);
+        });
+        xhr.addEventListener('error', (e) => {
+            console.log(`XHR result: ERROR!, URL: ${xhr.responseURL} - Response length: ${xhr.responseText.length}`);
+            cb(xhr, e);
+        });
+
+        xhr.open("GET", path);
+        xhr.send();
+    } catch (e) {
+        onSaveResultArrived(e);
+    }
 }
 
 function nodeXHRPost(path, reqObj, cb) {
@@ -518,11 +530,14 @@ function onDateDown()
     onUserOrDateChanged();
 }
 
-function onFoodRecordRowArrived(content)
+function onFoodRecordRowArrived(xhr, ev)
 {
-    console.log('foodRecordRowArrived: ' + content);
-    $('#tDayFoodsRaw').val(content.replaceAll('\\n', '\n'));
-    onFoodInputChanged();
+    if (ev.type == 'load') {
+        content = xhr.responseText;
+        console.log('foodRecordRowArrived: ' + content);
+        $('#tDayFoodsRaw').val(content.replaceAll('\\n', '\n'));
+        onFoodInputChanged();
+    }
 }
 
 function onSave()
@@ -556,13 +571,14 @@ function onShowSaveButtonMsgUpdate()
     }
 }
 
-function onSaveResultArrived(content)
+function onSaveResultArrived(xhr, ev)
 {
-    if (content != '') {
-        showSaveButtonMsg('<span style="color: red"><b>ERROR!</b></span>', 'SAVE', 8);
-    }
-    else {
+    if (ev.type == 'load') {
+        console.log(`XHR communication result: ${xhr.responseText}`);
         showSaveButtonMsg('<span style="color: green"><b>SAVED!</b></span>', 'SAVE', 3);
+    } else if (ev.type == 'error') {
+        showSaveButtonMsg('<span style="color: red"><b>ERROR!</b></span>', 'SAVE', 8);
+        $('#lSaveErrorMsg').html('ERROR: ' + "Unable to access server and save data!").slideDown().delay(7800).slideUp();
     }
 }
 
@@ -592,6 +608,7 @@ function onPageLoaded()
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     currentDayMoment = getCurrentMoment('04:00');
     onUserOrDateChanged();
+    $('#lSaveErrorMsg').hide();
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
