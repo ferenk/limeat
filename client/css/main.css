@@ -121,12 +121,20 @@ th {
 }
 
 #btSave {
-    min-width: 12em;
+    min-width: 9em;
+    padding-left: 1em;
+    padding-right: 1em;
+    font-size: 14;
     margin-bottom: 0;
+    background-color: rgba(214, 164, 57, 0.637);
+}
+
+#btSave:active {
+    background-color: rgba(179, 137, 48, 0.726);
 }
 
 #lSaveErrorMsg {
-    color: red;
+    color: darkred;
     font-weight: bold;
     text-align: center;
 }
@@ -135,11 +143,16 @@ th {
     font-size: x-large;
     border-radius: 20%;
     padding: 0 .6vw;
+    min-width: 2em;
     color: black;
     background-color: rgba(0, 128, 0, 0.521);
 }
 
-#dKCals > * {
+#btAddMeal:active {
+    background-color: rgba(18, 126, 18, 0.733);
+}
+
+#dKCals > * [type^="button"] {
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -156,3 +169,18 @@ th {
     height:20%
 }
 
+/* animated button (like material UI) */
+.btn {
+    box-shadow: 0 2px #0008;
+    margin-bottom: 6px;
+}
+
+.btn:active {
+    box-shadow: 0 0px #000b;
+    transform: translateY(3px);
+}
+
+.btn_light:active {
+    transform: translateY(1px);
+    background: #0003;
+}

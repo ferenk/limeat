@@ -575,10 +575,10 @@ function onSaveResultArrived(xhr, ev)
 {
     if (ev.type == 'load') {
         console.log(`XHR communication result: ${xhr.responseText}`);
-        showSaveButtonMsg('<span style="color: green"><b>SAVED!</b></span>', 'SAVE', 3);
+        showSaveButtonMsg('<span style="color: darkgreen"><b>SAVED!</b></span>', 'SAVE', 3);
     } else if (ev.type == 'error') {
-        showSaveButtonMsg('<span style="color: red"><b>ERROR!</b></span>', 'SAVE', 8);
-        $('#lSaveErrorMsg').html('ERROR: ' + "Unable to access server and save data!").slideDown().delay(7800).slideUp();
+        showSaveButtonMsg('<span style="color: darkred"><b>ERROR!</b></span>', 'SAVE', 8);
+        $('#lSaveErrorMsg').html('ERROR: Unable to access server and to save data!').slideDown().delay(7800).slideUp();
     }
 }
 
