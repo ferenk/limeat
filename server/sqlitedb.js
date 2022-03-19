@@ -2,9 +2,19 @@
 
 // Import path module
 const path = require('path')
+const fs = require('fs')
 
-// Get the location of database.sqlite file
-const dbPath = path.resolve(__dirname, 'kcal.sqlite')
+// Find the food DB file: first sqlite file which begins with 'foods-' (e.g 'foods-test.sqlite')
+var dbPath =  path.resolve(__dirname, 'foods-default.sqlite');
+let fileNames = fs.readdirSync(__dirname);
+fileNames.some(fileName => {
+    if (fileName.startsWith('foods-') && fileName.endsWith('.sqlite')) {
+        dbPath = path.join(__dirname, fileName);
+        console.log(`Found food DB file: ${dbPath}`);
+        return true;
+    }
+    return false;
+});
 
 // users: 'id', 'name', 'password_hash', 'email'
 // foods: 'id', 'name', 'variant_name', 'creator', 'date', 'calories', 'weights'
