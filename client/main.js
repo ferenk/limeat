@@ -51,6 +51,7 @@ let currentDayMoment = null;
 let currentDayPart;
 let foodOutputStr;
 var g_mobileMode = null;
+var g_savedFoodInput = null;
 
 function initCounters()
 {
@@ -502,6 +503,7 @@ function onAddMeal() {
 function onFoodInputChanged()
 {
     initCounters();
+    onFoodsSaved(null);
     processInput();
 }
 
@@ -537,9 +539,19 @@ function onFoodRecordRowArrived(xhr, ev)
         console.log('foodRecordRowArrived: ' + content);
         $('#tDayFoodsRaw').val(content.replaceAll('\\n', '\n'));
         onFoodInputChanged();
+        onFoodsSaved(true);
     }
 }
 
+/**
+ * Save button handling - countdown timer, 'unsaved' flag
+ */
+var saveButtonUpdateTimer = null;
+var saveButtonUpdateMsg = null;
+var saveButtonNormalMsg = "SAVE";
+var saveButtonUpdateCounter = 0;
+
+/** EVENT: Save button clicked or ctrl-s pressed */
 function onSave()
 {
     $('#btSave').html("SAVING...");
@@ -547,10 +559,25 @@ function onSave()
     nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: $('#tDayFoodsRaw').val().replaceAll('\n', '\\n') }, onSaveResultArrived);
 }
 
-var saveButtonUpdateTimer = null;
-var saveButtonUpdateMsg = null;
-var saveButtonNormalMsg = null;
-var saveButtonUpdateCounter = 0;
+/** UI: Update the 'unsaved' flag */
+function onFoodsSaved(isSaved)
+{
+    let foodEditBoxContent = $('#tDayFoodsRaw').val();
+    if (isSaved == null || isSaved == undefined)
+        isSaved = (foodEditBoxContent.localeCompare(g_savedFoodInput) == 0);
+
+    if (isSaved == true) {
+        $('#btSave').html(saveButtonNormalMsg);
+        $('#btSave').removeClass('unsaved');
+        g_savedFoodInput = foodEditBoxContent;
+    }
+    else {
+        $('#btSave').html('<font color="darkred">SAVE &#x25CF;</font>');
+        $('#btSave').addClass('unsaved');
+    }
+}
+
+/** UI: Start the countdown after the Save operation is done */
 function showSaveButtonMsg(updateMsg, normalMsg, timeoutSecs)
 {
     clearInterval(saveButtonUpdateTimer);
@@ -561,13 +588,14 @@ function showSaveButtonMsg(updateMsg, normalMsg, timeoutSecs)
     saveButtonUpdateTimer = setInterval(onShowSaveButtonMsgUpdate, 1000);
 }
 
+/** Countdown functionality for a button (currently specific to the save button) */
 function onShowSaveButtonMsgUpdate()
 {
     $('#btSave').html(`${saveButtonUpdateMsg} (${saveButtonUpdateCounter})`);
     saveButtonUpdateCounter--;
     if (saveButtonUpdateCounter < 0) {
         clearInterval(saveButtonUpdateTimer);
-        $('#btSave').html(saveButtonNormalMsg);
+        onFoodsSaved();
     }
 }
 
@@ -576,6 +604,7 @@ function onSaveResultArrived(xhr, ev)
     if (ev.type == 'load') {
         console.log(`XHR communication result: ${xhr.responseText}`);
         showSaveButtonMsg('<span style="color: darkgreen"><b>SAVED!</b></span>', 'SAVE', 3);
+        g_savedFoodInput = $('#tDayFoodsRaw').val();
     } else if (ev.type == 'error') {
         showSaveButtonMsg('<span style="color: darkred"><b>ERROR!</b></span>', 'SAVE', 8);
         $('#lSaveErrorMsg').html('ERROR: Unable to access server and to save data!').slideDown().delay(7800).slideUp();
@@ -584,7 +613,6 @@ function onSaveResultArrived(xhr, ev)
 
 function handleMobileMode() {
     md = new MobileDetect(window.navigator.userAgent);
-    window.navigator.scree
     g_mobileMode = md.mobile() != null;
     if (g_mobileMode) {
     //if (g_mobileMode || true) {           // mobile layout on browser, too
@@ -619,6 +647,15 @@ function onPageLoaded()
     $('#btDateDown').on('click', onDateDown);
     $('#btSave').on('click', onSave);
     $('#btAddMeal').on('click', onAddMeal);
+
+    // shortcuts (only ctrl-s is supported by now)
+    $(window).keydown(function (event) {
+        if (event.ctrlKey && event.keyCode == 83) {
+            console.log('Event: ctrl-S has been pressed');
+            event.preventDefault();
+            onSave();
+        }
+    });
 
     handleMobileMode();
 }

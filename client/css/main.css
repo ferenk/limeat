@@ -126,6 +126,10 @@ th {
     padding-right: 1em;
     font-size: 14;
     margin-bottom: 0;
+    background-color: rgba(226, 199, 141, 0.637);
+}
+
+#btSave.unsaved {
     background-color: rgba(214, 164, 57, 0.637);
 }
 
