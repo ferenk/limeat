@@ -339,11 +339,15 @@ function appendSeparator() {
     currentDayPart++;
 }
 
+/**
+ * @param {Object} foodPart
+ */
 function calcFoodKcal(foodPart)
 {
     let foodPartNameLower = foodPart.name.toLowerCase();
-    for (let i = 0; i < calcDb.length; i++) {
-        let dbFood = calcDb[i];
+    let foodItems = FoodsDb.getInstance().items;
+    for (let i = 0; i < foodItems.length; i++) {
+        let dbFood = foodItems[i];
         if (dbFood.name == foodPartNameLower && dbFood.quantityunit == foodPart.quantityunit) {
             return ((foodPart.quantity / dbFood.quantity) * dbFood.kcal);
         }
@@ -351,6 +355,13 @@ function calcFoodKcal(foodPart)
     return 0;
 }
 
+/**
+ * 
+ * @param {string} kcalStr 
+ * @param {string} timestamp 
+ * @param {string} foodDetails 
+ * @returns 
+ */
 function formatFoodData(kcalStr, timestamp, foodDetails)
 {
     let COL_KCAL_END = 10, COL_TIMESTAMP_END = 19;
@@ -367,50 +378,27 @@ function formatFoodData(kcalStr, timestamp, foodDetails)
     return resultStr;
 }
 
-
-/* Process DB file */
-let calcDb = [];
-function processDbFile(content)
-{
-    let str = '';
-    let dbLines = content.split('\r\n');
-    dbLines.forEach(element => {
-        dbLineParts = element.split('|');
-        if (dbLineParts.length >= 3) {
-            //str += 'LINE: ' + element + '\n';  // orig line
-            let foodName = dbLineParts[1].trim();
-            let foodInfo = dbLineParts[2].trim();
-            let foodInfoParts = foodInfo.split(' ');
-            if (foodInfoParts.length >= 2) {
-                let foodDbEntry = { name: foodName.toLowerCase(), kcal: foodInfoParts[0], quantity: 100, quantityunit: 'g' };
-                if (foodInfoParts[1].startsWith('kcal')) {
-                    if (foodInfoParts[1][4] == '/') {
-                        processQuantity(foodInfoParts[1].slice(5), foodDbEntry);
-                    }
-                }
-                calcDb.push(foodDbEntry);
-            }
-        }
-    });
-    calcDb.forEach((dbItem) => {
-        let kcal2ndPart = (dbItem.quantity == 100 && dbItem.quantityunit == 'g' ? '' : `${dbItem.quantity}${dbItem.quantityunit}`);
-        str += `${dbItem.name}: ${dbItem.kcal} kCal/${kcal2ndPart}\n`;
-    } );
-
-    $('#divDbContent').html('<pre>' + str + '</pre>');
-}
-
-/* Communication */
+/**
+ * Communication
+ * @param {XMLHttpRequest} xhr 
+ * @param {XMLHttpRequestEventTarget} ev 
+ */
 function onCalcDbArrived(xhr, ev)
 {
     if (ev.type == 'load') {
         let content = xhr.responseText;
-        processDbFile(content);
+        FoodsDb.getInstance().processDbFile(content);
         onUserOrDateChanged();
         onFoodInputChanged();
     }
 }
 
+/**
+ * Do XML HTTP request communication
+ * @param {string} path 
+ * @param {string[]} params 
+ * @param {function(string, Object, function)} cb 
+ */
 function nodeXHRComm(path, params, cb)
 {
     if (params != null)
@@ -446,6 +434,12 @@ function nodeXHRComm(path, params, cb)
     }
 }
 
+/**
+ * Server/Client communication
+ * @param {string} path 
+ * @param {XMLHttpRequest} reqObj 
+ * @param {function} cb 
+ */
 function nodeXHRPost(path, reqObj, cb) {
     let xhr = new XMLHttpRequest();
     xhr.open("POST", path, true);
@@ -458,6 +452,9 @@ function nodeXHRPost(path, reqObj, cb) {
 
 }
 
+/**
+ * @return string
+ */
 function getCurrentTimeStr()
 {
     let date = new Date();
