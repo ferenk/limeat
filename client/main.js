@@ -1,3 +1,5 @@
+var optScaleType = 'barista';
+
 function isNumeric(str) {
     if (typeof str != "string")
         return false;
@@ -195,7 +197,8 @@ function processInput()
                     partKCal = toNumericOrZero(foodPart.kcal);
                 if (partKCal == 0) {
                     if (foodPart.kcalunit == 'kcal/100g' && foodPart.quantityunit == 'g') {
-                        partKCal = (toNumericOrZero(foodPart.kcal) * foodPart.quantity) / 100;
+                        let quant = simulateScaleMeasurement(foodPart.quantity);
+                        partKCal = (toNumericOrZero(roundKCalMeasurement(quant, 100, foodPart.kcal)));
                     }
                 }
                 if (partKCal == 0)
@@ -319,6 +322,32 @@ function processQuantity(quantityStr, foodObj)
     return false;
 }
 
+function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
+{
+    return (quant * dbFoodKcal / dbFoodQuant);
+}
+
+/**
+ * Adjust the measured weight simulating the selected kitchen scale.
+ * @param {num} quant
+ */
+function simulateScaleMeasurement(quant)
+{
+    if (optScaleType != 'barista') {
+        if (optScaleType == 'kitchen')
+        {
+            let minWeightStr = $('#minimalWeight').val(),
+                corrWeightStr = $('#minimalWeightCorrection').val();
+            let minWeight = (isNaN(minWeightStr) ? 3 : parseFloat(minWeightStr)), 
+                corrWeight = (isNaN(corrWeightStr) ? 0 : parseFloat(corrWeightStr)); 
+            quant = (quant < minWeight ? corrWeight : quant);
+
+            quant = Math.round(quant);
+        }
+    }
+    return quant;
+}
+
 function appendSeparator() {
     let outputKCal = `***${Math.round(dayParts[currentDayPart].kcal)}***`;
     outputKCal = ' '.repeat(10 - outputKCal.length) + outputKCal;
@@ -349,7 +378,11 @@ function calcFoodKcal(foodPart)
     for (let i = 0; i < foodItems.length; i++) {
         let dbFood = foodItems[i];
         if (dbFood.name == foodPartNameLower && dbFood.quantityunit == foodPart.quantityunit) {
-            return ((foodPart.quantity / dbFood.quantity) * dbFood.kcal);
+            let quant = foodPart.quantity;
+            if (foodPart.quantityunit == 'g') {
+                quant = simulateScaleMeasurement(quant);
+            }
+            return roundKCalMeasurement(quant, dbFood.quantity, dbFood.kcal);
         }
     }
     return 0;
@@ -655,6 +688,21 @@ function onPageLoaded()
     $('#btDateDown').on('click', onDateDown);
     $('#btSave').on('click', onSave);
     $('#btAddMeal').on('click', onAddMeal);
+
+    $('#optsDev').hide();
+    $('#devMode').change(function(){
+        //? $('#devMode').detach().appendTo('#optsDev');
+        if (this.checked)
+            $('#optsDev').slideDown(150);
+        else
+            $('#optsDev').slideUp(100);
+    });
+    $('#optScaleType,.scaleOpts').change(() => {
+        optScaleType = ($('#optScaleType :selected').val());
+        $('.scaleOpts').toggle(optScaleType != 'barista');
+        onFoodInputChanged();
+    });
+    $('.scaleOpts').hide();
 
     // shortcuts (only ctrl-s is supported by now)
     $(window).keydown(function (event) {

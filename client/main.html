@@ -1,5 +1,11 @@
 <html style="background: lightGray;">
 
+<!--
+    Licenses
+    --------
+        Background for the 'dev mode' settings box: Free SVG Background by <a target="_blank" href="https://bgjar.com">BGJar</a>
+-->
+
 <head>
     <title>KCal calculator</title> 
     <link rel="icon" type="image/x-icon" href="css/diet.png">
@@ -17,8 +23,8 @@
 <script src="/3rdparty/moment-with-locales.js"></script>
 <script src="/3rdparty/mobile-detect.min.js"></script>
 
-<script src="/foods.js"></script>
-<script src="/main.js"></script>
+<script type="text/javascript" charset="UTF-8" src="/foodsDb.js"></script>
+<script type="text/javascript" charset="UTF-8" src="/main.js"></script>
 
 <script>
 </script>
@@ -51,6 +57,23 @@
 
         <textarea id="tDayFoodsRaw"></textarea>
 
+        <input type="checkbox" id="devMode" name="devMode">
+        <label for="devMode" id="devModeLabel">dev mode</label>
+
+        <div id="optsDev">
+            <div>
+                <label id="optScaleTypeLabel" for="optScaleType">Scale type:</label>
+                <select name="optScaleType" id="optScaleType">
+                    <option value="barista">Barista</option>
+                    <option value="kitchen">Kitchen scale</option>
+                </select>
+                    <label class="scaleOpts" id="minimalWeightLabel">Min. grams:</label>
+                    <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3"></input>
+                    <label class="scaleOpts" id="minimalWeightCorrectionLabel">Corrected:</label>
+                    <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0"></input>
+            </div>
+        </div>
+            
         <hr>
         <p><b>OUTPUT (table))</b>:
         <div id="tableOut">
