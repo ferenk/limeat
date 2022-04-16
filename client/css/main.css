@@ -33,7 +33,7 @@ th {
     text-decoration: underline;
 }
 
-#devModeLabel, #optScaleTypeLabel, #minimalWeightLabel, #minimalWeightCorrectionLabel, #scaleOpts {
+#devModeLabel, #devModeOutputsLabel, #optScaleTypeLabel, #minimalWeightLabel, #minimalWeightCorrectionLabel, #scaleOpts {
     display: inline-block;
 }
 
@@ -183,6 +183,15 @@ th {
     box-shadow: #0005 0 1px 3px;
     border-radius: 0.3em;
     padding: 8px;
+}
+
+.shareIconImg {
+    position: absolute;
+    z-index: 5;
+    background-image: url('share_icon.svg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: -50px;
 }
 
 /* animated button (like material UI) */

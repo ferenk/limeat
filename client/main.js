@@ -666,6 +666,21 @@ function handleMobileMode() {
         $('body').css('width', '640px');
 }
 
+/**
+ * Copies a string to the clipboard
+ * It uses the execCommand() method, because writeText works only on localhost
+ * @param {String} text The string to copy
+ */
+function copyText2Clipboard(text)
+{
+    $('#txtCopyHelper').val(text);
+    $('#txtCopyHelper').show();
+    $('#txtCopyHelper')[0].select();
+    let retVal = document.execCommand('copy');
+    $('#txtCopyHelper').hide();
+    return retVal;
+}
+
 function onPageLoaded()
 {
     if (window.localStorage != null) {
@@ -689,13 +704,14 @@ function onPageLoaded()
     $('#btSave').on('click', onSave);
     $('#btAddMeal').on('click', onAddMeal);
 
-    $('#optsDev').hide();
+    /** Developer options: Section, controls, experimental features */
+    $('#optsDevSection').hide();
     $('#devMode').change(function(){
         //? $('#devMode').detach().appendTo('#optsDev');
         if (this.checked)
-            $('#optsDev').slideDown(150);
+            $('#optsDevSection').slideDown(150);
         else
-            $('#optsDev').slideUp(100);
+            $('#optsDevSection').slideUp(100);
     });
     $('#optScaleType,.scaleOpts').change(() => {
         optScaleType = ($('#optScaleType :selected').val());
@@ -703,6 +719,20 @@ function onPageLoaded()
         onFoodInputChanged();
     });
     $('.scaleOpts').hide();
+
+    $('#devModeOutputs').change(function(){
+        //? $('#devMode').detach().appendTo('#optsDev');
+        if (this.checked)
+            $('#devOutputs').slideDown(150);
+        else
+            $('#devOutputs').slideUp(100);
+    });
+    $('#devOutputs').hide();
+
+    /** Button, feature: Export MD output to the clipboard */
+    $('#btCopyMD').on('click', () => { 
+        copyText2Clipboard(foodOutputStr);
+    });
 
     // shortcuts (only ctrl-s is supported by now)
     $(window).keydown(function (event) {

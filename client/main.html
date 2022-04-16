@@ -60,22 +60,32 @@
         <input type="checkbox" id="devMode" name="devMode">
         <label for="devMode" id="devModeLabel">dev mode</label>
 
-        <div id="optsDev">
-            <div>
-                <label id="optScaleTypeLabel" for="optScaleType">Scale type:</label>
-                <select name="optScaleType" id="optScaleType">
-                    <option value="barista">Barista</option>
-                    <option value="kitchen">Kitchen scale</option>
-                </select>
-                    <label class="scaleOpts" id="minimalWeightLabel">Min. grams:</label>
-                    <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3"></input>
-                    <label class="scaleOpts" id="minimalWeightCorrectionLabel">Corrected:</label>
-                    <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0"></input>
+        <button id="btCopyMD" class="btn_light btn" style="float: right">
+            <img src='css/share_icon.svg' style='width: 2em; vertical-align:middle'/>
+            Copy MD output</button>
+        <div style="clear: both"></div>
+
+        <div id="optsDevSection">
+            <div style="height: 1em;"></div>
+            <div id="optsDev">
+                <div>
+                    <label id="optScaleTypeLabel" for="optScaleType">Scale type:</label>
+                    <select name="optScaleType" id="optScaleType">
+                        <option value="barista">Barista</option>
+                        <option value="kitchen">Kitchen scale</option>
+                    </select>
+                        <label class="scaleOpts" id="minimalWeightLabel">Min. grams:</label>
+                        <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3"></input>
+                        <label class="scaleOpts" id="minimalWeightCorrectionLabel">Corrected:</label>
+                        <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0"></input>
+                </div>
+
+                <input type="checkbox" id="devModeOutputs" name="devModeOutputs">
+                <label for="devModeOutputs" id="devModeOutputsLabel">Show output sections</label>
             </div>
+            <br>
         </div>
-            
-        <hr>
-        <p><b>OUTPUT (table))</b>:
+
         <div id="tableOut">
             <table>
                 <tr class="trSep">
@@ -86,13 +96,18 @@
             </table>
         </div>
 
-        <hr>
-        <p><b>OUTPUT (processed food data, as a MD table))</b>:
-        <div id="divOutput"></div>
+        <div id="divStatusBar"></div>
+        <div id="devOutputs">
+            <hr>
+            <p><b>OUTPUT (processed food data, as a MD table))</b>:
+            <div id="divOutput"></div>
 
-        <hr>
-        <p><b>OUTPUT (processed DB file, as list):</b>
-        <div id="divDbContent"></div>
+            <hr>
+            <p><b>OUTPUT (processed DB file, as list):</b>
+            <div id="divDbContent"></div>
+        </div>
+
+        <textarea id="txtCopyHelper" style="display: none;"></textarea>
     </div>
 </body>
 </html>
