@@ -1,5 +1,8 @@
 var optScaleType = 'barista';
 
+/** @type { TextAreaExt } */
+var jqTextMealsDiary = null;
+
 function isNumeric(str) {
     if (typeof str != "string")
         return false;
@@ -70,16 +73,12 @@ function initCounters()
 /* Process entered text*/
 function processInput()
 {
-    let mainTextArea = $('#tDayFoodsRaw');
-    let currentTextLines = mainTextArea.val().substr(0, mainTextArea[0].selectionStart).split("\n");
-    let currentRowNum = currentTextLines.length;
-    let currentRowCol = currentTextLines[currentRowNum - 1].length;
+    let foodLines = jqTextMealsDiary.rows;
 
     let currentSummaryStr = '';
     let currentSummaryKCal = 0;
 
-    let foodLines = $('#tDayFoodsRaw').val().split('\n');
-    
+
     for (let i = 0; i < foodLines.length; i++)
     {
         // foodLine: "10:25 apple 10g, banana 20g"
@@ -269,11 +268,10 @@ function processInput()
 
             // append this line to the main output (and optionally to the summary text)
             foodOutputStr += currentOutputLine;
-            if (i == Math.round(currentRowNum) - 1) {
+            if (i == jqTextMealsDiary.cursorPosY) {
                 currentSummaryStr += foodNamePrefixStr + htmlfoodOutputLineStr;
                 currentSummaryKCal = foodKCal;
             }
-
         }
     }
 
@@ -519,26 +517,9 @@ function printMoment(currMoment)
 }
 
 //todo Option for auto cleanup (?)
-function onAddMeal() {
-    let wMealEditor = $('#tDayFoodsRaw');
-    let wMealEditorText = wMealEditor.val();
-    // auto cleanup
-    let currentMealTextRows = wMealEditorText.split('\n');
-    // remove the last empty lines
-    let lastRow = '';
-    while (currentMealTextRows.length >= 1) {
-        lastRow = currentMealTextRows.pop();
-        if (lastRow.length != 0)
-            break;
-    }
-    lastRow += `${lastRow.length > 0 ? '\n' : ''}${getCurrentTimeStr()} `;
-    currentMealTextRows.push(lastRow);
-
-    // show the new, extended meal text
-    wMealEditorText = currentMealTextRows.join('\n')
-    wMealEditor.val(wMealEditorText);
-    wMealEditor[0].selectionStart = wMealEditor[0].selectionEnd = wMealEditorText.length;
-    wMealEditor[0].focus();
+function onAddMeal()
+{
+    jqTextMealsDiary.appendNewText(`${getCurrentTimeStr()} `);
 }
 
 function onFoodInputChanged()
@@ -578,7 +559,7 @@ function onFoodRecordRowArrived(xhr, ev)
     if (ev.type == 'load') {
         content = xhr.responseText;
         console.log('foodRecordRowArrived: ' + content);
-        $('#tDayFoodsRaw').val(content.replaceAll('\\n', '\n'));
+        jqTextMealsDiary.onTextChanged(content.replaceAll('\\n', '\n'), true);
         onFoodInputChanged();
         onFoodsSaved(true);
     }
@@ -597,13 +578,13 @@ function onSave()
 {
     $('#btSave').html("SAVING...");
     let currentDayStr = currentDayMoment.format('YYYY-MM-DD');
-    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: $('#tDayFoodsRaw').val().replaceAll('\n', '\\n') }, onSaveResultArrived);
+    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: jqTextMealsDiary.rowsStr.replaceAll('\n', '\\n') }, onSaveResultArrived);
 }
 
 /** UI: Update the 'unsaved' flag */
 function onFoodsSaved(isSaved)
 {
-    let foodEditBoxContent = $('#tDayFoodsRaw').val();
+    let foodEditBoxContent = jqTextMealsDiary.rowsStr;
     if (isSaved == null || isSaved == undefined)
         isSaved = (foodEditBoxContent.localeCompare(g_savedFoodInput) == 0);
 
@@ -645,7 +626,7 @@ function onSaveResultArrived(xhr, ev)
     if (ev.type == 'load') {
         console.log(`XHR communication result: ${xhr.responseText}`);
         showSaveButtonMsg('<span style="color: darkgreen"><b>SAVED!</b></span>', 'SAVE', 3);
-        g_savedFoodInput = $('#tDayFoodsRaw').val();
+        g_savedFoodInput = jqTextMealsDiary.rowsStr;
     } else if (ev.type == 'error') {
         showSaveButtonMsg('<span style="color: darkred"><b>ERROR!</b></span>', 'SAVE', 8);
         $('#lSaveErrorMsg').html('ERROR: Unable to access server and to save data!').slideDown().delay(7800).slideUp();
@@ -689,6 +670,8 @@ function onPageLoaded()
         }
     }
 
+    jqTextMealsDiary = new TextAreaExt('#txtMealsDiary');
+    
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     currentDayMoment = getCurrentMoment('04:00');
     onUserOrDateChanged();
@@ -696,7 +679,7 @@ function onPageLoaded()
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
-    $('#tDayFoodsRaw').on('input', onFoodInputChanged);
+    $('#txtMealsDiary').on('input', onFoodInputChanged);
     $('#tUser').on('input', onUserOrDateChanged);
     //$('#tDate').on('input', onUserOrDateChanged);
     $('#btDateUp').on('click', onDateUp);
