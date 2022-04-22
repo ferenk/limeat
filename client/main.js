@@ -1,7 +1,7 @@
 var optScaleType = 'barista';
 
 /** @type { TextAreaExt } */
-var jqTextMealsDiary = null;
+var g_mealsDiaryText = null;
 
 function isNumeric(str) {
     if (typeof str != "string")
@@ -73,16 +73,16 @@ function initCounters()
 /* Process entered text*/
 function processInput()
 {
-    let foodLines = jqTextMealsDiary.rows;
+    let foodLines = g_mealsDiaryText.rows;
 
     let currentSummaryStr = '';
     let currentSummaryKCal = 0;
 
 
-    for (let i = 0; i < foodLines.length; i++)
+    for (let iCurrentRow = 0; iCurrentRow < foodLines.length; iCurrentRow++)
     {
         // foodLine: "10:25 apple 10g, banana 20g"
-        let foodLine = foodLines[i];
+        let foodLine = foodLines[iCurrentRow];
 
         // print summary
         if (foodLine.startsWith('---'))
@@ -260,15 +260,18 @@ function processInput()
             // append this line to the table output
             let foodKCalStrFormatted = foodKCalStr.replace(/(..)$/, '<span style="font-size:0.85em;">$1</span>');  // decimal characters are smaller
             let currTableRowStr =
-                `<tr class="mealRow">` +
-                `<td style="text-align:right;" class="preBold kcalBg effectSmallerLast">${foodKCalStrFormatted}</td>` +
+                `<tr id="tr${iCurrentRow}" class="mealRow">` +
+                `<td style="text-align:right;" class="preBold kcalBg effectSmallerLast" value="${toFixedFloat(foodKCal, 1)}">${foodKCalStrFormatted}</td>` +
                 `<td style="text-align:right; font-size:0.85em;" class="preBold timeBg">${timestampStr?timestampStr:''}</td>` +
                 `<td class="preReg">${(foodNamePrefixStr ? `<u><b>${foodNamePrefixStr.replaceAll('___', '')}</b></u>\n` : '') + htmlfoodOutputLineStr}</td></tr>`;
+            if (g_mealsDiaryText.mealLineFirst == -1)
+                g_mealsDiaryText.mealLineFirst = iCurrentRow;
+            g_mealsDiaryText.mealLineLast = iCurrentRow;
             $('#tableOut tr:last').after(currTableRowStr);
 
             // append this line to the main output (and optionally to the summary text)
             foodOutputStr += currentOutputLine;
-            if (i == jqTextMealsDiary.cursorPosY) {
+            if (iCurrentRow == g_mealsDiaryText.cursorPos[1]) {
                 currentSummaryStr += foodNamePrefixStr + htmlfoodOutputLineStr;
                 currentSummaryKCal = foodKCal;
             }
@@ -292,7 +295,7 @@ function processInput()
     }
 
     $('#tCurrentLine').html(`${currentSummaryStr}`);
-    $('#lbCurrentAllKCal').html(`<b>${Math.round(dayParts[currentDayPart - 1].kcal)}kc |</b>`);
+    $('#lbCurrentAllKCal').html(`<b>${Math.round(dayParts[currentDayPart - 1].kcal)}kc</b>`);
     $('#lbCurrentKCal').html(`${Math.round(currentSummaryKCal)}kc`);
 
     // display the result
@@ -334,8 +337,10 @@ function simulateScaleMeasurement(quant)
     if (optScaleType != 'barista') {
         if (optScaleType == 'kitchen')
         {
-            let minWeightStr = $('#minimalWeight').val(),
-                corrWeightStr = $('#minimalWeightCorrection').val();
+            /** @type {String} */
+            let minWeightStr = $('#minimalWeight').val();
+            /** @type {String} */
+            let corrWeightStr = $('#minimalWeightCorrection').val();
             let minWeight = (isNaN(minWeightStr) ? 3 : parseFloat(minWeightStr)), 
                 corrWeight = (isNaN(corrWeightStr) ? 0 : parseFloat(corrWeightStr)); 
             quant = (quant < minWeight ? corrWeight : quant);
@@ -407,6 +412,13 @@ function formatFoodData(kcalStr, timestamp, foodDetails)
     // Column: foodDetails
     resultStr += foodDetails;
     return resultStr;
+}
+
+function selectFoodRow(row) {
+    if (selectedFoodRow != null)
+        selectedFoodRow.removeClass('selectedFoodRow');
+    selectedFoodRow = row;
+    selectedFoodRow.addClass('selectedFoodRow');
 }
 
 /**
@@ -519,14 +531,32 @@ function printMoment(currMoment)
 //todo Option for auto cleanup (?)
 function onAddMeal()
 {
-    jqTextMealsDiary.appendNewText(`${getCurrentTimeStr()} `);
+    g_mealsDiaryText.appendNewText(`${getCurrentTimeStr()} KV`);
+    onFoodInputChanged();
+    if (g_mealsDiaryText.focusedMode)
+    {
+        g_mealsDiaryText.selectedLine = g_mealsDiaryText.mealLineLast;
+        g_mealsDiaryText.jqItem.val(g_mealsDiaryText.rows[g_mealsDiaryText.selectedLine]);
+    }
+    updateAll_FocusedMode();
+    updatePrevNextMealButtons();
 }
 
 function onFoodInputChanged()
 {
+    g_mealsDiaryText.mealLineFirst = g_mealsDiaryText.mealLineLast = -1;
     initCounters();
     onFoodsSaved(null);
     processInput();
+    updateAll_FocusedMode();
+    updatePrevNextMealButtons();
+}
+
+function onCursorMoved()
+{
+    g_mealsDiaryText.selectedLine = g_mealsDiaryText.cursorPos[1];
+    updateAll_FocusedMode();
+    updatePrevNextMealButtons();
 }
 
 function onUserOrDateChanged()
@@ -542,24 +572,95 @@ function onUserOrDateChanged()
     nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: currentDayStr }, onFoodRecordRowArrived);
 }
 
-function onDateUp()
+/**
+ * Switch to the next or previous DAY
+ * @param {bool} nextDay true - next day, false - previous day 
+ */
+function onPrevNextDay(nextDay)
 {
-    currentDayMoment.milliseconds(currentDayMoment.milliseconds() + 24 * 60 * 60 * 1000);
+    if (g_mealsDiaryText.focusedMode) {
+        $('#focusedMode').prop('checked', false);
+        g_mealsDiaryText.switchMode(false);
+        updateAll_FocusedMode();
+    }
+
+    const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
+    const currentMoment = currentDayMoment.milliseconds();
+
+    currentDayMoment.milliseconds(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
     onUserOrDateChanged();
+
+    checkPrevNextMeal.selectedLine = checkPrevNextMeal(null);
+    updatePrevNextMealButtons();
 }
 
-function onDateDown()
+/**
+ * Switch to the next or previous MEAL
+ * @param {bool} nextMeal true - next meal, false - previous meal
+ */
+function onPrevNextMeal(nextMeal)
 {
-    currentDayMoment.milliseconds(currentDayMoment.milliseconds() - 24 * 60 * 60 * 1000);
-    onUserOrDateChanged();
+    let mealIdx_checked = checkPrevNextMeal(nextMeal);
+    if (mealIdx_checked != g_mealsDiaryText.selectedLine)
+    {
+        // select the next meal
+        g_mealsDiaryText.selectedLine = mealIdx_checked;
+        // move the cursor to the end of the selected meal's line
+        //@todo skipped, because it brings back the virtual keyboard on Android
+        //if (!g_mobileMode)
+            g_mealsDiaryText.moveCursorTo(g_mealsDiaryText.rows[mealIdx_checked].length, mealIdx_checked);
+        updateAll_FocusedMode();
+    }
+    //g_mealsDiaryText.updateUi();
+    updatePrevNextMealButtons();
 }
+
+function updatePrevNextMealButtons()
+{
+    let prevMealIdx_checked = checkPrevNextMeal(false);
+    let nextMealIdx_checked = checkPrevNextMeal(true);
+    $('#btPrevMeal').prop('disabled', prevMealIdx_checked == g_mealsDiaryText.selectedLine);
+    $('#btNextMeal').prop('disabled', nextMealIdx_checked == g_mealsDiaryText.selectedLine);
+}
+
+/**
+ * Check for the next or previous MEAL's index
+ * @param {bool} nextMeal true - next meal, false - previous meal, null - don't change the focused item, just check
+ * @returns {Number} index of the prev/next meal (equals to 'selectedLine' if there is no more valid meal)
+ */
+function checkPrevNextMeal(nextMeal)
+{
+    // check the range first: are we the OUTSIDE of it? (e.g after changing the current day) => return to the range for the first step
+    if (g_mealsDiaryText.selectedLine < g_mealsDiaryText.mealLineFirst)
+        return g_mealsDiaryText.mealLineFirst;
+    if (g_mealsDiaryText.selectedLine > g_mealsDiaryText.mealLineLast)
+        return g_mealsDiaryText.mealLineLast;
+
+    // caller don't want to move the selected line - so we're returning with the current index
+    if (nextMeal == null)
+        g_mealsDiaryText.selectedLine;
+
+    // start to search from the INSIDE of the range
+    let mealIdx_toCheck = g_mealsDiaryText.selectedLine + (nextMeal ? 1 : -1);
+    while (mealIdx_toCheck >= g_mealsDiaryText.mealLineFirst && mealIdx_toCheck <= g_mealsDiaryText.mealLineLast)
+    {
+        if ($(`#tableOut #tr${mealIdx_toCheck}`).length > 0)
+        {
+            return mealIdx_toCheck;
+        }
+        else
+            mealIdx_toCheck += (nextMeal ? 1 : -1);
+    }
+    return g_mealsDiaryText.selectedLine;
+}
+
 
 function onFoodRecordRowArrived(xhr, ev)
 {
     if (ev.type == 'load') {
         content = xhr.responseText;
         console.log('foodRecordRowArrived: ' + content);
-        jqTextMealsDiary.onTextChanged(content.replaceAll('\\n', '\n'), true);
+        g_mealsDiaryText.changeText(content.replaceAll('\\n', '\n'), true);
         onFoodInputChanged();
         onFoodsSaved(true);
     }
@@ -573,18 +674,22 @@ var saveButtonUpdateMsg = null;
 var saveButtonNormalMsg = "SAVE";
 var saveButtonUpdateCounter = 0;
 
-/** EVENT: Save button clicked or ctrl-s pressed */
+/**
+ * EVENT: Save button clicked or ctrl-s pressed
+ */
 function onSave()
 {
     $('#btSave').html("SAVING...");
     let currentDayStr = currentDayMoment.format('YYYY-MM-DD');
-    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: jqTextMealsDiary.rowsStr.replaceAll('\n', '\\n') }, onSaveResultArrived);
+    g_mealsDiaryText.updateRowsStr();
+    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: g_mealsDiaryText.rowsStr.replaceAll('\n', '\\n') }, onSaveResultArrived);
 }
 
 /** UI: Update the 'unsaved' flag */
 function onFoodsSaved(isSaved)
 {
-    let foodEditBoxContent = jqTextMealsDiary.rowsStr;
+    g_mealsDiaryText.updateRowsStr();
+    let foodEditBoxContent = g_mealsDiaryText.rowsStr;
     if (isSaved == null || isSaved == undefined)
         isSaved = (foodEditBoxContent.localeCompare(g_savedFoodInput) == 0);
 
@@ -626,7 +731,8 @@ function onSaveResultArrived(xhr, ev)
     if (ev.type == 'load') {
         console.log(`XHR communication result: ${xhr.responseText}`);
         showSaveButtonMsg('<span style="color: darkgreen"><b>SAVED!</b></span>', 'SAVE', 3);
-        g_savedFoodInput = jqTextMealsDiary.rowsStr;
+        g_mealsDiaryText.updateRowsStr();
+        g_savedFoodInput = g_mealsDiaryText.rowsStr;
     } else if (ev.type == 'error') {
         showSaveButtonMsg('<span style="color: darkred"><b>ERROR!</b></span>', 'SAVE', 8);
         $('#lSaveErrorMsg').html('ERROR: Unable to access server and to save data!').slideDown().delay(7800).slideUp();
@@ -670,8 +776,10 @@ function onPageLoaded()
         }
     }
 
-    jqTextMealsDiary = new TextAreaExt('#txtMealsDiary');
-    
+    g_mealsDiaryText = new TextAreaExt('#txtMealsDiary');
+    g_mealsDiaryText.on('input', onFoodInputChanged);
+    g_mealsDiaryText.on('cursor', onCursorMoved);
+
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     currentDayMoment = getCurrentMoment('04:00');
     onUserOrDateChanged();
@@ -679,11 +787,12 @@ function onPageLoaded()
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
-    $('#txtMealsDiary').on('input', onFoodInputChanged);
     $('#tUser').on('input', onUserOrDateChanged);
     //$('#tDate').on('input', onUserOrDateChanged);
-    $('#btDateUp').on('click', onDateUp);
-    $('#btDateDown').on('click', onDateDown);
+    $('#btDateUp').on('click', () => onPrevNextDay(false));
+    $('#btDateDown').on('click', () => onPrevNextDay(true));
+    $('#btNextMeal').on('click', () => onPrevNextMeal(true));
+    $('#btPrevMeal').on('click', () => onPrevNextMeal(false));
     $('#btSave').on('click', onSave);
     $('#btAddMeal').on('click', onAddMeal);
 
@@ -726,7 +835,78 @@ function onPageLoaded()
         }
     });
 
+    $('#focusedMode').change(function (e)
+    {
+        // only handle user triggered events! (to prevent infinite loops)
+        if (e.originalEvent != null) {
+            g_mealsDiaryText.switchMode(this.checked);
+            updateAll_FocusedMode(this.checked);
+        }
+    });
+
+    $('#tableOut').click(onRowChange);
+
     handleMobileMode();
+}
+
+/**
+ * Event: User changes the active row of the output table
+ * @param {Event} event 
+ */
+function onRowChange(event)
+{
+    let targetRowId = $(event.target).closest('tr')[0].id;
+    let targetRowNum = Number.parseInt(targetRowId.substr(2));
+    if (!Number.isNaN(targetRowNum))
+        selectRow(targetRowNum);
+}
+
+/**
+ * Select the current row of the output table
+ * @param {Number} iRow 
+ */
+function selectRow(iRow)
+{
+    $('#focusedMode').prop('checked', true);   //.is(":checked"))
+    g_mealsDiaryText.switchMode(true, iRow);
+    updateAll_FocusedMode(true);
+}
+
+function updateAll_FocusedMode()
+{
+    // are we in focused mode?
+    let focusedMode = g_mealsDiaryText.focusedMode;
+    // change UI's focused mode on/off
+    $('#tableOut').toggleClass('focusedMode', focusedMode);
+    $('#txtMealsDiary').toggleClass('focusedMode', focusedMode);
+}
+
+function updateTableOut_SelectedLine()
+{
+    if (g_mealsDiaryText.selectedLine != -1) 
+    {
+        let jqRow = $(`#tableOut #tr${g_mealsDiaryText.selectedLine}`);
+        // only check the table's current row if it is not empty
+        if (jqRow.length > 0)
+        {
+            // scroll to the line to select
+            let rowPos = jqRow.position();
+            $('#tableOut')[0].scrollTo({ top: $('#tableOut')[0].scrollTop + rowPos.top - 70, behavior: 'smooth' });
+            // unselect all lines and then select the current one
+            $(`#tableOut tr`).removeClass('selectedRow');
+            $(`#tableOut #tr${g_mealsDiaryText.selectedLine}`).addClass('selectedRow');
+            // update headers (table => header): copy the kcal value from the table to the header kcal field
+            let firstColumnVal = $(`#tableOut #tr${g_mealsDiaryText.selectedLine} td:nth-child(1)`).attr('value');
+            let secondColumnVal = $(`#tableOut #tr${g_mealsDiaryText.selectedLine} td:nth-child(2)`).html();
+            $('#lbCurrentKCal').html(`${firstColumnVal} kc`);
+            $('#lMealTime').html(secondColumnVal);
+        }
+        else
+        {
+            $('#lbCurrentKCal').html(`- kc`);
+            $('#lMealTime').html('--:--');
+        }
+    }
 }
 
 window.addEventListener("load", onPageLoaded);

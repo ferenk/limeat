@@ -1,24 +1,86 @@
 class TextAreaExt {
-    /** @type {String} */
+    /** @type {String} The whole text of the textarea, separated by '\n's (WARNING: not updated automatically, you need to call updateRowStr()!)  */
     rowsStr = '';
-    /** @type {String[]} */
+    /** @type {String[]} All rows of the textarea */
     rows = [];
     /** @type {jQuery} jQuery object of our textarea's widget */
     jqItem = null;
-    /** @type {Number} The current row number of the cursor */
-    cursorPosY = -1;
+    /** @type {Number[2]} The current row number of the cursor */
+    cursorPos = [-1, -1];
+    /** @type {boolean} Focused mode is enabled */
+    focusedMode = false;
+    /** @type {Number} Index of the focused line (within the rows array) */
+    selectedLine = -1;
+    /** @type {Number} The first line which contained a parsable meal */
+    mealLineFirst = -1;
+    /** @type {Number} The last line which contained a parsable meal */
+    mealLineLast = -1;
+    /**
+     * Callback for the textarea's input event
+     * @callback OnUserInputCB
+     * @returns {void}
+     */
+
+    /** @type {OnUserInputCB} User changed the text box */
+    onTextChangedCB = null;
+    /** @type {OnUserInputCB} User moved the cursor */
+    onCursorMovedCB = null;
 
     /**
      * Creates a new editor widget
      * @param {String} jqSelector selector for a textarea widget 
      */
-    constructor(jqSelector)
-    {
+    constructor(jqSelector) {
+        this.resetState();
+
         if (jqSelector) {
             this.jqItem = $(jqSelector);
         }
 
-        this.jqItem.on('input', () => { this.onTextChanged(); });
+        this.jqItem.on('input', () => {
+            this.onTextChanged();
+        });
+
+        this.jqItem.on('keydown keyup click focus', () => {
+            this.onCursorMoved();
+        });
+    }
+
+    /**
+     * Register a callback
+     * @param {String} eventName 
+     * @param {OnUserInputCB} callback 
+     */
+    on(eventName, callback) {
+        if (eventName == 'input') {
+            this.onTextChangedCB = callback;
+        }
+        else if (eventName == 'cursor') {
+            this.onCursorMovedCB = callback;
+        }
+    }
+
+    /**
+     * Handle the input event of the text box
+     * @param {Event} event 
+     */
+    onTextChanged(event)
+    {
+        if (this.focusedMode)
+        {
+            this.rows[this.selectedLine] = this.jqItem.val();
+            // this.updateRowsStr(); - this field will not updated automatically (it is rarely used)
+        }
+        else
+        {
+            this.rowsStr = this.jqItem.val();
+            this.updateRows();
+        }
+
+        this.onCursorMoved();
+
+        if (this.onTextChangedCB != null)
+            this.onTextChangedCB();
     }
 
     /**
@@ -26,25 +88,116 @@ class TextAreaExt {
      * @param {String} newText 
      * @param {boolean?} updateHtmlItem 
      */
-    onTextChanged(newText, updateHtmlItem)
+    changeText(newText, updateHtmlItem)
     {
+        if (newText != null && this.focusedMode)
+            throw new Exception('Cannot replace the whole text while in focused mode!');
+
         if (newText != null)
+        {
             this.rowsStr = newText;
-        else
-            this.rowsStr = this.jqItem.val();
+            this.updateRows();
 
-        this.rows = this.rowsStr.split('\n');
-
-        if (newText != null && updateHtmlItem == true)
-            this.jqItem.val(this.rowsStr);
-
-        this.onCursorPositionChanged();
+            if (updateHtmlItem == true)
+            {
+                this.jqItem.val(this.rowsStr);
+                this.onCursorMoved();
+            }
+        }
     }
 
-    onCursorPositionChanged()
+    updateRows()
     {
-        let arrCurrentTextLines = this.rowsStr.substr(0, this.jqItem[0].selectionStart).split('\n');
-        this.cursorPosY = arrCurrentTextLines.length - 1;
+        this.rows = this.rowsStr.split('\n');
+    }
+
+    updateRowsStr()
+    {
+        this.rowsStr = this.rows.join('\n');
+    }
+
+    /**
+     * Update the current cursor position
+     */
+    onCursorMoved()
+    {
+        let textBufferTillTheCursorStr = this.rowsStr.substr(0, this.jqItem[0].selectionStart).split('\n');
+        this.cursorPos[1] = textBufferTillTheCursorStr.length - 1;
+        this.cursorPos[0] = textBufferTillTheCursorStr[this.cursorPos[1]].length;
+        if (this.onCursorMovedCB != null)
+            this.onCursorMovedCB();
+    }
+
+    /**
+     * Move the cursor to the given position
+     * @param {Number} x
+     * @param {Number} y
+     */
+    moveCursorTo(x, y)
+    {
+        let aggregatedPosN = 0;
+        for (let yCurr = 0; yCurr < this.rows.length; yCurr++)
+        {
+            if (yCurr >= y)
+            {
+                aggregatedPosN += x;
+                break;
+            }
+            aggregatedPosN += this.rows[yCurr].length + 1;
+        }
+        //this.jqItem[0].selectionStart = this.jqItem[0].selectionEnd = aggregatedPosN;
+        this.moveCursorToPos(this.jqItem[0], aggregatedPosN);
+        //alert(`move cursor to ${x}, ${y}, aggregated: ${aggregatedPosN}`);
+    }
+
+    moveCursorToPos(element, pos)
+    {
+        this.setInputSelectionRange(element, pos, pos);
+    }
+
+    setInputSelectionRange(element, selectionStart, selectionEnd)
+    {
+        setTimeout(() =>
+        {
+            element.selectionStart = selectionStart;
+            element.selectionEnd = selectionEnd;
+        });
+    }
+
+    /**
+     * Resets all the internal/statistical counters
+     */
+    resetState() {
+        this.mealLineFirst = this.mealLineLast = -1;
+        this.selectedLine = 0;
+    }
+
+    /**
+     * Switch to focused mode or back to normal mode
+     * @param {boolean} focusedMode 
+     * @param {Number} selectedLine 
+     * @returns 
+     */
+    switchMode(focusedMode, selectedLine) {
+        if (selectedLine == null || selectedLine == NaN)
+            selectedLine = -1;
+
+        if (this.focusedMode == focusedMode && this.selectedLine == selectedLine)
+            return;
+
+        // add empty rows if needed
+        while (focusedMode && !(selectedLine < this.rows.length))
+            this.rows.push('');
+
+        this.focusedMode = focusedMode;
+        if (selectedLine != -1)
+            this.selectedLine = selectedLine;
+        if (focusedMode) {
+            if (this.selectedLine != -1)
+                this.jqItem.val(this.rows[this.selectedLine]);
+        }
+        else
+            this.jqItem.val(this.rowsStr);
     }
 
     /**
@@ -75,24 +228,49 @@ class TextAreaExt {
     {
         this.jqItem[0].selectionStart = this.jqItem[0].selectionEnd = this.rowsStr.length;
         this.jqItem[0].focus();
-        onCursorPositionChanged()
+        //qTask? onCursorPositionChanged()
     }
 
     /**
-     * Add NEW text to the textarea. If it is the same as the last line, the textarea will be unchanged.
-     * @description Note: Useful when using multiple events leading to redundant text additions.
+     * Add NEW text to the textarea.
+     * @description Feature: If it is the same as the last line, the textarea will be unchanged.
+     * Note: Useful when using multiple events leading to redundant text additions.
+     * @param {boolean} updateUi - update the UI (DOM) after adding the text (default: true)
      * @param {String} newText - the text to add to the textarea
      */
-    appendNewText(newText)
+    appendNewText(newText, updateUi)
     {
         // append text (COND: if the text buffer is empty or it ends with a different text)
         if (this.rows.length == 0 || this.rows[this.rows.length - 1].localeCompare(newText) != 0)
         {
             this.rows.push(newText);
-            this.rowsStr = this.rows.join('\n');
+        }
+
+        if (this.focusedMode)
+            this.selectedLine = this.rows.length - 1;
+
+        // option: Update the UI
+        if (updateUi != false)
+            this.updateUi();
+    }
+
+    /**
+     * Update the DOM textarea
+     * @param {boolean} focusToTheEnd - Move the cursor to the end of the input
+     */
+    updateUi(focusToTheEnd)
+    {
+        if (this.focusedMode)
+        {
+            this.jqItem.val(this.rows[this.selectedLine]);
+        }
+        else
+        {
+            this.updateRowsStr();
             this.jqItem.val(this.rowsStr);
         }
 
-        this.focusToTheEnd();
+        if (focusToTheEnd != false)
+            this.focusToTheEnd();
     }
 }

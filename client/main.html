@@ -31,35 +31,61 @@
 </script>
 <body>
     <div>
-        <h1>KCal calculator</h1>
+        <div style="font-size: 3em; font-weight: 600;">KCal calculator</div>
 
         <div id="dMainLine">
-            <div id="lUser">User:</div>
-            <input id="tUser" type="text" size="10" maxlength="50">
-            <div id="lDate">Day:</div>
+            <div id="lUser">U:</div>
+            <input id="tUser" type="text" size="3" maxlength="50">
+            <div id="lDate">D:</div>
+
             <div id="dDate">
                 <input id="tDate" type="text" size="10" maxlength="50">
-                <div id="dDateUpDown">
+                <div id="divDateUpDown">
                     <button id="btDateUp" class="btn_light">&#9650;</button>
                     <button id="btDateDown" class="btn_light">&#9660;</button>
                 </div>
             </div>
-            <button id="btSave" class="btn">Save</button>
+            <button id="btSave" class="btn" style="margin-left: auto;">Save</button>
+            <div id="lSaveErrorMsg">Error message</div>
+            <div style="height: 0.5em;"></div>
         </div>
-        <div id="lSaveErrorMsg">Error message</div>
+        <hr class="noMargin">
 
         <div id="dKCals">
             <button id="btAddMeal" class="btn">+</button>
-            <font size="+2"><div id="lbCurrentAllKCal">0 | </div></font>
-            <font size="+2"><div id="lbCurrentKCal">0 kc</div></font>
-            
-            <div id="tCurrentLine"></div>
+            <font size="+1.5" style="min-width: 5em;"><div id="lbCurrentKCal">0 kc</div></font>
+            &nbsp; &nbsp;
+            <!--div id="tCurrentLine" style="display: none;"></div-->
+            <!--button id="btMealPrev" class="btn">&lt;</button>
+            <button id="btMealNext" class="btn">&gt;</button-->
+            <div id="divMealSelection">
+                <div id="lMealTime" class="biggerText" style="margin-right: 6px;">00:00</div>
+                <div id="divMealUpDown">
+                    <button id="btPrevMeal" class="btn_light">&#9650;</button>
+                    <button id="btNextMeal" class="btn_light">&#9660;</button>
+                </div>
+            </div>
+            <font size="+2" style="text-decoration: underline; margin-left: auto;"><span id="lbCurrentAllKCal">0</span></font> &nbsp; &nbsp;
+            <div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216</div><!-- div>  11034</div-->
         </div>
+        <hr class="noMargin">
 
-        <textarea id="txtMealsDiary"></textarea>
+        <textarea id="txtMealsDiary" spellcheck="false"></textarea>
+
+            <table id="tableOut" style="display: block; position: relative;">
+                <tr class="trSep" style="position: sticky; top: 0;">
+                    <th class="foodSepBg">KCal</th>
+                    <th class="foodSepBg">Time</th>
+                    <th class="foodSepBg">Meal details</th>
+                </tr><u></u>
+            </table>
 
         <input type="checkbox" id="devMode" name="devMode">
         <label for="devMode" id="devModeLabel">dev mode</label>
+
+        &nbsp;&nbsp;
+        <input type="checkbox" id="focusedMode" name="focusedMode">
+        <label for="focusedMode" id="focusedModeLabel">focused mode</label>
 
         <button id="btCopyMD" class="btn_light btn" style="float: right">
             <img src='css/share_icon.svg' style='width: 2em; vertical-align:middle'/>
@@ -85,16 +111,6 @@
                 <label for="devModeOutputs" id="devModeOutputsLabel">Show output sections</label>
             </div>
             <br>
-        </div>
-
-        <div id="tableOut">
-            <table>
-                <tr class="trSep">
-                    <th class="foodSepBg">KCal</th>
-                    <th class="foodSepBg">Time</th>
-                    <th class="foodSepBg">Meal details</th>
-                </tr><u></u>
-            </table>
         </div>
 
         <div id="divStatusBar"></div>
