@@ -3,9 +3,9 @@ class TextAreaExt {
     rowsStr = '';
     /** @type {String[]} All rows of the textarea */
     rows = [];
-    /** @type {jQuery} jQuery object of our textarea's widget */
-    jqItem = null;
-    /** @type {Number[2]} The current row number of the cursor */
+    /** @type {JQuery} jQuery object of our textarea's widget */
+    jqItem = $('html');
+    /** @type {Number[]} The current row number of the cursor */
     cursorPos = [-1, -1];
     /** @type {boolean} Focused mode is enabled */
     focusedMode = false;
@@ -21,21 +21,26 @@ class TextAreaExt {
      * @returns {void}
      */
 
-    /** @type {OnUserInputCB} User changed the text box */
+    /** @type {OnUserInputCB?} User changed the text box */
     onTextChangedCB = null;
-    /** @type {OnUserInputCB} User moved the cursor */
+    /** @type {OnUserInputCB?} User moved the cursor */
     onCursorMovedCB = null;
 
     /**
      * Creates a new editor widget
-     * @param {String} jqSelector selector for a textarea widget 
      */
-    constructor(jqSelector) {
+    constructor()
+    {
         this.resetState();
+    }
 
-        if (jqSelector) {
-            this.jqItem = $(jqSelector);
-        }
+    /**
+     * Sets the JQuery selector and initializes event subscriptions
+     * @param {String} jqSelector selector for a textarea HTML widget 
+     */
+    initialize(jqSelector)
+    {
+        this.jqItem = $(jqSelector);
 
         this.jqItem.on('input', () => {
             this.onTextChanged();
@@ -62,17 +67,19 @@ class TextAreaExt {
 
     /**
      * Handle the input event of the text box
-     * @param {Event} event 
+     * @param {Event?} event 
      */
-    onTextChanged(event)
+    onTextChanged(event = null)
     {
         if (this.focusedMode)
         {
+            // @ts-ignore:next-line (<multiple types> cannot set to 'string')
             this.rows[this.selectedLine] = this.jqItem.val();
             // this.updateRowsStr(); - this field will not updated automatically (it is rarely used)
         }
         else
         {
+            // @ts-ignore:next-line (<multiple types> cannot set to 'string')
             this.rowsStr = this.jqItem.val();
             this.updateRows();
         }
@@ -91,6 +98,7 @@ class TextAreaExt {
     changeText(newText, updateHtmlItem)
     {
         if (newText != null && this.focusedMode)
+            // @ts-ignore:next-line (Cannot find name 'Exception')
             throw new Exception('Cannot replace the whole text while in focused mode!');
 
         if (newText != null)
@@ -121,6 +129,7 @@ class TextAreaExt {
      */
     onCursorMoved()
     {
+        // @ts-ignore:next-line (selectionStart does not exist on HTMLElement)
         let textBufferTillTheCursorStr = this.rowsStr.substr(0, this.jqItem[0].selectionStart).split('\n');
         this.cursorPos[1] = textBufferTillTheCursorStr.length - 1;
         this.cursorPos[0] = textBufferTillTheCursorStr[this.cursorPos[1]].length;
@@ -175,10 +184,10 @@ class TextAreaExt {
     /**
      * Switch to focused mode or back to normal mode
      * @param {boolean} focusedMode 
-     * @param {Number} selectedLine 
+     * @param {Number?} selectedLine 
      * @returns 
      */
-    switchMode(focusedMode, selectedLine) {
+    switchMode(focusedMode, selectedLine = null) {
         if (selectedLine == null || selectedLine == NaN)
             selectedLine = -1;
 
@@ -218,7 +227,7 @@ class TextAreaExt {
         // show the new, extended meal text
         this.rowsStr = this.rows.join('\n');
         this.jqItem.val(this.rowsStr);
-        focusToTheEnd();
+        this.focusToTheEnd();
     }
 
     /**
@@ -226,7 +235,10 @@ class TextAreaExt {
      */
     focusToTheEnd()
     {
-        this.jqItem[0].selectionStart = this.jqItem[0].selectionEnd = this.rowsStr.length;
+        /** @type {HTMLInputElement} */
+        // @ts-ignore:next-line (HTMLElement is not an HTMLInputElement, some properties are missing)
+        let textInputElement = this.jqItem[0];
+        textInputElement.selectionStart = textInputElement.selectionEnd = this.rowsStr.length;
         this.jqItem[0].focus();
         //qTask? onCursorPositionChanged()
     }
@@ -238,7 +250,7 @@ class TextAreaExt {
      * @param {boolean} updateUi - update the UI (DOM) after adding the text (default: true)
      * @param {String} newText - the text to add to the textarea
      */
-    appendNewText(newText, updateUi)
+    appendNewText(newText, updateUi = false)
     {
         // append text (COND: if the text buffer is empty or it ends with a different text)
         if (this.rows.length == 0 || this.rows[this.rows.length - 1].localeCompare(newText) != 0)
@@ -258,7 +270,7 @@ class TextAreaExt {
      * Update the DOM textarea
      * @param {boolean} focusToTheEnd - Move the cursor to the end of the input
      */
-    updateUi(focusToTheEnd)
+    updateUi(focusToTheEnd = false)
     {
         if (this.focusedMode)
         {

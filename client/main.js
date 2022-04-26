@@ -1,12 +1,17 @@
 var optScaleType = 'barista';
 
 /** @type { TextAreaExt } */
-var g_mealsDiaryText = null;
+var g_mealsDiaryText = new TextAreaExt();
 
+/**
+ * Check a string if it contains only numbers
+ * @param {String} str 
+ * @returns boolean
+ */
 function isNumeric(str) {
     if (typeof str != "string")
         return false;
-    return !isNaN(str) && !isNaN(parseFloat(str));
+    return !isNaN(Number(str)) && !isNaN(parseFloat(str));
 }
 
 function toNumericOrZero(str)
@@ -134,7 +139,7 @@ function processInput()
                 // test if this part is a gram-based quantity
                 let foodPartUnitGramCalcStr = foodPartNameStr.replaceAll('g', '').replaceAll('db', '');
                 let foodPartNameISQuantity = /^[.*/+-0123456789()]+$/.test(foodPartUnitGramCalcStr);
-                let u = 0, op;
+                let u = '', op;
                 if (foodPartNameISQuantity) {
                     try {
                         let foodQuantity = toFixedFloat(eval(foodPartUnitGramCalcStr));
@@ -304,7 +309,7 @@ function processInput()
 
 function processQuantity(quantityStr, foodObj)
 {
-    let u = 0, unit = null;
+    let u = '', unit = null;
     let quantityNumStr = quantityStr;
     if (quantityStr.endsWith(u = 'g') || quantityStr.endsWith(u = 'ml') || quantityStr.endsWith(u = 'l') || quantityStr.endsWith(u = 'db')) {
         quantityNumStr = quantityStr.substring(0, quantityStr.length - u.length);
@@ -330,19 +335,19 @@ function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
 
 /**
  * Adjust the measured weight simulating the selected kitchen scale.
- * @param {num} quant
+ * @param {Number} quant
  */
 function simulateScaleMeasurement(quant)
 {
     if (optScaleType != 'barista') {
         if (optScaleType == 'kitchen')
         {
-            /** @type {String} */
+            /** @type {any} */
             let minWeightStr = $('#minimalWeight').val();
-            /** @type {String} */
+            /** @type {any} */
             let corrWeightStr = $('#minimalWeightCorrection').val();
-            let minWeight = (isNaN(minWeightStr) ? 3 : parseFloat(minWeightStr)), 
-                corrWeight = (isNaN(corrWeightStr) ? 0 : parseFloat(corrWeightStr)); 
+            let minWeight = (isNaN(Number(minWeightStr)) ? 3 : parseFloat(minWeightStr)), 
+                corrWeight = (isNaN(Number(corrWeightStr)) ? 0 : parseFloat(corrWeightStr)); 
             quant = (quant < minWeight ? corrWeight : quant);
 
             quant = Math.round(quant);
@@ -393,38 +398,31 @@ function calcFoodKcal(foodPart)
 
 /**
  * 
- * @param {string} kcalStr 
- * @param {string} timestamp 
- * @param {string} foodDetails 
+ * @param {String} kcalStr 
+ * @param {String?} timestampStr 
+ * @param {String} foodDetails 
  * @returns 
  */
-function formatFoodData(kcalStr, timestamp, foodDetails)
+function formatFoodData(kcalStr, timestampStr, foodDetails)
 {
     let COL_KCAL_END = 10, COL_TIMESTAMP_END = 19;
     let resultStr = "  |"
-    timestamp = (timestamp == null) ? "" : timestamp;
+    timestampStr = (timestampStr == null) ? "" : timestampStr;
     // Column: kCal
     resultStr += " ".repeat(COL_KCAL_END - kcalStr.length - resultStr.length);
     resultStr += kcalStr + "   |";
     // Column: timeStamp
-    resultStr += " ".repeat(COL_TIMESTAMP_END - timestamp.length - resultStr.length);
-    resultStr += timestamp + "    | ";
+    resultStr += " ".repeat(COL_TIMESTAMP_END - timestampStr.length - resultStr.length);
+    resultStr += timestampStr + "    | ";
     // Column: foodDetails
     resultStr += foodDetails;
     return resultStr;
 }
 
-function selectFoodRow(row) {
-    if (selectedFoodRow != null)
-        selectedFoodRow.removeClass('selectedFoodRow');
-    selectedFoodRow = row;
-    selectedFoodRow.addClass('selectedFoodRow');
-}
-
 /**
  * Communication
  * @param {XMLHttpRequest} xhr 
- * @param {XMLHttpRequestEventTarget} ev 
+ * @param {ProgressEvent<XMLHttpRequestEventTarget>} ev 
  */
 function onCalcDbArrived(xhr, ev)
 {
@@ -437,10 +435,17 @@ function onCalcDbArrived(xhr, ev)
 }
 
 /**
+ * XML HTTP communication: Callback for the received message
+ *
+ * @callback xhrCommCallback
+ * @param {Object} xhr
+ * @param {Object} e
+ */
+/**
  * Do XML HTTP request communication
  * @param {string} path 
- * @param {string[]} params 
- * @param {function(string, Object, function)} cb 
+ * @param {Object?} params 
+ * @param {xhrCommCallback} cb 
  */
 function nodeXHRComm(path, params, cb)
 {
@@ -508,9 +513,11 @@ function getCurrentTimeStr()
 
 function getCurrentMoment(thresholdTime)
 {
+    // @ts-ignore:next-line (moment undefined)
     moment.locale('hu');
 
     // Switch to yesterday if needed (based on thresholdTime)
+    // @ts-ignore:next-line (moment undefined)
     let currMoment = moment();
     if (currMoment.format('HH:mm') < thresholdTime)
         currMoment.milliseconds(currMoment.milliseconds() - 24 * 60*60 * 1000);
@@ -521,6 +528,7 @@ function getCurrentMoment(thresholdTime)
 function printMoment(currMoment)
 {
      // Field: WeekdaysMin
+    // @ts-ignore:next-line (moment undefined)
     let weekDayMin = moment.localeData().weekdaysMin(currMoment);
     weekDayMin = weekDayMin.charAt(0).toUpperCase() + weekDayMin.slice(1);
 
@@ -531,7 +539,7 @@ function printMoment(currMoment)
 //todo Option for auto cleanup (?)
 function onAddMeal()
 {
-    g_mealsDiaryText.appendNewText(`${getCurrentTimeStr()} KV`);
+    g_mealsDiaryText.appendNewText(`${getCurrentTimeStr()} `);
     onFoodInputChanged();
     if (g_mealsDiaryText.focusedMode)
     {
@@ -574,7 +582,7 @@ function onUserOrDateChanged()
 
 /**
  * Switch to the next or previous DAY
- * @param {bool} nextDay true - next day, false - previous day 
+ * @param {boolean} nextDay true - next day, false - previous day 
  */
 function onPrevNextDay(nextDay)
 {
@@ -590,13 +598,13 @@ function onPrevNextDay(nextDay)
     currentDayMoment.milliseconds(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
     onUserOrDateChanged();
 
-    checkPrevNextMeal.selectedLine = checkPrevNextMeal(null);
+    g_mealsDiaryText.selectedLine = checkPrevNextMeal(null);
     updatePrevNextMealButtons();
 }
 
 /**
  * Switch to the next or previous MEAL
- * @param {bool} nextMeal true - next meal, false - previous meal
+ * @param {boolean} nextMeal true - next meal, false - previous meal
  */
 function onPrevNextMeal(nextMeal)
 {
@@ -625,7 +633,7 @@ function updatePrevNextMealButtons()
 
 /**
  * Check for the next or previous MEAL's index
- * @param {bool} nextMeal true - next meal, false - previous meal, null - don't change the focused item, just check
+ * @param {boolean?} nextMeal true - next meal, false - previous meal, null - don't change the focused item, just check
  * @returns {Number} index of the prev/next meal (equals to 'selectedLine' if there is no more valid meal)
  */
 function checkPrevNextMeal(nextMeal)
@@ -658,7 +666,7 @@ function checkPrevNextMeal(nextMeal)
 function onFoodRecordRowArrived(xhr, ev)
 {
     if (ev.type == 'load') {
-        content = xhr.responseText;
+        let content = xhr.responseText;
         console.log('foodRecordRowArrived: ' + content);
         g_mealsDiaryText.changeText(content.replaceAll('\\n', '\n'), true);
         onFoodInputChanged();
@@ -740,7 +748,8 @@ function onSaveResultArrived(xhr, ev)
 }
 
 function handleMobileMode() {
-    md = new MobileDetect(window.navigator.userAgent);
+    // @ts-ignore:next-line (Cannot find name 'MobileDetect')
+    let md = new MobileDetect(window.navigator.userAgent);
     g_mobileMode = md.mobile() != null;
     if (g_mobileMode) {
     //if (g_mobileMode || true) {           // mobile layout on browser, too
@@ -762,6 +771,7 @@ function copyText2Clipboard(text)
 {
     $('#txtCopyHelper').val(text);
     $('#txtCopyHelper').show();
+    // @ts-ignore:next-line (HTMLElement.select is not assignable)
     $('#txtCopyHelper')[0].select();
     let retVal = document.execCommand('copy');
     $('#txtCopyHelper').hide();
@@ -776,7 +786,7 @@ function onPageLoaded()
         }
     }
 
-    g_mealsDiaryText = new TextAreaExt('#txtMealsDiary');
+    g_mealsDiaryText.initialize('#txtMealsDiary');
     g_mealsDiaryText.on('input', onFoodInputChanged);
     g_mealsDiaryText.on('cursor', onCursorMoved);
 
@@ -798,14 +808,17 @@ function onPageLoaded()
 
     /** Developer options: Section, controls, experimental features */
     $('#optsDevSection').hide();
-    $('#devMode').change(function(){
+    $('#devMode').change( function(){
         //? $('#devMode').detach().appendTo('#optsDev');
+        // @ts-ignore:next-line (Property name 'checked' does not exist on type 'HTMLInputElement')
         if (this.checked)
             $('#optsDevSection').slideDown(150);
         else
             $('#optsDevSection').slideUp(100);
+        // eslint-enable
     });
     $('#optScaleType,.scaleOpts').change(() => {
+        // @ts-ignore:next-line (<multiple types> cannot set to 'string')
         optScaleType = ($('#optScaleType :selected').val());
         $('.scaleOpts').toggle(optScaleType != 'barista');
         onFoodInputChanged();
@@ -814,6 +827,7 @@ function onPageLoaded()
 
     $('#devModeOutputs').change(function(){
         //? $('#devMode').detach().appendTo('#optsDev');
+        // @ts-ignore:next-line (Property name 'checked' does not exist on type 'HTMLInputElement')
         if (this.checked)
             $('#devOutputs').slideDown(150);
         else
@@ -839,11 +853,13 @@ function onPageLoaded()
     {
         // only handle user triggered events! (to prevent infinite loops)
         if (e.originalEvent != null) {
+            // @ts-ignore:next-line (Property name 'checked' does not exist on type 'HTMLInputElement')
             g_mealsDiaryText.switchMode(this.checked);
-            updateAll_FocusedMode(this.checked);
+            updateAll_FocusedMode();
         }
     });
 
+    // @ts-ignore:next-line (callback is not assignable)
     $('#tableOut').click(onRowChange);
 
     handleMobileMode();
@@ -855,6 +871,7 @@ function onPageLoaded()
  */
 function onRowChange(event)
 {
+    // @ts-ignore:next-line (JQueryStatic)
     let targetRowId = $(event.target).closest('tr')[0].id;
     let targetRowNum = Number.parseInt(targetRowId.substr(2));
     if (!Number.isNaN(targetRowNum))
@@ -869,7 +886,7 @@ function selectRow(iRow)
 {
     $('#focusedMode').prop('checked', true);   //.is(":checked"))
     g_mealsDiaryText.switchMode(true, iRow);
-    updateAll_FocusedMode(true);
+    updateAll_FocusedMode();
 }
 
 function updateAll_FocusedMode()

@@ -1,11 +1,11 @@
 class FoodsDb
 {
-    /** @type {FoodsDb} */
+    /** @type {FoodsDb?} */
     static instance = null;
 
     constructor()
     {
-        /** @type {string} */
+        /** @type {Object[]} */
         this.items = [];
     }
 
