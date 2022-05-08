@@ -18,8 +18,8 @@ h1 {
 #tableOut
 {
     border: 3px solid rgba(110, 110, 110, 0.884);
+    resize: both;
     transition: all .8s ease;
-    resize: none;
 }
 
 #tableOut.focusedMode
@@ -29,7 +29,7 @@ h1 {
     resize: both;
     border-top: 3px dashed gray;
     border-bottom: 3px dashed gray;
-    transition: all .8s ease;
+    transition: all 0.8s ease;
 }
 
 #tableOut tr {
@@ -66,8 +66,8 @@ th {
     text-decoration: underline;
 }
 
-#devModeLabel, #focusedModeLabel, #devModeOutputsLabel, #optScaleTypeLabel, #minimalWeightLabel, #minimalWeightCorrectionLabel, #scaleOpts {
-    display: inline-block;
+#outTabModes *, #txtMealsModes *, #devModeLabel, #outTabFocusedMode, #outTabFocusedModeLabel, #devModeOutputsLabel, #optScaleTypeLabel, #minimalWeightLabel, #minimalWeightCorrectionLabel, #scaleOpts {
+    display: inline-block !important;
 }
 
 .noMargin {
@@ -242,6 +242,8 @@ th {
 #txtMealsDiary.focusedMode
 {
     height: 6em;
+    overflow-y: scroll;
+    resize: both;
     border-top: 3px dashed gray;
     border-bottom: 3px dashed gray;
     transition: all .8s ease;

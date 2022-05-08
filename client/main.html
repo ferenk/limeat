@@ -23,9 +23,12 @@
 <script src="/3rdparty/moment-with-locales.js"></script>
 <script src="/3rdparty/mobile-detect.min.js"></script>
 
-<script type="text/javascript" charset="UTF-8" src="/foodsDb.js"></script>
-<script type="text/javascript" charset="UTF-8" src="/views/textAreaExt.js"></script>
-<script type="text/javascript" charset="UTF-8" src="/main.js"></script>
+<script type="module" charset="UTF-8" src="./data/foodsDb.js"></script>
+<script type="module" charset="UTF-8" src="./views/textAreaExt.js"></script>
+<script type="module" charset="UTF-8" src="./views/outputTable.js"></script>
+<script type="module" charset="UTF-8" src="./views/userControls.js"></script>
+<script type="module" charset="UTF-8" src="./controller.js"></script>
+<script type="module" charset="UTF-8" src="./main.js"></script>
 
 <script>
 </script>
@@ -70,22 +73,49 @@
         </div>
         <hr class="noMargin">
 
+        <!-- MEALS! -->
         <textarea id="txtMealsDiary" spellcheck="false"></textarea>
 
-            <table id="tableOut" style="display: block; position: relative;">
-                <tr class="trSep" style="position: sticky; top: 0;">
-                    <th class="foodSepBg">KCal</th>
-                    <th class="foodSepBg">Time</th>
-                    <th class="foodSepBg">Meal details</th>
-                </tr><u></u>
-            </table>
+        <div id="txtMealsModes">
+            <input type="checkbox" id="devMode" name="devMode">
+            <label for="devMode" id="devModeLabel">dev mode</label>
+            <div style="font-weight:700; text-decoration: underline; margin-left: auto;">Views: &nbsp; </div>
+            <fieldset>
+                <input type="radio" id="txtMealsNormalMode" name="txtMealsModes">
+                <label for="txtMealsNormalMode" id="txtMealsNormalModeLabel">normal</label>
 
-        <input type="checkbox" id="devMode" name="devMode">
-        <label for="devMode" id="devModeLabel">dev mode</label>
+                <input type="radio" id="txtMealsScrolledMode" name="txtMealsModes">
+                <label for="txtMealsScrolledMode" id="txtMealsScrolledModeLabel">scrolled</label>
 
-        &nbsp;&nbsp;
-        <input type="checkbox" id="focusedMode" name="focusedMode">
-        <label for="focusedMode" id="focusedModeLabel">focused mode</label>
+                <input type="radio" id="txtMealsFocusedMode" name="txtMealsModes">
+                <label for="txtMealsFocusedMode" id="txtMealsFocusedModeLabel">focused</label>
+            </fieldset>
+        </div>
+
+        <!-- OUTPUT TABLE! -->
+        <table id="tableOut" style="display: block; position: relative;">
+            <tr class="trSep" style="position: sticky; top: 0;">
+                <th class="foodSepBg">KCal</th>
+                <th class="foodSepBg">Time</th>
+                <th class="foodSepBg">Meal details</th>
+            </tr><u></u>
+        </table>
+
+        <div id="outTabModes">
+            <input type="checkbox" id="devMode" name="devMode">
+            <label for="devMode" id="devModeLabel">dev mode</label>
+            <div style="font-weight:700; text-decoration: underline; margin-left: auto;">Views: &nbsp; </div>
+            <fieldset>
+                <input type="radio" id="outTabNormalMode" name="outTabModes">
+                <label for="outTabNormalMode" id="outTabNormalModeLabel">normal</label>
+
+                <input type="radio" id="outTabScrolledMode" name="outTabModes">
+                <label for="outTabScrolledMode" id="outTabScrolledModeLabel">scrolled</label>
+
+                <input type="radio" id="outTabFocusedMode" name="outTabModes">
+                <label for="outTabFocusedMode" id="outTabFocusedModeLabel">focused</label>
+            </fieldset>
+        </div>
 
         <button id="btCopyMD" class="btn_light btn" style="float: right">
             <img src='css/share_icon.svg' style='width: 2em; vertical-align:middle'/>

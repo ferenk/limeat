@@ -1,3 +1,5 @@
+export { TextAreaExt };
+
 class TextAreaExt {
     /** @type {String} The whole text of the textarea, separated by '\n's (WARNING: not updated automatically, you need to call updateRowStr()!)  */
     rowsStr = '';
@@ -18,6 +20,7 @@ class TextAreaExt {
     /**
      * Callback for the textarea's input event
      * @callback OnUserInputCB
+     * @param {boolean?} userEvent True if this is a real user event (and not a call from another part of the system)
      * @returns {void}
      */
 
@@ -46,9 +49,17 @@ class TextAreaExt {
             this.onTextChanged();
         });
 
-        this.jqItem.on('keydown keyup click focus', () => {
+        this.jqItem.on('keydown keyup click focusin', () => {
             this.onCursorMoved();
         });
+
+        $('input[type=radio][name=txtMealsModes]').change((e) => {
+            // memo: How to get the current value of the radio button
+            let selectedMode = ($(e.target).attr('id') ?? '').replace(/^txtMeals/, '').replace(/Mode$/, '');
+            this.onDisplayModeChanged(selectedMode.toLowerCase());
+        });
+
+        //! silly test this.jqItem.on('dblclick', () => alert("Dobla"));
     }
 
     /**
@@ -63,6 +74,17 @@ class TextAreaExt {
         else if (eventName == 'cursor') {
             this.onCursorMovedCB = callback;
         }
+    }
+
+    /**
+     * 
+     * @param {String} mode The mode selected by the user (possible values: 'normal', 'scrolled', 'focused')
+     */
+    onDisplayModeChanged(mode)
+    {
+        // only handle user triggered events! (to prevent infinite loops)
+        let setToFocused = (mode != 'normal');
+        $(this.jqItem).toggleClass('focusedMode', setToFocused);
     }
 
     /**
@@ -87,7 +109,7 @@ class TextAreaExt {
         this.onCursorMoved();
 
         if (this.onTextChangedCB != null)
-            this.onTextChangedCB();
+            this.onTextChangedCB(false);
     }
 
     /**
@@ -134,7 +156,7 @@ class TextAreaExt {
         this.cursorPos[1] = textBufferTillTheCursorStr.length - 1;
         this.cursorPos[0] = textBufferTillTheCursorStr[this.cursorPos[1]].length;
         if (this.onCursorMovedCB != null)
-            this.onCursorMovedCB();
+            this.onCursorMovedCB(false);
     }
 
     /**

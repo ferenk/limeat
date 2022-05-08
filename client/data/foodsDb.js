@@ -1,3 +1,8 @@
+export { FoodsDb }
+
+import { isNumeric } from '../util/util.js';
+import { processQuantity } from './foodsLang.js';
+
 class FoodsDb
 {
     /** @type {FoodsDb?} */
