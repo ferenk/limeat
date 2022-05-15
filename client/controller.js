@@ -2,7 +2,8 @@ export { Controller };
 
 import { nodeXHRComm } from './data/comm.js';
 import { printMoment, getCurrentTimeStr } from './util/util.js';
-import { TextAreaExt } from './views/textAreaExt.js';
+import { TextareaExt } from './views/textareaExt.js';
+import { TextareaHighlight } from './views/textareaHighlight';
 import { OutputTable } from './views/outputTable.js';
 
 class Controller
@@ -19,6 +20,8 @@ class Controller
     currentDayPart = 0;
     /** @type { String } */
     foodOutputStr = '';
+    /** @type { String } */
+    foodSourceModifiedOutputStr = '';
 
     /* Time management */
 
@@ -31,12 +34,14 @@ class Controller
 
     /**
      * Creates a new output table widget
-     * @param { TextAreaExt } mealsDiaryText
+     * @param { TextareaExt } mealsDiaryText
+     * @param { TextareaHighlight } mealsDiaryTextHighlight
      * @param { OutputTable } outputTable
      */
-    constructor(mealsDiaryText, outputTable,  processInputCB)
+    constructor(mealsDiaryText, mealsDiaryTextHighlight, outputTable,  processInputCB)
     {
         this.mealsDiaryText = mealsDiaryText;
+        this.mealsDiaryTextHighlight = mealsDiaryTextHighlight;
         this.outputTable = outputTable;
         this.processInputCB = processInputCB;
     }
@@ -60,6 +65,7 @@ class Controller
         }
         this.currentDayPart = 0;
         this.foodOutputStr = `### ${printMoment(this.currentDayMoment).slice(8)}  \n` + this.mdHeader;
+        this.foodSourceModifiedOutputStr = '';
         $('.mealRow').remove();
     }
 
@@ -73,6 +79,8 @@ class Controller
         this.processInputCB();
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
+        ///!!!
+        this.mealsDiaryTextHighlight.update(this.foodSourceModifiedOutputStr);
     }
 
     onCursorMoved(userEvent)

@@ -1,6 +1,6 @@
-export { TextAreaExt };
+export { TextareaExt };
 
-class TextAreaExt {
+class TextareaExt {
     /** @type {String} The whole text of the textarea, separated by '\n's (WARNING: not updated automatically, you need to call updateRowStr()!)  */
     rowsStr = '';
     /** @type {String[]} All rows of the textarea */
@@ -58,8 +58,6 @@ class TextAreaExt {
             let selectedMode = ($(e.target).attr('id') ?? '').replace(/^txtMeals/, '').replace(/Mode$/, '');
             this.onDisplayModeChanged(selectedMode.toLowerCase());
         });
-
-        //! silly test this.jqItem.on('dblclick', () => alert("Dobla"));
     }
 
     /**
@@ -109,7 +107,9 @@ class TextAreaExt {
         this.onCursorMoved();
 
         if (this.onTextChangedCB != null)
+        {
             this.onTextChangedCB(false);
+        }
     }
 
     /**
@@ -132,6 +132,9 @@ class TextAreaExt {
             {
                 this.jqItem.val(this.rowsStr);
                 this.onCursorMoved();
+
+                let refreshEvent = new Event('input');
+                this.jqItem[0].dispatchEvent(refreshEvent);
             }
         }
     }

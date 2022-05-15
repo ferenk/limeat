@@ -3,18 +3,20 @@ import { nodeXHRComm } from './data/comm.js';
 import { processQuantity } from './data/foodsLang.js';
 import { FoodsDb } from './data/foodsDb.js';
 import { Controller } from './controller.js';
-import { TextAreaExt } from './views/textAreaExt.js';
+import { TextareaExt } from './views/textareaExt.js';
+import { TextareaHighlight } from './views/textareaHighlight.js';
 import { OutputTable } from './views/outputTable.js';
 import { CountdownButton } from './util/ui/countdownButton.js';
 
 var optScaleType = 'barista';
 
-/** @type { TextAreaExt } */
-var g_mealsDiaryText = new TextAreaExt();
+/** @type { TextareaExt } */
+var g_mealsDiaryText = new TextareaExt();
+var g_mealsDiaryTextHighlight = new TextareaHighlight();
 /** @type { OutputTable } */
 var g_outputTable = new OutputTable();
 /** @type { Controller } */
-var g_controller = new Controller(g_mealsDiaryText, g_outputTable, processInput);
+var g_controller = new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, processInput);
 
 var g_mobileMode = null;
 
@@ -38,6 +40,7 @@ function processInput()
         if (foodLine.startsWith('---'))
         {
             appendSeparator();
+            recordHighlightedInput(iCurrentRow, 0, foodLine);
             continue;
         }
 
@@ -52,6 +55,7 @@ function processInput()
         // parse food (name, quantity, unit)
         let foodParts = [];
         let foodNamePrefixStr = '';
+        let foodPartOrigIdx = 0;
         // foodPartStrs: ["apple 40g", "banana 20g"]
         let foodPartStrs = foodLine.split(',');
         foodPartStrs.forEach(foodPartStr => {
@@ -62,7 +66,9 @@ function processInput()
                 foodQuantity = null,
                 foodQuantityUnit = null,
                 foodKCal = null;
-            let newFoodPart = { };
+            let newFoodPart = {};
+
+            newFoodPart.origText = foodPartStr;
 
             for (let j = 0; j < foodPartArr.length; j++)
             {
@@ -72,7 +78,9 @@ function processInput()
 
                 // Skip empty strings. They are not 'parts'. Wrong input, effect of String.split() - duplicate separators result empty values, e.g '40g  apple'.
                 if (foodPartNameStr.length == 0)
+                {
                     continue;
+                }
 
                 // handling labels (e.g "fish_n_chips:")
                 if (foodPartNameStr.endsWith(':'))
@@ -130,74 +138,88 @@ function processInput()
                     newFoodPart.quantity = 1;
                 if (newFoodPart.quantityunit == null)
                     newFoodPart.quantityunit = 'db';
-                foodParts.push(newFoodPart);
             }
+            else
+                newFoodPart.isInvalid = true;
+            foodParts.push(newFoodPart);
         });
 
         // print the currently processed food
         let mdFoodOutputLineStr = '',
             htmlfoodOutputLineStr = '';
         let foodKCal = 0, foodG = 0;
-        let firstRow = true;
-        foodParts.forEach(foodPart => {
-            let partKCal = 0;
-            if (foodPart.kcalunit == 'kcal')
-                partKCal = toNumericOrZero(foodPart.kcal);
-            if (partKCal == 0) {
-                if (foodPart.kcalunit == 'kcal/100g' && foodPart.quantityunit == 'g') {
-                    let quant = simulateScaleMeasurement(foodPart.quantity);
-                    partKCal = (toNumericOrZero(roundKCalMeasurement(quant, 100, foodPart.kcal)));
+        let isFirstPart = true;
+        for (let iPart = 0; iPart < foodParts.length; iPart++)
+        {
+            let foodPart = foodParts[iPart];
+            this.foodPartColored = foodPart.origText;
+            let partOrigTextColor = 'black';
+            if (foodPart.isInvalid != true)
+            {
+                let partKCal = 0;
+                if (foodPart.kcalunit == 'kcal')
+                    partKCal = toNumericOrZero(foodPart.kcal);
+                if (partKCal == 0) {
+                    if (foodPart.kcalunit == 'kcal/100g' && foodPart.quantityunit == 'g') {
+                        let quant = simulateScaleMeasurement(foodPart.quantity);
+                        partKCal = (toNumericOrZero(roundKCalMeasurement(quant, 100, foodPart.kcal)));
+                    }
                 }
-            }
-            if (partKCal == 0)
-                partKCal = calcFoodKcal(foodPart);
-            foodKCal += toFixedFloat(partKCal);
-            if (foodPart.quantityunit == 'g')
-                foodG += toFixedFloat(foodPart.quantity);
+                if (partKCal == 0)
+                    partKCal = calcFoodKcal(foodPart);
+                foodKCal += toFixedFloat(partKCal);
+                if (foodPart.quantityunit == 'g')
+                    foodG += toFixedFloat(foodPart.quantity);
 
-            // add new row after labels
-            if (mdFoodOutputLineStr.length > 0) {
-                mdFoodOutputLineStr += '  \n  |          |         | ';
-                htmlfoodOutputLineStr += '\n';
-            }
-            // indent when adding multiple food parts
-            if (foodNamePrefixStr != null && foodNamePrefixStr.length > 0) {
-                if (firstRow)
-                    mdFoodOutputLineStr += '  \n  |          |         | * ';
-                else
-                    mdFoodOutputLineStr += '* ';
+                // add new row after labels
+                if (mdFoodOutputLineStr.length > 0) {
+                    mdFoodOutputLineStr += '  \n  |          |         | ';
+                    htmlfoodOutputLineStr += '\n';
+                }
+                // indent when adding multiple food parts
+                if (foodNamePrefixStr != null && foodNamePrefixStr.length > 0) {
+                    if (iPart == 0)
+                        mdFoodOutputLineStr += '  \n  |          |         | * ';
+                    else
+                        mdFoodOutputLineStr += '* ';
 
-                htmlfoodOutputLineStr += '  ';
-            }
-            firstRow = false;
+                    htmlfoodOutputLineStr += '  ';
+                }
 
-            if (partKCal == 0) {
-                mdFoodOutputLineStr += '<font color="red">';
-                htmlfoodOutputLineStr += '<font color="red">';
-            }
-            if (foodPart.kcal != null) {
-                if (foodPart.kcalunit != 'kcal') {
-                    mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit}, =${Math.round(partKCal)}kc)`;
-                    htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit}, =${Math.round(partKCal)}kc)`;
+                if (partKCal == 0) {
+                    mdFoodOutputLineStr += '<font color="red">';
+                    htmlfoodOutputLineStr += '<font color="red">';
+                    partOrigTextColor = 'red';
+                }
+                if (foodPart.kcal != null) {
+                    let kcalunitPrinted = foodPart.kcalunit == 'kcal/100g' ? 'kc/' : foodPart.kcalunit;
+                    if (foodPart.kcalunit != 'kcal') {
+                        mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)`;
+                        htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)`;
+                    }
+                    else {
+                        mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})`;
+                        htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})`;
+                    }
                 }
                 else {
-                    mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
-                    htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${foodPart.kcalunit})`;
+                    mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
+                    htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
+                }
+                if (partKCal == 0) {
+                    mdFoodOutputLineStr += '</font>';
+                    htmlfoodOutputLineStr += '</font>';
+                }
+                if (foodPart.unprocessed != null) {
+                    mdFoodOutputLineStr += ` ***${foodPart.unprocessed}***`;
+                    htmlfoodOutputLineStr += ` <font color="#f00000"><b><i>${foodPart.unprocessed}</i></b></font>`;
+                    partOrigTextColor = '#f00000';
                 }
             }
-            else {
-                mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
-                htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
-            }
-            if (partKCal == 0) {
-                mdFoodOutputLineStr += '</font>';
-                htmlfoodOutputLineStr += '</font>';
-            }
-            if (foodPart.unprocessed != null) {
-                mdFoodOutputLineStr += ` ***${foodPart.unprocessed}***`;
-                htmlfoodOutputLineStr += ` <font color="#f00000"><b><i>${foodPart.unprocessed}</i></b></font>`;
-            }
-        });
+
+            // update textbox to have syntax highlighted output
+            recordHighlightedInput(iCurrentRow, iPart, foodPart.origText, partOrigTextColor, timestampStr);
+        }
 
         g_controller.dayParts[g_controller.currentDayPart].kcal += foodKCal;
         g_controller.dayParts[g_controller.currentDayPart].g += foodG;
@@ -208,11 +230,20 @@ function processInput()
 
         // append this line to the table output
         let foodKCalStrFormatted = foodKCalStr.replace(/(..)$/, '<span style="font-size:0.85em;">$1</span>');  // decimal characters are smaller
+        // calculate prefix
+        foodNamePrefixStr ??= '';
+        if (foodNamePrefixStr.length > 0)
+        {
+            foodNamePrefixStr = foodNamePrefixStr.replaceAll('___', '').replaceAll(/ $/g, '');
+            foodNamePrefixStr = `<u><b>${foodNamePrefixStr}</b></u>`;
+            foodNamePrefixStr += ` (${printToFixedFloat(foodG, 1, true)}g, ${printToFixedFloat(foodKCal/(foodG/100), 1, true)}kc/)\n`
+        }
+        foodNamePrefixStr = !foodNamePrefixStr ? '' : foodNamePrefixStr.replaceAll('___', ''); 
         let currTableRowStr =
             `<tr id="tr${iCurrentRow}" class="mealRow">` +
             `<td style="text-align:right;" class="preBold kcalBg effectSmallerLast" value="${toFixedFloat(foodKCal, 1)}">${foodKCalStrFormatted}</td>` +
             `<td style="text-align:right; font-size:0.85em;" class="preBold timeBg">${timestampStr?timestampStr:''}</td>` +
-            `<td class="preReg">${(foodNamePrefixStr ? `<u><b>${foodNamePrefixStr.replaceAll('___', '')}</b></u>\n` : '') + htmlfoodOutputLineStr}</td></tr>`;
+            `<td class="preReg">${foodNamePrefixStr + htmlfoodOutputLineStr}</td></tr>`;
         if (g_mealsDiaryText.mealLineFirst == -1)
             g_mealsDiaryText.mealLineFirst = iCurrentRow;
         g_mealsDiaryText.mealLineLast = iCurrentRow;
@@ -248,6 +279,30 @@ function processInput()
 
     // display the result
     $('#divOutput').html('<pre>' + g_controller.foodOutputStr + '</pre>');
+}
+
+/**
+ * 
+ * @param {Number} iRow 
+ * @param {Number} iPart 
+ * @param {String} htmlText 
+ * @param {String?} color
+ * @param {String?} timeStamp
+ */
+function recordHighlightedInput(iRow, iPart, htmlText, color = null, timeStamp = null)
+{
+    // update textbox to have syntax highlighted input
+    if (iPart == 0 && iRow > 0)
+        g_controller.foodSourceModifiedOutputStr += '\n';
+    if (iPart == 0 && timeStamp != null)
+        g_controller.foodSourceModifiedOutputStr += timeStamp + ' ';
+    else if (iPart > 0)
+        g_controller.foodSourceModifiedOutputStr += ',';
+
+    if (color != null)
+        g_controller.foodSourceModifiedOutputStr += `<font color="${color}">${htmlText}</font>`;
+    else
+        g_controller.foodSourceModifiedOutputStr += htmlText;
 }
 
 function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
@@ -408,6 +463,8 @@ function onPageLoaded()
     }
 
     g_mealsDiaryText.initialize('#txtMealsDiary');
+    g_mealsDiaryTextHighlight.initialize('#txtMealsDiary');
+
     g_outputTable.initialize('#tableOut');
     g_mealsDiaryText.on('input', g_controller.onFoodInputChanged.bind(g_controller));
     g_mealsDiaryText.on('cursor', g_controller.onCursorMoved.bind(g_controller));

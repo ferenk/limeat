@@ -34,15 +34,16 @@ h1 {
 
 #tableOut tr {
     cursor: crosshair;
+    border-radius: 2px;
 }
 
 #tableOut tr:hover {
-    outline: 4px solid rgba(97, 167, 65, 0.575);
+    outline: 3px solid rgba(97, 167, 65, 0.575);
     background-color: rgba(254, 255, 191, 0.226);
 }
 
 #tableOut tr.selectedRow {
-    outline: 4px solid rgba(64, 155, 22, 0.671);
+    outline: 3px solid rgba(64, 155, 22, 0.671);
     background-color: rgba(185, 255, 21, 0.178);
     box-shadow: 0 0 2px 3px 0px gray;
 }
@@ -234,8 +235,8 @@ th {
 
 #txtMealsDiary {
     resize:both;
-    width: 100%;
-    height:20%;
+    /*width: 100%;
+    height:20%;*/
     transition: all .8s ease;
 }
 
