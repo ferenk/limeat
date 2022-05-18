@@ -291,18 +291,20 @@ function processInput()
  */
 function recordHighlightedInput(iRow, iPart, htmlText, color = null, timeStamp = null)
 {
-    // update textbox to have syntax highlighted input
-    if (iPart == 0 && iRow > 0)
-        g_controller.foodSourceModifiedOutputStr += '\n';
+    let outRows = g_controller.foodSourceModifiedOutput;
+
+    while (iRow >= outRows.length)
+        outRows.push('');
+
     if (iPart == 0 && timeStamp != null)
-        g_controller.foodSourceModifiedOutputStr += timeStamp + ' ';
+        outRows[iRow] += timeStamp + ' ';
     else if (iPart > 0)
-        g_controller.foodSourceModifiedOutputStr += ',';
+        outRows[iRow] += ',';
 
     if (color != null)
-        g_controller.foodSourceModifiedOutputStr += `<font color="${color}">${htmlText}</font>`;
+        outRows[iRow] += `<font color="${color}">${htmlText}</font>`;
     else
-        g_controller.foodSourceModifiedOutputStr += htmlText;
+        outRows[iRow] += htmlText;
 }
 
 function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
@@ -467,7 +469,7 @@ function onPageLoaded()
 
     g_outputTable.initialize('#tableOut');
     g_mealsDiaryText.on('input', g_controller.onFoodInputChanged.bind(g_controller));
-    g_mealsDiaryText.on('cursor', g_controller.onCursorMoved.bind(g_controller));
+    g_mealsDiaryText.on('cursorRow', g_controller.onCursorMoved.bind(g_controller));
 
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     g_controller.currentDayMoment = getCurrentMoment('04:00');

@@ -17,6 +17,7 @@ h1 {
 
 #tableOut
 {
+    width: 100%;
     border: 3px solid rgba(110, 110, 110, 0.884);
     resize: both;
     transition: all .8s ease;
@@ -42,7 +43,7 @@ h1 {
     background-color: rgba(254, 255, 191, 0.226);
 }
 
-#tableOut tr.selectedRow {
+#tableOut tr.selectedRow, .textCurrentRow {
     outline: 3px solid rgba(64, 155, 22, 0.671);
     background-color: rgba(185, 255, 21, 0.178);
     box-shadow: 0 0 2px 3px 0px gray;

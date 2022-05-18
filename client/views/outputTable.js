@@ -84,8 +84,8 @@ class OutputTable
         $('#lbCurrentKCal').html(`${firstColumnVal} kc`);
         $('#lMealTime').html(secondColumnVal);*/
         let result = new OutputTableRowInfo();
-        result.mealTime = this.jqItem.find(`#tr${rowIdx} td:nth-child(1)`).attr('value') ?? '';
-        result.kCal = parseFloat(this.jqItem.find(`#tr${rowIdx} td:nth-child(2)`).html());
+        result.mealTime = this.jqItem.find(`#tr${rowIdx} td:nth-child(2)`).html() ?? '';
+        result.kCal = parseFloat(this.jqItem.find(`#tr${rowIdx} td:nth-child(1)`).attr('value') ?? '0');
         
         return result;
     }

@@ -20,8 +20,8 @@ class Controller
     currentDayPart = 0;
     /** @type { String } */
     foodOutputStr = '';
-    /** @type { String } */
-    foodSourceModifiedOutputStr = '';
+    /** @type { String[] } */
+    foodSourceModifiedOutput = [];
 
     /* Time management */
 
@@ -65,7 +65,7 @@ class Controller
         }
         this.currentDayPart = 0;
         this.foodOutputStr = `### ${printMoment(this.currentDayMoment).slice(8)}  \n` + this.mdHeader;
-        this.foodSourceModifiedOutputStr = '';
+        this.foodSourceModifiedOutput = [];
         $('.mealRow').remove();
     }
 
@@ -80,15 +80,32 @@ class Controller
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
         ///!!!
-        this.mealsDiaryTextHighlight.update(this.foodSourceModifiedOutputStr);
+        this.updateTextHighlightLayer();
     }
 
     onCursorMoved(userEvent)
     {
         this.mealsDiaryText.selectedLine = this.mealsDiaryText.cursorPos[1];
         this.selectRow(this.mealsDiaryText.selectedLine, userEvent);
+        this.updateTextHighlightLayer();
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
+    }
+
+    updateTextHighlightLayer()
+    {
+        let highlightedStr = '';
+        for (let iRow = 0; iRow < this.foodSourceModifiedOutput.length; iRow++)
+        {
+            if (iRow > 0)
+                highlightedStr += '\n';
+            // add cursor to the appropriate row
+            let rowStr = this.foodSourceModifiedOutput[iRow];
+            if (iRow === this.mealsDiaryText.cursorPos[1])
+                rowStr = `<span class="textCurrentRow" style="width:100%">${rowStr}</span>`;
+            highlightedStr += rowStr;
+        }
+        this.mealsDiaryTextHighlight.update(highlightedStr);
     }
 
     onUserOrDateChanged() {
@@ -118,6 +135,8 @@ class Controller
         }
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
+        this.mealsDiaryText.jqItem.blur();
+        this.mealsDiaryText.jqItem.focus();
     }
 
     /**
@@ -258,6 +277,10 @@ class Controller
         //! Recheck!
         this.mealsDiaryText.updateUi();
         this.updatePrevNextMealButtons();
+
+        this.updateTextHighlightLayer();
+        this.mealsDiaryText.jqItem.focus();
+        this.mealsDiaryText.jqItem.blur();
     }
 
     /**
@@ -274,6 +297,7 @@ class Controller
             this.mealsDiaryText.moveCursorTo(0, iRow);
         }
         this.updatePrevNextMealButtons();
+        this.updateTextHighlightLayer();
     }
 
     focusRow(iRow)

@@ -28,6 +28,8 @@ class TextareaExt {
     onTextChangedCB = null;
     /** @type {OnUserInputCB?} User moved the cursor */
     onCursorMovedCB = null;
+    /** @type {OnUserInputCB?} User moved the cursor to a different row */
+    onCursorRowMovedCB = null;
 
     /**
      * Creates a new editor widget
@@ -71,6 +73,9 @@ class TextareaExt {
         }
         else if (eventName == 'cursor') {
             this.onCursorMovedCB = callback;
+        }
+        else if (eventName == 'cursorRow') {
+            this.onCursorRowMovedCB = callback;
         }
     }
 
@@ -154,10 +159,15 @@ class TextareaExt {
      */
     onCursorMoved()
     {
+        let prevcursorY = this.cursorPos[1];
         // @ts-ignore:next-line (selectionStart does not exist on HTMLElement)
         let textBufferTillTheCursorStr = this.rowsStr.substr(0, this.jqItem[0].selectionStart).split('\n');
         this.cursorPos[1] = textBufferTillTheCursorStr.length - 1;
         this.cursorPos[0] = textBufferTillTheCursorStr[this.cursorPos[1]].length;
+
+        if (this.onCursorRowMovedCB != null && prevcursorY != this.cursorPos[1])
+            this.onCursorRowMovedCB(false);
+
         if (this.onCursorMovedCB != null)
             this.onCursorMovedCB(false);
     }
@@ -181,6 +191,8 @@ class TextareaExt {
         }
         //this.jqItem[0].selectionStart = this.jqItem[0].selectionEnd = aggregatedPosN;
         this.moveCursorToPos(this.jqItem[0], aggregatedPosN);
+        this.cursorPos[0] = x;
+        this.cursorPos[1] = y;
         //alert(`move cursor to ${x}, ${y}, aggregated: ${aggregatedPosN}`);
     }
 

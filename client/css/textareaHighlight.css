@@ -1,17 +1,19 @@
 /* Idea, original implementation: Creating an Editable Textarea That Supports Syntax-Highlighted Code -  https://css-tricks.com/creating-an-editable-textarea-that-supports-syntax-highlighted-code/ */
 /* Background, HTML positioning: Web Dev Simplified: Learn CSS Position In 9 Minutes - https://www.youtube.com/watch?v=jx5jmI0UlXU */
 
+.textarea_editor, .textarea_highlighter, .textarea_highlighter * {
+    /* Also add text styles to highlighting tokens */
+    font-size: 11pt !important;
+    font-family: monospace !important;
+    tab-size: 4 !important;
+}
+
 .textarea_editor, .textarea_highlighter {
     /* Both elements need the same text and space styling so they are directly on top of each other */
     border: 0;
     padding: 6px;
     margin: 0; 
     box-sizing: border-box;
-    font-size: 12px;
-    /*width: calc(100% - 32px);*/
-    /*width: 400px;
-    height: 250px;
-    padding: 12px;*/
 
     overflow: auto;
     white-space: pre-wrap; /* Allows textarea to scroll horizontally */
@@ -22,10 +24,12 @@
     top: 0px;
 
     z-index: 1;
-    color: #002fff25;
+    /* color: #002fff25; */
+    color: #002fff65;
     background: transparent;
     caret-color: black; /* Or choose your favorite color */
     resize: none;
+    border-radius: 2px;
 }
 
 .textarea_highlighter {
@@ -39,21 +43,17 @@
     outline: 2px solid #05a2fdaf;
 }
 
+.textarea_editor:not([focused='true']) {
+    color: transparent;
+}
+
 [mode='normal']
 {
     width: 100%;
     height: 12em;
 }
 
-.textarea_editor, .textarea_highlighter, .textarea_highlighter * {
-    /* Also add text styles to highlighting tokens */
-    /*font-size: 15pt;*/
-    font-family: monospace;
-    /*line-height: 20pt;*/
-    tab-size: 4;
-}
-
 .textarea_parent {
     position: relative;
-    padding: 0;
+    padding: 0 !important;
 }
