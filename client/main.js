@@ -30,6 +30,8 @@ function processInput()
     let currentSummaryStr = '';
     let currentSummaryKCal = 0;
 
+    g_mealsDiaryTextHighlight.tempHtmlBuffer.clear();
+
 
     for (let iCurrentRow = 0; iCurrentRow < foodLines.length; iCurrentRow++)
     {
@@ -128,6 +130,7 @@ function processInput()
                                 else
                                     newFoodPart.unprocessed += ' ';
                                 newFoodPart.unprocessed += `<font color="peru">${foodPartNameStr}</font>`;
+                                newFoodPart.origText = newFoodPart.origText.replaceAll(foodPartNameStr, `<font color="peru">${foodPartNameStr}</font>`);
                             }
                         } 
                     }
@@ -191,20 +194,25 @@ function processInput()
                     htmlfoodOutputLineStr += '<font color="red">';
                     partOrigTextColor = 'red';
                 }
+
+                // update textbox to have syntax highlighted output
+                let sectionName = recordHighlightedInput(iCurrentRow, iPart, foodPart.origText, partOrigTextColor, timestampStr);
+                foodPart.highlighterClass = (sectionName ? `class=${sectionName}` : '');
+
                 if (foodPart.kcal != null) {
                     let kcalunitPrinted = foodPart.kcalunit == 'kcal/100g' ? 'kc/' : foodPart.kcalunit;
                     if (foodPart.kcalunit != 'kcal') {
                         mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)`;
-                        htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)`;
+                        htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)</span>`;
                     }
                     else {
                         mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})`;
-                        htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})`;
+                        htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})</span>`;
                     }
                 }
                 else {
                     mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
-                    htmlfoodOutputLineStr += `<span style="font-weight:600">${foodPart.name.replaceAll('_', ' ')}</span> (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
+                    htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)</span>`;
                 }
                 if (partKCal == 0) {
                     mdFoodOutputLineStr += '</font>';
@@ -212,13 +220,9 @@ function processInput()
                 }
                 if (foodPart.unprocessed != null) {
                     mdFoodOutputLineStr += ` ***${foodPart.unprocessed}***`;
-                    htmlfoodOutputLineStr += ` <font color="#f00000"><b><i>${foodPart.unprocessed}</i></b></font>`;
-                    partOrigTextColor = '#f00000';
+                    htmlfoodOutputLineStr += ` <font ${foodPart.highlighterClass} color="#f00000"><b><i>${foodPart.unprocessed}</i></b></font>`;
                 }
             }
-
-            // update textbox to have syntax highlighted output
-            recordHighlightedInput(iCurrentRow, iPart, foodPart.origText, partOrigTextColor, timestampStr);
         }
 
         g_controller.dayParts[g_controller.currentDayPart].kcal += foodKCal;
@@ -285,26 +289,28 @@ function processInput()
  * 
  * @param {Number} iRow 
  * @param {Number} iPart 
- * @param {String} htmlText 
+ * @param {String} currPartHtmlText 
  * @param {String?} color
  * @param {String?} timeStamp
  */
-function recordHighlightedInput(iRow, iPart, htmlText, color = null, timeStamp = null)
+function recordHighlightedInput(iRow, iPart, currPartHtmlText, color = null, timeStamp = null)
 {
-    let outRows = g_controller.foodSourceModifiedOutput;
-
-    while (iRow >= outRows.length)
-        outRows.push('');
-
+    // add prefix
+    let currPartBeginStr = ''
     if (iPart == 0 && timeStamp != null)
-        outRows[iRow] += timeStamp + ' ';
+        currPartBeginStr += timeStamp + ' ';
     else if (iPart > 0)
-        outRows[iRow] += ',';
+        currPartBeginStr += ',';
 
+    g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, currPartBeginStr);
+
+    // colorize this part, if needed
     if (color != null)
-        outRows[iRow] += `<font color="${color}">${htmlText}</font>`;
-    else
-        outRows[iRow] += htmlText;
+        currPartHtmlText = `<font color="${color}">${currPartHtmlText}</font>`;
+
+    let sectionName = g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, currPartHtmlText, true);
+
+    return sectionName;
 }
 
 function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
@@ -469,7 +475,7 @@ function onPageLoaded()
 
     g_outputTable.initialize('#tableOut');
     g_mealsDiaryText.on('input', g_controller.onFoodInputChanged.bind(g_controller));
-    g_mealsDiaryText.on('cursorRow', g_controller.onCursorMoved.bind(g_controller));
+    g_mealsDiaryText.on('cursor', g_controller.onCursorMoved.bind(g_controller));
 
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     g_controller.currentDayMoment = getCurrentMoment('04:00');

@@ -14,16 +14,17 @@ class TextareaHighlight
     {
         /** @type { TextColor[] } */
         this.lineColors = [];
+        this.tempHtmlBuffer = new TempHtmlBuffer(this);
     }
 
     /**
      * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} jqSelector selector for a textarea HTML widget 
+     * @param {String} selector selector for a textarea HTML widget 
      */
-    initialize(jqSelector)
+    initialize(selector)
     {
         /** @type {HTMLTextAreaElement?} */
-        this.domText = document.querySelector(jqSelector);
+        this.domText = document.querySelector(selector);
         if (this.domText)
         {
             // add the highlighter layer
@@ -57,15 +58,6 @@ class TextareaHighlight
         }
     }
 
-    // Update helpers
-    //
-    // Handle final newlines (see article)
-    //if(text[text.length-1] == "\n") {
-    //text += " ";
-    //}
-    // escape HTML tags
-    //text = text.replace(new RegExp("&", "g"), "&").replace(new RegExp("<", "g"), "<"); /* Global RegExp */
-
 
     /**
      * @param {String?} htmlText
@@ -79,6 +71,7 @@ class TextareaHighlight
                 htmlText = this.domText.value;
             if (htmlText[htmlText.length - 1] == '\n')
                 htmlText += ' ';
+            htmlText += '\n\n\n';
             this.domHighlighter.innerHTML = htmlText;
         }
     }
@@ -93,16 +86,31 @@ class TextareaHighlight
         {
             if (textLines == null)
                 textLines = this.domText.value.split('\n');
-            // process text
-            for (let i = 0; i < textLines.length; i++)
-                textLines[i] = textLines[i].replaceAll('AAA', '<font color="red">AAA</font>'); /* Global RegExp */
+            // workaround for a textarea bug (when the last row is empty)
+            if (textLines[textLines.length - 1].endsWith('\n'))
+                textLines[textLines.length - 1] += ' ';
             this.domHighlighter.innerHTML = textLines.join('\n');
         }
     }
 
-    clearLineColors()
+    /**
+     * 
+     * @param {Number} cursorRow 
+     */
+    render(cursorRow)
     {
-
+        let highlightedStr = '';
+        for (let iRow = 0; iRow < this.tempHtmlBuffer.buffer.length; iRow++)
+        {
+            if (iRow > 0)
+                highlightedStr += '\n';
+            // add cursor to the appropriate row
+            let rowStr = this.tempHtmlBuffer.buffer[iRow];
+            if (iRow === cursorRow)
+                rowStr = `<div class="textCurrentRow" style="width:100%">${rowStr}</div>`;
+            highlightedStr += rowStr;
+        }
+        this.update(highlightedStr);
     }
 
     sync_scroll()
@@ -114,5 +122,64 @@ class TextareaHighlight
             this.domHighlighter.scrollTop = this.domText.scrollTop;
             this.domHighlighter.scrollLeft = this.domText.scrollLeft;
         }
+    }
+
+}
+
+class TempHtmlBuffer
+{
+    /**
+     * Creates a new temporary HTML buffer
+     * @param {TextareaHighlight} parent 
+     */
+    constructor(parent)
+    {
+        this.parent = parent;
+        this.buffer = [];
+        this.bufferIdxs = new Map();
+    }
+
+    clear()
+    {
+        this.buffer = [];
+        this.bufferIdxs.clear();
+    }
+
+    /**
+     * Add a new row section to highlight
+     * @param {Number} row Row number
+     * @param {String} htmlText HTML text to add 
+     * @param {boolean} addSection generate new section ID and wrap this text with a highlighted span
+     * @returns {String} Name for this section (for dynamic highlighting)
+     */
+    appendToLine(row, htmlText, addSection = false)
+    {
+        // add new rows if needed
+        while (row >= this.buffer.length)
+            this.buffer.push('');
+
+        // get the column index
+        let currSections = this.bufferIdxs.get(row),
+            currPos = 0;
+        if (currSections != null)
+            currPos = currSections[currSections.length - 1][1] + 1;
+        else
+            this.bufferIdxs.set(row, currSections = []);
+
+        // calculate the raw text (length) of this row
+        let htmlTextStripped = htmlText.replaceAll(/<.*?>/g, '');
+
+        let sectionName = '';
+        if (addSection)
+        {
+            sectionName = `section_${row}_${currPos}-${currPos + htmlTextStripped.length-1}`;
+            htmlText = `<span class="${sectionName}">${htmlText}</span>`;
+        }
+
+        this.buffer[row] += htmlText;
+        currSections.push([currPos, currPos + htmlTextStripped.length - 1, sectionName]);
+        this.bufferIdxs.set(row, currSections);
+
+        return sectionName;
     }
 }

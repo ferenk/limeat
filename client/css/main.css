@@ -19,6 +19,8 @@ h1 {
 {
     width: 100%;
     border: 3px solid rgba(110, 110, 110, 0.884);
+    font-size: 20px;
+    line-height: 22px;
     resize: both;
     transition: all .8s ease;
 }
@@ -43,9 +45,9 @@ h1 {
     background-color: rgba(254, 255, 191, 0.226);
 }
 
-#tableOut tr.selectedRow, .textCurrentRow {
-    outline: 3px solid rgba(64, 155, 22, 0.671);
-    background-color: rgba(185, 255, 21, 0.178);
+#tableOut tr.selectedRow {
+    outline: 3px solid hsla(78, 75%, 35%, 0.671);
+    background-color: hsla(78, 50%, 60%, 0.45);
     box-shadow: 0 0 2px 3px 0px gray;
 }
 
@@ -164,7 +166,7 @@ th {
 }
 
 #divMealSelection button {
-    background:rgba(97, 167, 65, 0.575);
+    background:hsla(78, 44%, 45%, 0.575);
 }
 
 #divDateUpDown button {
@@ -216,11 +218,11 @@ th {
     padding: 0 .6vw;
     min-width: 2em;
     color: black;
-    background-color: rgba(97, 167, 65, 0.575);
+    background-color: hsla(78, 44%, 45%, 0.575);
 }
 
 #btAddMeal:active {
-    background-color: rgba(18, 126, 18, 0.733);
+    background-color: hsla(78, 75%, 28%, 0.733);
 }
 
 #dKCals > * [type^="button"] {

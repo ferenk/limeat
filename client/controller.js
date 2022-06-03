@@ -31,6 +31,9 @@ class Controller
     savedFoodInput = '';
     saveButtonNormalMsg = "SAVE";
 
+    /** @type {String | null} */
+    currentCursorSection = null;
+
 
     /**
      * Creates a new output table widget
@@ -80,32 +83,67 @@ class Controller
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
         ///!!!
-        this.updateTextHighlightLayer();
+        this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
     }
 
     onCursorMoved(userEvent)
     {
-        this.mealsDiaryText.selectedLine = this.mealsDiaryText.cursorPos[1];
-        this.selectRow(this.mealsDiaryText.selectedLine, userEvent);
-        this.updateTextHighlightLayer();
+        let cursorPos = this.mealsDiaryText.cursorPos;
+        this.selectRow(cursorPos[1], userEvent);
+        this.mealsDiaryTextHighlight.render(cursorPos[1]);
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
+
+        // add extra dark background color to the current food
+        let thisRowSections = this.mealsDiaryTextHighlight.tempHtmlBuffer.bufferIdxs.get(cursorPos[1]);
+        if (thisRowSections)
+            for (let i = 0; i < thisRowSections.length; i++)
+            {
+                if (thisRowSections[i][0] <= cursorPos[0] && cursorPos[0] <= thisRowSections[i][1] + 1)
+                {
+                    if (thisRowSections[i][2])
+                    {
+                        this.changeHighlightedFoodPart(`.${thisRowSections[i][2]}`);
+                        break;
+                    }
+                }
+            }
     }
 
-    updateTextHighlightLayer()
+    changeHighlightedFoodPart(newSelector)
     {
-        let highlightedStr = '';
-        for (let iRow = 0; iRow < this.foodSourceModifiedOutput.length; iRow++)
+        if (this.currentCursorSection != null)
+            this.modifySelectorsBgColor(this.currentCursorSection, null, false);
+        this.modifySelectorsBgColor(this.currentCursorSection = newSelector, 'hsla(78, 38%, 44%, 0.55)', true);
+    }
+
+    /**
+     * 
+     * @param {String} query 
+     * @param {String | null} color 
+     * @param {boolean} add 
+     */
+    modifySelectorsBgColor(query, color, add)
+    {
+        if (query == null || query.length == 0)
+            return;
+
+        try
         {
-            if (iRow > 0)
-                highlightedStr += '\n';
-            // add cursor to the appropriate row
-            let rowStr = this.foodSourceModifiedOutput[iRow];
-            if (iRow === this.mealsDiaryText.cursorPos[1])
-                rowStr = `<span class="textCurrentRow" style="width:100%">${rowStr}</span>`;
-            highlightedStr += rowStr;
+            /** @type {NodeListOf<HTMLElement>} */
+            let selectorItems = document.querySelectorAll(query);
+
+            selectorItems.forEach((selectorItem) => {
+                if (add)
+                    selectorItem.style.setProperty('background-color', color ?? 'hsla(78, 38%, 44%, 0.55)');
+                else
+                    selectorItem.style.removeProperty('background-color');
+            });
         }
-        this.mealsDiaryTextHighlight.update(highlightedStr);
+        catch(e)
+        {
+            console.log(`Error while trying to evaluate selector: '${query}'\nException: ${e}`)
+        }
     }
 
     onUserOrDateChanged() {
@@ -130,8 +168,8 @@ class Controller
         this.onFoodInputChanged();
         if (this.mealsDiaryText.focusedMode)
         {
-            this.mealsDiaryText.selectedLine = this.mealsDiaryText.mealLineLast;
-            this.mealsDiaryText.jqItem.val(this.mealsDiaryText.rows[this.mealsDiaryText.selectedLine]);
+            this.mealsDiaryText.cursorPos[1] = this.mealsDiaryText.mealLineLast;
+            this.mealsDiaryText.jqItem.val(this.mealsDiaryText.rows[this.mealsDiaryText.cursorPos[1]]);
         }
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
@@ -159,8 +197,9 @@ class Controller
         this.currentDayMoment.milliseconds(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
         this.onUserOrDateChanged();
 
-        this.mealsDiaryText.selectedLine = this.outputTable.checkPrevNextMeal(null,
-            this.mealsDiaryText.selectedLine, this.mealsDiaryText.mealLineFirst, this.mealsDiaryText.mealLineLast);
+        let newSelectedLine = this.outputTable.checkPrevNextMeal(null,
+            this.mealsDiaryText.cursorPos[1], this.mealsDiaryText.mealLineFirst, this.mealsDiaryText.mealLineLast);
+        this.selectRow(newSelectedLine, true);
         //! refactor?
         this.updatePrevNextMealButtons();
     }
@@ -168,10 +207,10 @@ class Controller
     updatePrevNextMealButtons()
     {
         let txt = this.mealsDiaryText;
-        let prevMealIdx_checked = this.outputTable.checkPrevNextMeal(false, txt.selectedLine, txt.mealLineFirst, txt.mealLineLast);
-        let nextMealIdx_checked = this.outputTable.checkPrevNextMeal(true, txt.selectedLine, txt.mealLineFirst, txt.mealLineLast);
-        $('#btPrevMeal').prop('disabled', prevMealIdx_checked == this.mealsDiaryText.selectedLine);
-        $('#btNextMeal').prop('disabled', nextMealIdx_checked == this.mealsDiaryText.selectedLine);
+        let prevMealIdx_checked = this.outputTable.checkPrevNextMeal(false, txt.cursorPos[1], txt.mealLineFirst, txt.mealLineLast);
+        let nextMealIdx_checked = this.outputTable.checkPrevNextMeal(true, txt.cursorPos[1], txt.mealLineFirst, txt.mealLineLast);
+        $('#btPrevMeal').prop('disabled', prevMealIdx_checked == txt.cursorPos[1]);
+        $('#btNextMeal').prop('disabled', nextMealIdx_checked == txt.cursorPos[1]);
     }
 
 
@@ -244,12 +283,36 @@ class Controller
     {
         //! RECHECK!
         if (event.target != null) {
-            // JQuery type magic, hopefully works
-            // @ts-ignore:next-line (Cannot find name 'MobileDetect')
-            let targetRowId = ($(event.target)).closest('tr')[0].id;
-            let targetRowNum = Number.parseInt(targetRowId.substr(2));
-            if (!Number.isNaN(targetRowNum))
-                this.selectRow(targetRowNum, true);
+            let targetSpan = ($(event.target)).closest('span');
+            let resTextCursorMoved = false;
+            /** @type {String | null | undefined } */
+            let targetSpanClass = null;
+            if (targetSpan.length > 0) {
+                targetSpanClass = targetSpan.attr('class');
+                if (targetSpanClass && targetSpanClass.startsWith('section_'))
+                {
+                    // move cursor to the selected food part's last character
+                    let highlightClassNameParts = targetSpanClass.split('_');
+                    let highlightClassNamePartsCols = highlightClassNameParts[2].split('-');
+                    if (highlightClassNamePartsCols && highlightClassNamePartsCols.length > 1)
+                    {
+                        this.selectRow(Number.parseInt(highlightClassNameParts[1]), false);
+                        this.mealsDiaryText.moveCursorTo(Number.parseInt(highlightClassNamePartsCols[1]), Number.parseInt(highlightClassNameParts[1]));
+                        resTextCursorMoved = true;
+                    }
+                    // highlight food part
+                    this.changeHighlightedFoodPart(`.${targetSpanClass}`);
+                }
+            }
+            if (!resTextCursorMoved)
+            {
+                // JQuery type magic, hopefully works
+                // @ts-ignore:next-line (Cannot find name 'MobileDetect')
+                let targetRowId = ($(event.target)).closest('tr')[0].id;
+                let targetRowNum = Number.parseInt(targetRowId.substr(2));
+                if (!Number.isNaN(targetRowNum))
+                    this.selectRow(targetRowNum, true);
+            }
         }
         else console.log('ERROR: onTableRowChange(): event.target is null!');
     }
@@ -262,23 +325,21 @@ class Controller
     {
         let mealIdx_checked =
             this.outputTable.checkPrevNextMeal(nextMeal,
-                this.mealsDiaryText.selectedLine,this.mealsDiaryText.mealLineFirst, this.mealsDiaryText.mealLineLast);
-        if (mealIdx_checked != this.mealsDiaryText.selectedLine)
+                this.mealsDiaryText.cursorPos[1],this.mealsDiaryText.mealLineFirst, this.mealsDiaryText.mealLineLast);
+        if (mealIdx_checked != this.mealsDiaryText.cursorPos[1])
         {
-            // select the next meal
-            this.mealsDiaryText.selectedLine = mealIdx_checked;
             // move the cursor to the end of the selected meal's line
             //@todo skipped, because it brings back the virtual keyboard on Android
             //if (!g_mobileMode)
+            // select the next meal and move cursor to that meal
             this.mealsDiaryText.moveCursorTo(this.mealsDiaryText.rows[mealIdx_checked].length, mealIdx_checked);
             this.outputTable.selectRow(mealIdx_checked);
-            //this.updateUi_FocusedMode();
         }
         //! Recheck!
         this.mealsDiaryText.updateUi();
         this.updatePrevNextMealButtons();
 
-        this.updateTextHighlightLayer();
+        this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
         this.mealsDiaryText.jqItem.focus();
         this.mealsDiaryText.jqItem.blur();
     }
@@ -290,14 +351,14 @@ class Controller
      */
     selectRow(iRow, isUserEvent)
     {
-        this.mealsDiaryText.selectedLine = iRow;
+        this.mealsDiaryText.cursorPos[1] = iRow;
         this.outputTable.selectRow(iRow);
         if (isUserEvent)
         {
             this.mealsDiaryText.moveCursorTo(0, iRow);
         }
         this.updatePrevNextMealButtons();
-        this.updateTextHighlightLayer();
+        this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
     }
 
     focusRow(iRow)
@@ -305,7 +366,7 @@ class Controller
         $('#outTabFocusedMode').prop('checked', true);   //.is(":checked"))
         this.mealsDiaryText.switchMode(true, iRow);
         this.updateUi_FocusedMode();
-        this.selectRow(this.mealsDiaryText.selectedLine, false);
+        this.selectRow(this.mealsDiaryText.cursorPos[1], false);
     }
 
     updateUi_FocusedMode()

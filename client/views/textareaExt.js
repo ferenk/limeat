@@ -189,13 +189,16 @@ class TextareaExt {
             }
             aggregatedPosN += this.rows[yCurr].length + 1;
         }
-        //this.jqItem[0].selectionStart = this.jqItem[0].selectionEnd = aggregatedPosN;
         this.moveCursorToPos(this.jqItem[0], aggregatedPosN);
         this.cursorPos[0] = x;
         this.cursorPos[1] = y;
-        //alert(`move cursor to ${x}, ${y}, aggregated: ${aggregatedPosN}`);
     }
 
+    /**
+     * Move the cursor to the given character-based position (inside the textarea)
+     * @param {HTMLElement} element 
+     * @param {Number} pos 
+     */
     moveCursorToPos(element, pos)
     {
         this.setInputSelectionRange(element, pos, pos);

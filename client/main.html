@@ -1,12 +1,14 @@
+<!DOCTYPE html>
 <html style="background: lightGray;">
 
 <!--
     Licenses
-    --------
         Background for the 'dev mode' settings box: Free SVG Background by <a target="_blank" href="https://bgjar.com">BGJar</a>
 -->
 
 <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
     <title>KCal calculator</title> 
     <link rel="icon" type="image/x-icon" href="css/diet.png">
     <link rel="stylesheet" href="3rdparty/normalize.css">
@@ -14,25 +16,23 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/textareaHighlight.css">
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <!-- VUE.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script src="/3rdparty/moment-with-locales.js"></script>
+    <script src="/3rdparty/mobile-detect.min.js"></script>
+
+    <script type="module" charset="UTF-8" src="./data/foodsDb.js"></script>
+    <script type="module" charset="UTF-8" src="./views/textareaExt.js"></script>
+    <script type="module" charset="UTF-8" src="./views/outputTable.js"></script>
+    <script type="module" charset="UTF-8" src="./views/userControls.js"></script>
+    <script type="module" charset="UTF-8" src="./controller.js"></script>
+    <script type="module" charset="UTF-8" src="./main.js"></script>
 </head>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"
-    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-<!-- VUE.js -->
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-
-<script src="/3rdparty/moment-with-locales.js"></script>
-<script src="/3rdparty/mobile-detect.min.js"></script>
-
-<script type="module" charset="UTF-8" src="./data/foodsDb.js"></script>
-<script type="module" charset="UTF-8" src="./views/textareaExt.js"></script>
-<script type="module" charset="UTF-8" src="./views/outputTable.js"></script>
-<script type="module" charset="UTF-8" src="./views/userControls.js"></script>
-<script type="module" charset="UTF-8" src="./controller.js"></script>
-<script type="module" charset="UTF-8" src="./main.js"></script>
-
-<script>
-</script>
 <body>
     <div>
         <div style="font-size: 3em; font-weight: 600;">KCal calculator</div>
@@ -70,7 +70,7 @@
                 </div>
             </div>
             <font size="+2" style="text-decoration: underline; margin-left: auto;"><span id="lbCurrentAllKCal">0</span></font> &nbsp; &nbsp;
-            <div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216</div><!-- div>  11034</div-->
+            <div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216;</div><!-- div>  11034</div-->
         </div>
         <hr class="noMargin">
 
@@ -78,8 +78,6 @@
         <textarea id="txtMealsDiary" spellcheck="false"></textarea>
 
         <div id="txtMealsModes">
-            <input type="checkbox" id="devMode" name="devMode">
-            <label for="devMode" id="devModeLabel">dev mode</label>
             <div style="font-weight:700; text-decoration: underline; margin-left: auto;">Views: &nbsp; </div>
             <fieldset>
                 <input type="radio" id="txtMealsNormalMode" name="txtMealsModes">
@@ -99,7 +97,7 @@
                 <th class="foodSepBg">KCal</th>
                 <th class="foodSepBg">Time</th>
                 <th class="foodSepBg">Meal details</th>
-            </tr><u></u>
+            </tr>
         </table>
 
         <div id="outTabModes">
@@ -133,9 +131,9 @@
                         <option value="kitchen">Kitchen scale</option>
                     </select>
                         <label class="scaleOpts" id="minimalWeightLabel">Min. grams:</label>
-                        <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3"></input>
+                        <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3">
                         <label class="scaleOpts" id="minimalWeightCorrectionLabel">Corrected:</label>
-                        <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0"></input>
+                        <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0">
                 </div>
 
                 <input type="checkbox" id="devModeOutputs" name="devModeOutputs">
