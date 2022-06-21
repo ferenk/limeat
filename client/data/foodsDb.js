@@ -1,7 +1,20 @@
-export { FoodsDb }
+export { FoodsDb, FoodsDbItem }
 
-import { isNumeric } from '../util/util.js';
 import { processQuantity } from './foodsLang.js';
+
+class FoodsDbItem
+{
+    /** @type { Number | undefined } */
+    quantity;
+    /** @type { Number | undefined } */
+    kcal;
+    /** @type { String | undefined } */
+    quantityunit;
+    /** @type { String | undefined } */
+    name;
+    /** @type { boolean | undefined } */
+}
+
 
 class FoodsDb
 {
@@ -10,7 +23,7 @@ class FoodsDb
 
     constructor()
     {
-        /** @type {Object[]} */
+        /** @type {FoodsDbItem[]} */
         this.items = [];
     }
 
@@ -37,15 +50,19 @@ class FoodsDb
                 let foodName = dbLineParts[1].trim();
                 let foodInfo = dbLineParts[2].trim();
                 let foodInfoParts = foodInfo.split(' ');
+                let foodDbEntry = new FoodsDbItem();
                 if (foodInfoParts.length >= 2) {
-                    let foodDbEntry = { name: foodName.toLowerCase(), kcal: foodInfoParts[0], quantity: 100, quantityunit: 'g' };
-                    if (foodInfoParts[1].startsWith('kcal')) {
-                        if (foodInfoParts[1][4] == '/') {
-                            processQuantity(foodInfoParts[1].slice(5), foodDbEntry);
-                        }
-                    }
-                    this.items.push(foodDbEntry);
+                    foodDbEntry.name = foodName.toLowerCase();
+                    foodDbEntry.kcal = Number.parseFloat(foodInfoParts[0]);
+                    foodDbEntry.quantity = 100;
+                    foodDbEntry.quantityunit = 'g';
                 }
+                if (foodInfoParts[1].startsWith('kcal')) {
+                    if (foodInfoParts[1][4] == '/') {
+                        processQuantity(foodInfoParts[1].slice(5), foodDbEntry);
+                    }
+                }
+                this.items.push(foodDbEntry);
             }
         });
         this.items.forEach((dbItem) => {

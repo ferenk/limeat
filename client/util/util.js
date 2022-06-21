@@ -4,6 +4,11 @@ export {
     copyText2Clipboard
 };
 
+/**
+ * 
+ * @param {String} thresholdTime 
+ * @returns {import("client/3rdparty/ts/moment").Moment}
+ */
 function getCurrentMoment(thresholdTime)
 {
     // @ts-ignore:next-line (moment undefined)
@@ -29,6 +34,11 @@ function getCurrentTimeStr()
     return currentTimeStr;
 }
 
+/**
+ * 
+ * @param {import("client/3rdparty/ts/moment").Moment} currMoment 
+ * @returns 
+ */
 function printMoment(currMoment)
 {
      // Field: WeekdaysMin
@@ -51,6 +61,11 @@ function isNumeric(str) {
     return !isNaN(Number(str)) && !isNaN(parseFloat(str));
 }
 
+/**
+ * 
+ * @param {String | Number} str 
+ * @returns {Number}
+ */
 function toNumericOrZero(str)
 {
     try {
@@ -64,17 +79,31 @@ function toNumericOrZero(str)
     }
 }
 
-function toFixedFloat(num, decimals) {
-    if (decimals == null)
-        decimals = 1;
-    let realNum = num;
+/**
+ * 
+ * @param {Number | String} num 
+ * @param {Number} decimals 
+ * @returns {Number}
+ */
+function toFixedFloat(num = 0, decimals = 1) {
+    /** @type {Number} */
+    let realNum;
     if (typeof (num) == 'string')
         realNum = parseFloat(num);
+    else
+        realNum = num;
     let decimalPower = Math.pow(10, decimals);
     //debug console.log(`decimalPower: ${decimalPower}`);
     return Math.round(realNum * decimalPower) / decimalPower;
 }
 
+/**
+ * 
+ * @param {Number} num 
+ * @param {Number} decimals 
+ * @param {boolean} padDecimals 
+ * @returns 
+ */
 function printToFixedFloat(num, decimals, padDecimals) {
     if (decimals == null)
         decimals = 0;
@@ -90,12 +119,12 @@ function printToFixedFloat(num, decimals, padDecimals) {
 
 /**
  * Detect if the given object is an error
- * @param {Object} e 
+ * @param {Object | Error} e 
  * @returns true if the object is an Error
  */
 let isError = function (e)
 {
-    return e && e.stack != null && e.message != null &&
+    return e && e instanceof Error && e.stack != null && e.message != null &&
         typeof e.stack === 'string' && typeof e.message === 'string';
 }
 

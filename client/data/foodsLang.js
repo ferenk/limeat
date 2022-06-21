@@ -1,7 +1,14 @@
 export { processQuantity }
 
 import { isNumeric } from '../util/util.js';
+import { FoodsDbItem } from './foodsDb.js';
 
+/**
+ * 
+ * @param {String} quantityStr 
+ * @param {FoodsDbItem} foodObj 
+ * @returns 
+ */
 function processQuantity(quantityStr, foodObj)
 {
     let u = '', unit = null;
@@ -16,7 +23,7 @@ function processQuantity(quantityStr, foodObj)
         unit = 'db';
 
     if (isNumeric(quantityNumStr)) {
-            foodObj.quantity = quantityNumStr;
+            foodObj.quantity = Number.parseFloat(quantityNumStr);
             foodObj.quantityunit = (unit != null ? unit : 'db');
             return true;
     }

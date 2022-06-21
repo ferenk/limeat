@@ -3,19 +3,19 @@ export { nodeXHRComm, nodeXHRPost };
 /**
  * XML HTTP communication: Callback for the received message
  *
- * @callback xhrCommCallback
- * @param {Object} xhr
- * @param {Object} ev the Event or an Error
+ * @callback XHRCommCallback
+ * @param {XMLHttpRequest} xhr
+ * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev the Event or an Error
  */
 
 /**
  * Do XML HTTP request communication
  * @param {string} path 
  * @param {Object?} params 
- * @param {xhrCommCallback} cb 
+ * @param {XHRCommCallback} cb 
  */
 
-function nodeXHRComm(path, params, cb)
+function nodeXHRComm(path = '', params, cb)
 {
     if (params != null)
     {
@@ -27,13 +27,14 @@ function nodeXHRComm(path, params, cb)
             {
                 if (paramStr.length > 0)
                     paramStr += '&';
+                // @ts-ignore:next-line (it's guaranteed that params has this value)
                 paramStr += paramName + '=' + encodeURIComponent(params[paramName]);
             });
             path += `?${paramStr}`;
         }
     }
+    let xhr = new XMLHttpRequest();
     try {
-        let xhr = new XMLHttpRequest();
         xhr.addEventListener('load', (e) => {
             console.log(`XHR result: OK, URL: ${xhr.responseURL} - Response length: ${xhr.responseText.length}`);
             cb(xhr, e);
@@ -45,8 +46,9 @@ function nodeXHRComm(path, params, cb)
 
         xhr.open("GET", path);
         xhr.send();
-    } catch (e) {
-        cb(null, e);
+    } catch (e2) {
+        // @ts-ignore:next-line (e2 is not 'unknown' type but is an error for sure)
+        cb(xhr, e2);
     }
 }
 

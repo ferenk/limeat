@@ -1,7 +1,7 @@
 export { Controller };
 
 import { nodeXHRComm } from './data/comm.js';
-import { printMoment, getCurrentTimeStr } from './util/util.js';
+import { printMoment, getCurrentTimeStr, isError } from './util/util.js';
 import { TextareaExt } from './views/textareaExt.js';
 import { TextareaHighlight } from './views/textareaHighlight';
 import { OutputTable } from './views/outputTable.js';
@@ -36,10 +36,17 @@ class Controller
 
 
     /**
+     * XML HTTP communication: Callback for the received message
+     *
+     * @callback ProcessInputCallBack
+     */
+
+    /**
      * Creates a new output table widget
      * @param { TextareaExt } mealsDiaryText
      * @param { TextareaHighlight } mealsDiaryTextHighlight
      * @param { OutputTable } outputTable
+     * @param { ProcessInputCallBack } processInputCB
      */
     constructor(mealsDiaryText, mealsDiaryTextHighlight, outputTable,  processInputCB)
     {
@@ -51,9 +58,8 @@ class Controller
 
     /**
      * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} jqSelector selector for a textarea HTML widget 
      */
-    initialize(jqSelector)
+    initialize()
     {
     }
 
@@ -86,13 +92,21 @@ class Controller
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
     }
 
-    onCursorMoved(userEvent)
-    {
+    /**
+     * Event handler for cursor move events
+     * @param {boolean?} isUserEvent true if the event comes directly from the user
+     * @param {number[]?} prevCursorPos previous cursor position
+     */
+    onCursorMoved(isUserEvent, prevCursorPos) {
         let cursorPos = this.mealsDiaryText.cursorPos;
-        this.selectRow(cursorPos[1], userEvent);
-        this.mealsDiaryTextHighlight.render(cursorPos[1]);
-        this.updateUi_FocusedMode();
-        this.updatePrevNextMealButtons();
+
+        if (prevCursorPos == null || prevCursorPos[1] != cursorPos[1])
+        {
+            this.selectRow(cursorPos[1], isUserEvent == true);
+            this.mealsDiaryTextHighlight.render(cursorPos[1]);
+            //? this.updateUi_FocusedMode();
+            this.updatePrevNextMealButtons();
+        }
 
         // add extra dark background color to the current food
         let thisRowSections = this.mealsDiaryTextHighlight.tempHtmlBuffer.bufferIdxs.get(cursorPos[1]);
@@ -110,6 +124,10 @@ class Controller
             }
     }
 
+    /**
+     * 
+     * @param {String} newSelector 
+     */
     changeHighlightedFoodPart(newSelector)
     {
         if (this.currentCursorSection != null)
@@ -169,12 +187,12 @@ class Controller
         if (this.mealsDiaryText.focusedMode)
         {
             this.mealsDiaryText.cursorPos[1] = this.mealsDiaryText.mealLineLast;
-            this.mealsDiaryText.jqItem.val(this.mealsDiaryText.rows[this.mealsDiaryText.cursorPos[1]]);
+            this.mealsDiaryText.domItem.value = this.mealsDiaryText.rows[this.mealsDiaryText.cursorPos[1]];
         }
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
-        this.mealsDiaryText.jqItem.blur();
-        this.mealsDiaryText.jqItem.focus();
+        this.mealsDiaryText.domItem.blur();
+        this.mealsDiaryText.domItem.focus();
     }
 
     /**
@@ -221,11 +239,12 @@ class Controller
     /**
      * Communication handler: Incoming whole daily food record
      * @param {XMLHttpRequest} xhr 
-     * @param {ProgressEvent<XMLHttpRequestEventTarget>} ev 
+     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
      */
     onDailyFoodRecordArrived(xhr, ev)
     {
-        if (ev.type == 'load') {
+        // @ts-ignore:next-line (dynamic type check)
+        if (!isError(ev) && ev.type == 'load') {
             let content = xhr.responseText;
             content = content.replaceAll('\\n', '\n');
             console.log('foodRecordRowArrived: ' + content);
@@ -340,14 +359,14 @@ class Controller
         this.updatePrevNextMealButtons();
 
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
-        this.mealsDiaryText.jqItem.focus();
-        this.mealsDiaryText.jqItem.blur();
+        this.mealsDiaryText.domItem.focus();
+        this.mealsDiaryText.domItem.blur();
     }
 
     /**
      * Select the current row of the output table
-     * @param {Number} iRow 
      * @param {boolean} isUserEvent true if the event comes directly from the user
+     * @param {Number} iRow 
      */
     selectRow(iRow, isUserEvent)
     {
@@ -361,6 +380,10 @@ class Controller
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
     }
 
+    /**
+     * 
+     * @param {Number} iRow 
+     */
     focusRow(iRow)
     {
         $('#outTabFocusedMode').prop('checked', true);   //.is(":checked"))

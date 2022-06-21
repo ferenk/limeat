@@ -10,7 +10,14 @@
     "checkJs": true,
     "noEmit": true,
     "strict": true,
-    "noImplicitAny": false,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
     "declaration": true
   },
   "include": ["client/**/*.js"]

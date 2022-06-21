@@ -1,4 +1,4 @@
-import { getCurrentMoment, isNumeric, toNumericOrZero, toFixedFloat, printToFixedFloat, isError, copyText2Clipboard } from './util/util.js';
+import { getCurrentMoment, toNumericOrZero, toFixedFloat, printToFixedFloat, isError, copyText2Clipboard } from './util/util.js';
 import { nodeXHRComm } from './data/comm.js';
 import { processQuantity } from './data/foodsLang.js';
 import { FoodsDb } from './data/foodsDb.js';
@@ -6,21 +6,54 @@ import { Controller } from './controller.js';
 import { TextareaExt } from './views/textareaExt.js';
 import { TextareaHighlight } from './views/textareaHighlight.js';
 import { OutputTable } from './views/outputTable.js';
+import { traceMethodCalls } from './util/callTracker.js'
 import { CountdownButton } from './util/ui/countdownButton.js';
 
 var optScaleType = 'barista';
 
 /** @type { TextareaExt } */
-var g_mealsDiaryText = new TextareaExt();
-var g_mealsDiaryTextHighlight = new TextareaHighlight();
+// @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareExt'... (Proxy type problem))
+var g_mealsDiaryText = traceMethodCalls(new TextareaExt(), false);
+
+/** @type { TextareaHighlight } */
+// @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareaHighlight'... (Proxy type problem))
+var g_mealsDiaryTextHighlight = traceMethodCalls(new TextareaHighlight(), false);
+
 /** @type { OutputTable } */
-var g_outputTable = new OutputTable();
+// @ts-ignore:next-line (Type '{}' is missing the following properties from type 'OutputTable'... (Proxy type problem))
+var g_outputTable = traceMethodCalls(new OutputTable(), false);
+
 /** @type { Controller } */
-var g_controller = new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, processInput);
+// @ts-ignore:next-line (Type '{}' is missing the following properties from type 'Controller'... (Proxy type problem))
+var g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, processInput), false);
 
 var g_mobileMode = null;
 
 let g_saveButton = new CountdownButton('#btSave', 'SAVED!', 'SAVE', 3, onSaveButtonPressed, null);
+
+class Food
+{
+    constructor()
+    {
+        this.origText = '';
+    }
+    /** @type { String | undefined } */
+    name;
+    /** @type { Number | undefined } */
+    quantity;
+    /** @type { Number | undefined } */
+    kcal;
+    /** @type { String | undefined } */
+    kcalunit;
+    /** @type { String | undefined } */
+    quantityunit;
+    /** @type { boolean | undefined } */
+    isInvalid;
+    /** @type { String | undefined } */
+    unprocessed;
+    /** @type { String | undefined } */
+    highlighterClass;
+}
 
 /* Process entered text*/
 function processInput()
@@ -55,20 +88,16 @@ function processInput()
         }
 
         // parse food (name, quantity, unit)
+        /** @type {Food[]} */
         let foodParts = [];
         let foodNamePrefixStr = '';
-        let foodPartOrigIdx = 0;
         // foodPartStrs: ["apple 40g", "banana 20g"]
         let foodPartStrs = foodLine.split(',');
         foodPartStrs.forEach(foodPartStr => {
             // foodPartStr: "apple 40g"
             let foodPartArr = foodPartStr.split(/[' ']+/);
             // foodPartArr: ["apple", "40g"]
-            let foodName = null,
-                foodQuantity = null,
-                foodQuantityUnit = null,
-                foodKCal = null;
-            let newFoodPart = {};
+            let newFoodPart = new Food();
 
             newFoodPart.origText = foodPartStr;
 
@@ -94,7 +123,7 @@ function processInput()
                 // test if this part is a gram-based quantity
                 let foodPartUnitGramCalcStr = foodPartNameStr.replaceAll('g', '').replaceAll('db', '');
                 let foodPartNameISQuantity = /^[.*/+-0123456789()]+$/.test(foodPartUnitGramCalcStr);
-                let u = '', op;
+                let u = '';
                 if (foodPartNameISQuantity) {
                     try {
                         let foodQuantity = toFixedFloat(eval(foodPartUnitGramCalcStr));
@@ -112,11 +141,11 @@ function processInput()
                     let foodPartNameBEGINSWITHQuantity = /^[.0123456789]+/.test(foodPartNameStr);
                     if (foodPartNameBEGINSWITHQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
                         newFoodPart.kcalunit = 'kcal';
-                        newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
+                        newFoodPart.kcal = Number.parseFloat(foodPartNameStr.substring(0, foodPartNameStr.length - u.length));
                     }
                     else if (foodPartNameBEGINSWITHQuantity && (foodPartNameStr.endsWith(u = 'kc/') || foodPartNameStr.endsWith(u = 'kcal/'))) {
                         newFoodPart.kcalunit = 'kcal/100g';
-                        newFoodPart.kcal = foodPartNameStr.substring(0, foodPartNameStr.length - u.length);
+                        newFoodPart.kcal = Number.parseFloat(foodPartNameStr.substring(0, foodPartNameStr.length - u.length));
                     }
                     else {
                         if (!processQuantity(foodPartNameStr, newFoodPart))
@@ -151,7 +180,6 @@ function processInput()
         let mdFoodOutputLineStr = '',
             htmlfoodOutputLineStr = '';
         let foodKCal = 0, foodG = 0;
-        let isFirstPart = true;
         for (let iPart = 0; iPart < foodParts.length; iPart++)
         {
             let foodPart = foodParts[iPart];
@@ -161,7 +189,7 @@ function processInput()
             {
                 let partKCal = 0;
                 if (foodPart.kcalunit == 'kcal')
-                    partKCal = toNumericOrZero(foodPart.kcal);
+                    partKCal = toNumericOrZero(foodPart.kcal ?? 0);
                 if (partKCal == 0) {
                     if (foodPart.kcalunit == 'kcal/100g' && foodPart.quantityunit == 'g') {
                         let quant = simulateScaleMeasurement(foodPart.quantity);
@@ -199,21 +227,25 @@ function processInput()
                 let sectionName = recordHighlightedInput(iCurrentRow, iPart, foodPart.origText, partOrigTextColor, timestampStr);
                 foodPart.highlighterClass = (sectionName ? `class=${sectionName}` : '');
 
-                if (foodPart.kcal != null) {
-                    let kcalunitPrinted = foodPart.kcalunit == 'kcal/100g' ? 'kc/' : foodPart.kcalunit;
-                    if (foodPart.kcalunit != 'kcal') {
-                        mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)`;
-                        htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)</span>`;
+                if (foodPart && foodPart.name)
+                {
+                    if (foodPart.kcal != null) {
+                        let kcalunitPrinted = foodPart.kcalunit == 'kcal/100g' ? 'kc/' : foodPart.kcalunit;
+                        if (foodPart.kcalunit != 'kcal') {
+                            mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)`;
+                            htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted}, =${Math.round(partKCal)}kc)</span>`;
+                        }
+                        else {
+                            mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})`;
+                            htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})</span>`;
+                        }
                     }
                     else {
-                        mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})`;
-                        htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, ${foodPart.kcal}${kcalunitPrinted})</span>`;
+                        mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
+                        htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)</span>`;
                     }
                 }
-                else {
-                    mdFoodOutputLineStr += `${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)`;
-                    htmlfoodOutputLineStr += `<span ${foodPart.highlighterClass} style="font-weight:600">${foodPart.name.replaceAll('_', ' ')} (${foodPart.quantity}${foodPart.quantityunit}, =${Math.round(partKCal)}kc)</span>`;
-                }
+
                 if (partKCal == 0) {
                     mdFoodOutputLineStr += '</font>';
                     htmlfoodOutputLineStr += '</font>';
@@ -313,7 +345,14 @@ function recordHighlightedInput(iRow, iPart, currPartHtmlText, color = null, tim
     return sectionName;
 }
 
-function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
+/**
+ * 
+ * @param {Number} quant 
+ * @param {Number} dbFoodQuant 
+ * @param {Number} dbFoodKcal 
+ * @returns 
+ */
+function roundKCalMeasurement(quant = 0, dbFoodQuant = 1, dbFoodKcal = 0)
 {
     return (quant * dbFoodKcal / dbFoodQuant);
 }
@@ -321,8 +360,9 @@ function roundKCalMeasurement(quant, dbFoodQuant, dbFoodKcal)
 /**
  * Adjust the measured weight simulating the selected kitchen scale.
  * @param {Number} quant
+ * @returns {Number}
  */
-function simulateScaleMeasurement(quant)
+function simulateScaleMeasurement(quant = 0)
 {
     if (optScaleType != 'barista') {
         if (optScaleType == 'kitchen')
@@ -362,11 +402,11 @@ function appendSeparator() {
 }
 
 /**
- * @param {Object} foodPart
+ * @param {Food} foodPart
  */
 function calcFoodKcal(foodPart)
 {
-    let foodPartNameLower = foodPart.name.toLowerCase();
+    let foodPartNameLower = foodPart.name?.toLowerCase();
     let foodItems = FoodsDb.getInstance().items;
     for (let i = 0; i < foodItems.length; i++) {
         let dbFood = foodItems[i];
@@ -407,11 +447,12 @@ function formatFoodData(kcalStr, timestampStr, foodDetails)
 /**
  * Communication
  * @param {XMLHttpRequest} xhr 
- * @param {ProgressEvent<XMLHttpRequestEventTarget>} ev 
+ * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
  */
 function onCalcDbArrived(xhr, ev)
 {
-    if (ev.type == 'load') {
+    // @ts-ignore:next-line (dynamic type check)
+    if (!isError(ev) && ev.type == 'load') {
         let content = xhr.responseText;
         FoodsDb.getInstance().processDbFile(content);
         g_controller.onUserOrDateChanged();
@@ -433,19 +474,24 @@ function onSaveButtonPressed()
     nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: preprocessedFoodInputText }, onSaveFinished);
 }
 
-/** Countdown functionality for a button (currently specific to the save button) */
+/**
+ * Countdown functionality for a button (currently specific to the save button)
+ * @param {XMLHttpRequest} xhr 
+ * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+ */
 function onSaveFinished(xhr, ev)
 {
+    // @ts-ignore:next-line (dynamic type check)
     if (!isError(ev) && ev.type == 'load') {
         console.log(`XHR communication result: ${xhr.responseText}`);
         g_controller.savedFoodInput = g_mealsDiaryText.rowsStr;
         g_saveButton.startCountdown('<span style="color: darkgreen"><b>SAVED!</b></span>', 3);
+    // @ts-ignore:next-line (dynamic type check)
     } else if (isError(ev) || ev.type == 'error') {
         g_saveButton.startCountdown('<span style="color: darkred"><b>ERROR!</b></span>', 8);
         $('#lSaveErrorMsg').html('ERROR: Unable to access server and to save data!').slideDown().delay(7800).slideUp();
     }
 }
-
 
 function handleMobileMode() {
     // @ts-ignore:next-line (Cannot find name 'MobileDetect')
@@ -454,7 +500,6 @@ function handleMobileMode() {
     if (g_mobileMode) {
     //if (g_mobileMode || true) {           // mobile layout on browser, too
         $('body').css('margin', '0px');
-        let screenScale = document.documentElement.clientWidth / 640;
         $('head').append(`<meta name="viewport" content="width=640px">`);
         $('body div').css('padding', '1em');
     }
@@ -484,7 +529,7 @@ function onPageLoaded()
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
-    $('#tUser').on('input', g_controller.onUserOrDateChanged);
+    $('#tUser').on('input', () => g_controller.onUserOrDateChanged());
     //$('#tDate').on('input', onUserOrDateChanged);
     $('#btDateUp').on('click', () => g_controller.onPrevNextDay(false));
     $('#btDateDown').on('click', () => g_controller.onPrevNextDay(true));

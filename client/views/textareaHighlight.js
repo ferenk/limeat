@@ -135,6 +135,7 @@ class TempHtmlBuffer
     constructor(parent)
     {
         this.parent = parent;
+        /** @type { String[]} */
         this.buffer = [];
         this.bufferIdxs = new Map();
     }

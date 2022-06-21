@@ -5,8 +5,8 @@ class TextareaExt {
     rowsStr = '';
     /** @type {String[]} All rows of the textarea */
     rows = [];
-    /** @type {JQuery} jQuery object of our textarea's widget */
-    jqItem = $('html');
+    /** @type {HTMLTextAreaElement} DOM object of our textarea's widget */
+    domItem = document.createElement("textarea");
     /** @type {Number[]} The current row number of the cursor */
     cursorPos = [-1, -1];
     /** @type {boolean} Focused mode is enabled */
@@ -21,6 +21,7 @@ class TextareaExt {
      * Callback for the textarea's input event
      * @callback OnUserInputCB
      * @param {boolean?} userEvent True if this is a real user event (and not a call from another part of the system)
+     * @param {number[]?} prevCursorPos previous cursor position
      * @returns {void}
      */
 
@@ -41,19 +42,21 @@ class TextareaExt {
 
     /**
      * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} jqSelector selector for a textarea HTML widget 
+     * @param {String} htmlSelector selector for a textarea HTML widget 
      */
-    initialize(jqSelector)
+    initialize(htmlSelector)
     {
-        this.jqItem = $(jqSelector);
+        // @ts-ignore:next-line (HTMLElement is not an HTMLInputElement, some properties are missing)
+        this.domItem = document.querySelector(htmlSelector);
 
-        this.jqItem.on('input', () => {
-            this.onTextChanged();
-        });
+        let self = this;
 
-        this.jqItem.on('keydown keyup click focusin', () => {
-            this.onCursorMoved();
-        });
+        this.domItem.addEventListener('input', () => { self.onTextChanged(); return true; });
+
+        this.domItem.addEventListener('keydown', () => { self.onCursorMoved('keydown'); return true; });
+        this.domItem.addEventListener('keyup',   () => { self.onCursorMoved('keyup'); return true; });
+        //this.domItem.addEventListener('click',   () => { self.onCursorMoved('click'); return true; });
+        //this.domItem.addEventListener('focusin', () => { self.onCursorMoved('focus in'); return true; });
 
         $('input[type=radio][name=txtMealsModes]').change((e) => {
             // memo: How to get the current value of the radio button
@@ -87,25 +90,22 @@ class TextareaExt {
     {
         // only handle user triggered events! (to prevent infinite loops)
         let setToFocused = (mode != 'normal');
-        $(this.jqItem).toggleClass('focusedMode', setToFocused);
+        $(this.domItem).toggleClass('focusedMode', setToFocused);
     }
 
     /**
      * Handle the input event of the text box
-     * @param {Event?} event 
      */
-    onTextChanged(event = null)
+    onTextChanged()
     {
         if (this.focusedMode)
         {
-            // @ts-ignore:next-line (<multiple types> cannot set to 'string')
-            this.rows[this.selectedLine] = this.jqItem.val();
+            this.rows[this.selectedLine] = this.domItem.value;
             // this.updateRowsStr(); - this field will not updated automatically (it is rarely used)
         }
         else
         {
-            // @ts-ignore:next-line (<multiple types> cannot set to 'string')
-            this.rowsStr = this.jqItem.val();
+            this.rowsStr = this.domItem.value;
             this.updateRows();
         }
 
@@ -113,7 +113,7 @@ class TextareaExt {
 
         if (this.onTextChangedCB != null)
         {
-            this.onTextChangedCB(false);
+            this.onTextChangedCB(false, this.cursorPos);
         }
     }
 
@@ -135,11 +135,11 @@ class TextareaExt {
 
             if (updateHtmlItem == true)
             {
-                this.jqItem.val(this.rowsStr);
+                this.domItem.value = this.rowsStr;
                 this.onCursorMoved();
 
                 let refreshEvent = new Event('input');
-                this.jqItem[0].dispatchEvent(refreshEvent);
+                this.domItem.dispatchEvent(refreshEvent);
             }
         }
     }
@@ -156,20 +156,22 @@ class TextareaExt {
 
     /**
      * Update the current cursor position
+     * @param {String} eventName the DOM event currently handled
      */
-    onCursorMoved()
+    onCursorMoved(eventName = 'unknown')
     {
-        let prevcursorY = this.cursorPos[1];
+        console.log(`textAreaExt.onCursorMoved(eventName='${eventName}')`);
+        let prevCursorPos = JSON.parse(JSON.stringify(this.cursorPos));
         // @ts-ignore:next-line (selectionStart does not exist on HTMLElement)
-        let textBufferTillTheCursorStr = this.rowsStr.substr(0, this.jqItem[0].selectionStart).split('\n');
+        let textBufferTillTheCursorStr = this.rowsStr.substr(0, this.domItem.selectionStart).split('\n');
         this.cursorPos[1] = textBufferTillTheCursorStr.length - 1;
         this.cursorPos[0] = textBufferTillTheCursorStr[this.cursorPos[1]].length;
 
-        if (this.onCursorRowMovedCB != null && prevcursorY != this.cursorPos[1])
-            this.onCursorRowMovedCB(false);
+        if (this.onCursorRowMovedCB != null && prevCursorPos[1] != this.cursorPos[1])
+            this.onCursorRowMovedCB(false, prevCursorPos);
 
         if (this.onCursorMovedCB != null)
-            this.onCursorMovedCB(false);
+            this.onCursorMovedCB(false, prevCursorPos);
     }
 
     /**
@@ -189,14 +191,14 @@ class TextareaExt {
             }
             aggregatedPosN += this.rows[yCurr].length + 1;
         }
-        this.moveCursorToPos(this.jqItem[0], aggregatedPosN);
+        this.moveCursorToPos(this.domItem, aggregatedPosN);
         this.cursorPos[0] = x;
         this.cursorPos[1] = y;
     }
 
     /**
      * Move the cursor to the given character-based position (inside the textarea)
-     * @param {HTMLElement} element 
+     * @param {HTMLTextAreaElement} element 
      * @param {Number} pos 
      */
     moveCursorToPos(element, pos)
@@ -204,6 +206,12 @@ class TextareaExt {
         this.setInputSelectionRange(element, pos, pos);
     }
 
+    /**
+     * 
+     * @param {HTMLTextAreaElement} element 
+     * @param {Number} selectionStart 
+     * @param {Number} selectionEnd 
+     */
     setInputSelectionRange(element, selectionStart, selectionEnd)
     {
         setTimeout(() =>
@@ -243,10 +251,10 @@ class TextareaExt {
             this.selectedLine = selectedLine;
         if (focusedMode) {
             if (this.selectedLine != -1)
-                this.jqItem.val(this.rows[this.selectedLine]);
+                this.domItem.value = this.rows[this.selectedLine];
         }
         else
-            this.jqItem.val(this.rowsStr);
+            this.domItem.value = this.rowsStr;
     }
 
     /**
@@ -266,7 +274,7 @@ class TextareaExt {
 
         // show the new, extended meal text
         this.rowsStr = this.rows.join('\n');
-        this.jqItem.val(this.rowsStr);
+        this.domItem.value = this.rowsStr;
         this.focusToTheEnd();
     }
 
@@ -275,11 +283,8 @@ class TextareaExt {
      */
     focusToTheEnd()
     {
-        /** @type {HTMLInputElement} */
-        // @ts-ignore:next-line (HTMLElement is not an HTMLInputElement, some properties are missing)
-        let textInputElement = this.jqItem[0];
-        textInputElement.selectionStart = textInputElement.selectionEnd = this.rowsStr.length;
-        this.jqItem[0].focus();
+        this.domItem.selectionStart = this.domItem.selectionEnd = this.rowsStr.length;
+        this.domItem.focus();
         //qTask? onCursorPositionChanged()
     }
 
@@ -314,12 +319,12 @@ class TextareaExt {
     {
         if (this.focusedMode)
         {
-            this.jqItem.val(this.rows[this.selectedLine]);
+            this.domItem.value = this.rows[this.selectedLine];
         }
         else
         {
             this.updateRowsStr();
-            this.jqItem.val(this.rowsStr);
+            this.domItem.value = this.rowsStr;
         }
 
         if (focusToTheEnd != false)
