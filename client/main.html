@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html style="background: lightGray;">
+<html style="background: #dadada;">
 
 <!--
     Licenses
@@ -8,6 +8,7 @@
 
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=0">
 
     <title>KCal calculator</title> 
     <link rel="icon" type="image/x-icon" href="css/diet.png">
@@ -33,7 +34,33 @@
 </head>
 
 <body>
-    <div>
+    <div class="header sticky">
+        <div class="topContent">
+            <div id="dKCals">
+                <button id="btAddMeal" class="btn">+</button>
+                <font size="+1.5" style="min-width: 5em;"><div id="lbCurrentKCal">0 kc</div></font>
+                <!--div id="tCurrentLine" style="display: none;"></div-->
+                <!--button id="btMealPrev" class="btn">&lt;</button>
+                <button id="btMealNext" class="btn">&gt;</button-->
+                <div id="divMealSelection">
+                    <div id="lMealTime" class="biggerText" style="margin-right: 6px;">00:00</div>
+                    <div id="divMealUpDown">
+                        <button id="btPrevMeal" class="btn_light">&#9650;</button>
+                        <button id="btNextMeal" class="btn_light">&#9660;</button>
+                    </div>
+                </div>
+
+                <button id="btSave" class="btn" style="margin-left: auto;">Save</button>
+                <div id="lSaveErrorMsg">Error message</div>
+
+                <font size="+2" style="text-decoration: underline; margin-left: 0.3em;"><span id="lbCurrentAllKCal">0</span></font> &nbsp; &nbsp;
+                <div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216;</div><!-- div>  11034</div-->
+            </div>
+        </div>
+    </div>
+
+
+    <div id="mainDiv">
         <div style="font-size: 3em; font-weight: 600;">KCal calculator</div>
 
         <div id="dMainLine">
@@ -48,28 +75,7 @@
                     <button id="btDateDown" class="btn_light">&#9660;</button>
                 </div>
             </div>
-            <button id="btSave" class="btn" style="margin-left: auto;">Save</button>
-            <div id="lSaveErrorMsg">Error message</div>
             <div style="height: 0.5em;"></div>
-        </div>
-        <hr class="noMargin">
-
-        <div id="dKCals">
-            <button id="btAddMeal" class="btn">+</button>
-            <font size="+1.5" style="min-width: 5em;"><div id="lbCurrentKCal">0 kc</div></font>
-            &nbsp; &nbsp;
-            <!--div id="tCurrentLine" style="display: none;"></div-->
-            <!--button id="btMealPrev" class="btn">&lt;</button>
-            <button id="btMealNext" class="btn">&gt;</button-->
-            <div id="divMealSelection">
-                <div id="lMealTime" class="biggerText" style="margin-right: 6px;">00:00</div>
-                <div id="divMealUpDown">
-                    <button id="btPrevMeal" class="btn_light">&#9650;</button>
-                    <button id="btNextMeal" class="btn_light">&#9660;</button>
-                </div>
-            </div>
-            <font size="+2" style="text-decoration: underline; margin-left: auto;"><span id="lbCurrentAllKCal">0</span></font> &nbsp; &nbsp;
-            <div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216;</div><!-- div>  11034</div-->
         </div>
         <hr class="noMargin">
 

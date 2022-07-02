@@ -91,30 +91,6 @@ class Controller
         this.updatePrevNextMealButtons();
         ///!!!
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
-
-        // dynamically switch the header and the footer
-        if (this.mainHeaderIsOnTop && this.mealsDiaryText.rows.length > 6)
-        {
-            let domModeButtons = document.getElementById('txtMealsModes');
-            let domKCalsHeader = document.getElementById('dKCals');
-            if (domModeButtons && domKCalsHeader)
-            {
-                document.getElementById('txtMealsAboveDock')?.appendChild(domModeButtons);
-                document.getElementById('txtMealsUnderDock')?.appendChild(domKCalsHeader);
-            }
-            this.mainHeaderIsOnTop = false;
-        }
-        else if (!this.mainHeaderIsOnTop && this.mealsDiaryText.rows.length <= 6)
-        {
-            let domModeButtons = document.getElementById('txtMealsModes');
-            let domKCalsHeader = document.getElementById('dKCals');
-            if (domModeButtons && domKCalsHeader)
-            {
-                document.getElementById('txtMealsAboveDock')?.appendChild(domKCalsHeader);
-                document.getElementById('txtMealsUnderDock')?.appendChild(domModeButtons);
-            }
-            this.mainHeaderIsOnTop = true;
-        }
     }
 
     /**

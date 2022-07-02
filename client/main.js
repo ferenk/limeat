@@ -498,13 +498,16 @@ function handleMobileMode() {
     let md = new MobileDetect(window.navigator.userAgent);
     g_mobileMode = md.mobile() != null;
     if (g_mobileMode) {
-    //if (g_mobileMode || true) {           // mobile layout on browser, too
+        //if (g_mobileMode || true) {           // use mobile layout on browser, too
+        $('html').css('max-width', '56em');
         $('body').css('margin', '0px');
-        $('head').append(`<meta name="viewport" content="width=640px">`);
-        $('body div').css('padding', '1em');
+        $('body > div').css('padding', '1em');
+        $('#tableOut').css('font-size', '110%');
     }
-    else
+    else {
         $('body').css('width', '640px');
+        $('.header').css('width', '640px');
+    }
 }
 
 function onPageLoaded()
