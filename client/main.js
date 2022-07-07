@@ -500,13 +500,14 @@ function handleMobileMode() {
     if (g_mobileMode) {
         //if (g_mobileMode || true) {           // use mobile layout on browser, too
         $('html').css('max-width', '56em');
+        $('body').css('width', '100%');
         $('body').css('margin', '0px');
         $('body > div').css('padding', '1em');
         $('#tableOut').css('font-size', '110%');
     }
     else {
         $('body').css('width', '640px');
-        $('.header').css('width', '640px');
+        $('.header').css('width', '616px');
     }
 }
 
