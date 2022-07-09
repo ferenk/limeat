@@ -1,46 +1,74 @@
 // bookshelf-app/server/db.js
 
 // Import path module
-const path = require('path')
-const fs = require('fs')
-
-// Find the food DB file: first sqlite file which begins with 'foods-' (e.g 'foods-test.sqlite')
-var dbPath =  path.resolve(__dirname, 'foods-default.sqlite');
-let fileNames = fs.readdirSync(__dirname);
-fileNames.some(fileName => {
-    if (fileName.startsWith('foods-') && fileName.endsWith('.sqlite')) {
-        dbPath = path.join(__dirname, fileName);
-        console.log(`Found food DB file: ${dbPath}`);
-        return true;
-    }
-    return false;
-});
+const path = require('path');
+const fs = require('fs');
 
 // users: 'id', 'name', 'password_hash', 'email'
 // foods: 'id', 'name', 'variant_name', 'creator', 'date', 'calories', 'weights'
 // tracking: 'user_id', 'date', 'foods'
 
-// Create connection to SQLite database
-const knex = require('knex')({
-    client: 'sqlite3',
-    connection: {
-        filename: dbPath,
-    },
-    useNullAsDefault: true
-} );
-
-//const sqlite = require('sqlite3');
-
 class SQLiteDb {
+    /**
+     * Initializes the SQlite DB connector
+     * @param {String} dbRootFolder The folder where the DB files are stored
+     */
+    constructor(dbRootFolder)
+    {
+        this.foodDbPath = this.findFoodDbFile(dbRootFolder);
+        this.knex = this.initWithKnex();
+    }
+
+    initWithKnex()
+    {
+        //const sqlite = require('sqlite3');
+
+        // Create connection to SQLite database
+        const knex = require('knex')({
+            client: 'sqlite3',
+            connection: {
+                filename: this.foodDbPath,
+            },
+            useNullAsDefault: true
+        } );
+
+        return knex;
+    }
+
+    findFoodDbFile(dbRootFolder)
+    {
+        if (dbRootFolder == null)
+            dbRootFolder = __dirname;
+
+        // Find the food DB file: first sqlite file which begins with 'foods-' (e.g 'foods-test.sqlite')
+        var foodDbPath =  path.resolve(dbRootFolder, 'foods-default.sqlite');
+
+        let fileNames = fs.readdirSync(dbRootFolder);
+        let found = false;
+        fileNames.some(fileName => {
+            if (fileName.startsWith('foods-') && fileName.endsWith('.sqlite')) {
+                foodDbPath = path.join(dbRootFolder, fileName);
+                console.log(`Found food DB file: ${foodDbPath}`);
+                found = true;
+                return true;
+            }
+            return false;
+        });
+
+        if (!found)
+            console.log('DB file NOT found!');
+        return foodDbPath;
+    }
+
     async createDbs()
     {
         // Create a foods table in the db if needed
-        await knex.schema
+        await this.knex.schema
             .hasTable('foods')
             .then((exists) => {
                 if (!exists) {
                     let tableName = 'foods';
-                    return knex.schema.createTable(tableName, (table) => {
+                    return this.knex.schema.createTable(tableName, (table) => {
                         table.increments('id').primary();
                         table.string('short_name');
                         table.string('name');
@@ -61,14 +89,14 @@ class SQLiteDb {
                 console.error(`There was an error setting up the database: ${error}`);
             });
 
-        await knex.schema
+        await this.knex.schema
             .hasTable('food_records_raw')
             .then((exists) => {
                 if (!exists)
                 {
                     let tableName = 'food_records_raw';
 
-                    return knex.schema.createTable(tableName, (table) =>
+                    return this.knex.schema.createTable(tableName, (table) =>
                     {
                         table.string('user');
                         table.string('date');
@@ -92,7 +120,7 @@ class SQLiteDb {
     // Just for debugging purposes:
     // Log all data in "books" table
     async selectAllRows(tableName) {
-        return await knex.select('*').from(tableName)
+        return await this.knex.select('*').from(tableName)
             .then(data => {
                 console.log('data:', data);
                 return data;
@@ -100,10 +128,20 @@ class SQLiteDb {
             .catch(err => console.log(`ERROR (.catch() handler): ${err}`));
     }
 
+    /**
+     * Read all food data from the file
+     * @param {Object} dbData 
+     */
+    async readFoodDbRows(dbData)
+    {
+        dbData.foods_raw = await this.selectAllRows('food_records_raw');
+        console.log(`DB rows read: ${dbData.foods_raw}`);
+    }
+
     // Just for debugging purposes:    
     async updateRow(tableName, user, date, food_data)
     {
-        await knex(tableName).insert({ user: user, date: date, food_data: food_data.replace(/\n/g, '\\nNEWLINE') })
+        await this.knex(tableName).insert({ user: user, date: date, food_data: food_data.replace(/\n/g, '\\nNEWLINE') })
             .onConflict(['user', 'date'])
             .merge({ food_data: food_data })
             .catch(err => {
@@ -115,4 +153,4 @@ class SQLiteDb {
 
 
 // Export the database
-module.exports = SQLiteDb;
+module.exports = { SQLiteDb };

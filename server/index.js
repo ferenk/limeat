@@ -11,18 +11,16 @@ const { query } = require('express');
 
 var app = express();
 
-app.use(express.static(path.join(__dirname, '../client'), { extensions: ['html', 'js', 'png'] }));
-app.set('views', path.join(__dirname, '../client'));
+app.use(express.static(path.join(__dirname, '..', 'client'), { extensions: ['html', 'js', 'png'] }));
+app.set('views', path.join(__dirname, '..', 'client'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
+// WEB server
 app.get('/', function (req, res) {
     console.log('Rendering page... (main.html)');
     res.render('main');
 });
-
-var connectDb = null, dbData = {};;
-initDb();
 
 function readFile(filename)
 {
@@ -36,23 +34,6 @@ function readFile(filename)
         console.error(err)
         return null;
     }
-}
-
-async function readFoodDbRows()
-{
-    dbData.foods_raw = await connectDb.selectAllRows('food_records_raw');
-    console.log(`DB rows read: ${dbData.foods_raw}`);
-}
-
-async function initDb()
-{
-    const DBConnector_SQLite = require('./sqlitedb');
-
-    //console.log(`imported knex lib: ${sqlitedb}`);
-    connectDb = new DBConnector_SQLite();
-    await connectDb.createDbs();
-
-    await readFoodDbRows('food_records_raw');
 }
 
 function getsetCache(user, date, data)
@@ -114,7 +95,7 @@ function checkQuery(req, params)
 app.get('/node_api/read_calcdb', function (req, res)
 {
     console.log(`Query: /node_api/read_calcdb`);
-    res.send( readFile(path.join(__dirname, '../server/kcal_db.md')) );
+    res.send( readFile(path.join(__dirname, '..', 'server/kcal_db.md')) );
 });
 
 app.get('/node_api/read_foodrowdb', function (req, res)
@@ -146,4 +127,28 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
     res.send(resStr);
 });
 
-app.listen(PORT, () => console.log(`KCal web page has been started on port ${PORT} !`));
+var connectDb = null, dbData = {};
+
+async function initApp()
+{
+    // basic init
+    require(path.join(__dirname, 'startup')).initEnvVariables();
+
+    // check config
+    if (!process.env.HEROKU)
+    {
+        console.error('Application is not set up correctly!\nPlease use either an app.env config file or use Heroku env variables!\nExiting...');
+        process.exit(1);
+    }
+    console.log(`Initialize HEROKU mode: ${process.env.HEROKU}`);
+
+    // init DB subsystem and read all food data
+    const Db = require(path.join(__dirname, 'db/db'));
+    connectDb = await Db.initDb();
+    await connectDb.readFoodDbRows(dbData);
+
+    // start to listen
+    app.listen(PORT, () => console.log(`KCal web page has been started on port ${PORT} !`));
+}
+
+initApp();
