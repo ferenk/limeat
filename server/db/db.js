@@ -7,7 +7,7 @@ async function initDb()
         console.log('Initializing SQLite DB...');
 
         const path = require('path');
-        const DBModule_SQLite = require(path.join(__dirname, 'sqlitedb'));
+        const DBModule_SQLite = require(path.join(__dirname, 'connectors', 'sqlitedb'));
 
         let connectDb = new DBModule_SQLite.SQLiteDb(path.join(__dirname, '..'));
 
@@ -21,7 +21,7 @@ async function initDb()
         console.log('Initializing MongoDB...');
 
         const path = require('path');
-        const DBModule_MongoDB = require(path.join(__dirname, 'mongodb'));
+        const DBModule_MongoDB = require(path.join(__dirname, 'connectors', 'mongodb'));
 
         let connectDb = new DBModule_MongoDB.MongoDb();
         await connectDb.connect();
