@@ -22,20 +22,6 @@ app.get('/', function (req, res) {
     res.render('main');
 });
 
-function readFile(filename)
-{
-    try
-    {
-        const data = fs.readFileSync(filename, 'utf8')
-        return data;
-    }
-    catch (err)
-    {
-        console.error(err)
-        return null;
-    }
-}
-
 function getsetCache(user, date, data)
 {
     for (let idx = 0; idx< dbData.foods_raw.length; idx++)
@@ -92,10 +78,12 @@ function checkQuery(req, params)
     return true;
 }
 
-app.get('/node_api/read_calcdb', function (req, res)
+app.get('/node_api/read_calcdb', async function (req, res)
 {
     console.log(`Query: /node_api/read_calcdb`);
-    res.send( readFile(path.join(__dirname, '..', 'server/kcal_db.md')) );
+
+    let kcalDb = await connectDb.readKCalDb();
+    res.send(kcalDb);
 });
 
 app.get('/node_api/read_foodrowdb', function (req, res)
@@ -127,7 +115,9 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
     res.send(resStr);
 });
 
-var connectDb = null, dbData = {};
+/** @type { import('./db/connectors/dbconnector.js').DbConnector } */
+var connectDb = null;
+var dbData = {};
 
 async function initApp()
 {
@@ -145,6 +135,7 @@ async function initApp()
     // init DB subsystem and read all food data
     const Db = require(path.join(__dirname, 'db/db'));
     connectDb = await Db.initDb();
+    await connectDb.connect();
     await connectDb.readFoodDbRows(dbData);
 
     // start to listen

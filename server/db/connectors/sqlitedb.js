@@ -4,17 +4,21 @@
 const path = require('path');
 const fs = require('fs');
 
+const { DbConnector } = require(path.join(__dirname, 'dbconnector'));
+
 // users: 'id', 'name', 'password_hash', 'email'
 // foods: 'id', 'name', 'variant_name', 'creator', 'date', 'calories', 'weights'
 // tracking: 'user_id', 'date', 'foods'
 
-class SQLiteDb {
+class SQLiteDb extends DbConnector {
     /**
      * Initializes the SQlite DB connector
      * @param {String} dbRootFolder The folder where the DB files are stored
      */
     constructor(dbRootFolder)
     {
+        super();
+
         this.foodDbPath = this.findFoodDbFile(dbRootFolder);
         this.knex = this.initWithKnex();
     }
@@ -33,6 +37,11 @@ class SQLiteDb {
         } );
 
         return knex;
+    }
+
+    async connect()
+    {
+        console.log('Connecting is not needed in case of SQLite DBs. Skipped.');
     }
 
     findFoodDbFile(dbRootFolder)
@@ -128,8 +137,27 @@ class SQLiteDb {
             .catch(err => console.log(`ERROR (.catch() handler): ${err}`));
     }
 
+    async readKCalDb()
+    {
+        return SQLiteDb.readFile(path.join(__dirname, '..', '..', 'kcal_db.md')) 
+    }
+
+    static readFile(filename)
+    {
+        try
+        {
+            const data = fs.readFileSync(filename, 'utf8')
+            return data;
+        }
+        catch (err)
+        {
+            console.error(err)
+            return null;
+        }
+    }
+
     /**
-     * Read all food data from the file
+     * Read all food data from the file (read from the SQLite DB)
      * @param {Object} dbData 
      */
     async readFoodDbRows(dbData)

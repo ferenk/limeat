@@ -43,6 +43,8 @@ class FoodsDb
     {
         let str = '';
         let dbLines = content.split('\r\n');
+        if (dbLines.length == 1)
+            dbLines = content.split('<NL/>');
         dbLines.forEach(element => {
             let dbLineParts = element.split('|');
             if (dbLineParts.length >= 3) {

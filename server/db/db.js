@@ -1,3 +1,6 @@
+/**
+ * @returns { import('./clipboard.js').DbConnector }
+ */
 async function initDb()
 {
     console.log(`DB_MODE: ${process.env.DB_MODE}`);
@@ -25,6 +28,9 @@ async function initDb()
 
         let connectDb = new DBModule_MongoDB.MongoDb();
         await connectDb.connect();
+        await connectDb.createDbs();
+
+        return connectDb;
     }
     else
     {
