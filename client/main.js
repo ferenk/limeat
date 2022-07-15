@@ -120,49 +120,56 @@ function processInput()
                     continue;
                 }
 
-                // test if this part is a gram-based quantity
-                let foodPartUnitGramCalcStr = foodPartNameStr.replaceAll('g', '').replaceAll('db', '');
-                let foodPartNameISQuantity = /^[.*/+-0123456789()]+$/.test(foodPartUnitGramCalcStr);
-                let u = '';
-                if (foodPartNameISQuantity) {
-                    try {
-                        let foodQuantity = toFixedFloat(eval(foodPartUnitGramCalcStr));
-                        newFoodPart.quantity = foodQuantity;
-                        // without quantityunit the default is now always 'db' (unit)
-                        if (foodPartNameStr.includes('g'))
+                // test if this part is a quantity
+                let unit = '', units = [ 'g', 'db', 'kc', 'kcal', 'kc/', 'kcal/' ], quantity = NaN;
+                for (let unitsIdx = 0; unitsIdx < units.length; unitsIdx++)
+                {
+                    if (foodPartNameStr.endsWith(units[unitsIdx]))
+                    {
+                        unit = units[unitsIdx];
+                        let foodPartNameWOUnitStr = foodPartNameStr.replaceAll(unit, '');
+                        if (/^[.*/+-0123456789()]+$/.test(foodPartNameWOUnitStr))
+                            quantity = toFixedFloat(eval(foodPartNameWOUnitStr));
+                        break;
+                    }
+                }
+                if (!isNaN(quantity))
+                {
+                    if (unit == 'g' || unit == 'db')
+                    {
+                        newFoodPart.quantity = quantity;
+                        if (unit == 'g')
                             newFoodPart.quantityunit = 'g';
-                        else if (foodPartNameStr.includes('db'))
+                        //? without quantityunit the default is now always 'db' (unit)
+                        else if (unit == 'db')
                             newFoodPart.quantityunit = 'db';
-                    } catch (e) {
-                        console.log(`Error: Invalid input: ${e}`);
+                    }
+                    else if (unit == 'kc' || unit == 'kcal')
+                    {
+                        newFoodPart.kcalunit = 'kcal';
+                        newFoodPart.kcal = quantity;
+                    }
+                    else if (unit == 'kc/' || unit == 'kcal/')
+                    {
+                        newFoodPart.kcalunit = 'kcal/100g';
+                        newFoodPart.kcal = quantity;
                     }
                 }
                 else {
-                    let foodPartNameBEGINSWITHQuantity = /^[.0123456789]+/.test(foodPartNameStr);
-                    if (foodPartNameBEGINSWITHQuantity && (foodPartNameStr.endsWith(u = 'kc') || foodPartNameStr.endsWith(u = 'kcal'))) {
-                        newFoodPart.kcalunit = 'kcal';
-                        newFoodPart.kcal = Number.parseFloat(foodPartNameStr.substring(0, foodPartNameStr.length - u.length));
-                    }
-                    else if (foodPartNameBEGINSWITHQuantity && (foodPartNameStr.endsWith(u = 'kc/') || foodPartNameStr.endsWith(u = 'kcal/'))) {
-                        newFoodPart.kcalunit = 'kcal/100g';
-                        newFoodPart.kcal = Number.parseFloat(foodPartNameStr.substring(0, foodPartNameStr.length - u.length));
-                    }
-                    else {
-                        if (!processQuantity(foodPartNameStr, newFoodPart))
-                        {
-                            if (newFoodPart.name == null)
-                                newFoodPart.name = foodPartNameStr;
-                            else {
-                                // not processed input
-                                if (newFoodPart.unprocessed == null)
-                                    newFoodPart.unprocessed = '';
-                                else
-                                    newFoodPart.unprocessed += ' ';
-                                newFoodPart.unprocessed += `<font color="peru">${foodPartNameStr}</font>`;
-                                newFoodPart.origText = newFoodPart.origText.replaceAll(foodPartNameStr, `<font color="peru">${foodPartNameStr}</font>`);
-                            }
-                        } 
-                    }
+                    if (!processQuantity(foodPartNameStr, newFoodPart))
+                    {
+                        if (newFoodPart.name == null)
+                            newFoodPart.name = foodPartNameStr;
+                        else {
+                            // not processed input
+                            if (newFoodPart.unprocessed == null)
+                                newFoodPart.unprocessed = '';
+                            else
+                                newFoodPart.unprocessed += ' ';
+                            newFoodPart.unprocessed += `<font color="peru">${foodPartNameStr}</font>`;
+                            newFoodPart.origText = newFoodPart.origText.replaceAll(foodPartNameStr, `<font color="peru">${foodPartNameStr}</font>`);
+                        }
+                    } 
                 }
             }
             if (newFoodPart.name != null && newFoodPart.name != '') {
@@ -540,6 +547,14 @@ function onPageLoaded()
     $('#btNextMeal').on('click', () => g_controller.onPrevNextMeal(true));
     $('#btPrevMeal').on('click', () => g_controller.onPrevNextMeal(false));
     $('#btAddMeal').on('click', () => g_controller.onAddMeal());
+
+    $('input[type=radio][name=txtMealsModes]').change((e) => {
+        // memo: How to get the current value of the radio button
+        let selectedMode = ($(e.target).attr('id') ?? '').replace(/^txtMeals/, '').replace(/Mode$/, '');
+        g_mealsDiaryText.onDisplayModeChanged(selectedMode.toLowerCase());
+        g_mealsDiaryTextHighlight.onDisplayModeChanged(selectedMode.toLowerCase());
+    });
+
 
     /** Developer options: Section, controls, experimental features */
     $('#optsDevSection').hide();
