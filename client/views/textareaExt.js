@@ -55,8 +55,8 @@ class TextareaExt {
 
         this.domItem.addEventListener('keydown', () => { self.onCursorMoved('keydown'); return true; });
         this.domItem.addEventListener('keyup',   () => { self.onCursorMoved('keyup'); return true; });
-        //this.domItem.addEventListener('click',   () => { self.onCursorMoved('click'); return true; });
-        //this.domItem.addEventListener('focusin', () => { self.onCursorMoved('focus in'); return true; });
+        this.domItem.addEventListener('click',   () => { self.onCursorMoved('click'); return true; });
+        this.domItem.addEventListener('focusin', () => { self.onCursorMoved('focus in'); return true; });
 
         $('input[type=radio][name=txtMealsModes]').change((e) => {
             // memo: How to get the current value of the radio button
