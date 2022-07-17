@@ -237,6 +237,8 @@ function processInput()
                     htmlfoodOutputLineStr += '  ';
                 }
 
+                foodPart.computedkcal = partKCal;
+
                 if (partKCal == 0) {
                     mdFoodOutputLineStr += '<font color="red">';
                     htmlfoodOutputLineStr += '<font color="red">';
@@ -244,7 +246,7 @@ function processInput()
                 }
 
                 // update textbox to have syntax highlighted output
-                let sectionName = recordHighlightedInput(iCurrentRow, iPart, foodPart.startTextCol, foodPart.origText, partOrigTextColor, timestampStr);
+                let sectionName = recordHighlightedInput(iCurrentRow, iPart, foodPart.startTextCol, foodPart.origText, partOrigTextColor, { foodPart: foodPart }, timestampStr);
                 foodPart.highlighterClass = (sectionName ? `class=${sectionName}` : '');
 
                 if (foodPart && foodPart.name)
@@ -331,7 +333,7 @@ function processInput()
 
     $('#tCurrentLine').html(`${currentSummaryStr}`);
     $('#lbCurrentAllKCal').html(`<b>${Math.round(g_controller.dayParts[g_controller.currentDayPart - 1].kcal)}kc</b>`);
-    $('#lbCurrentKCal').html(`${Math.round(currentSummaryKCal)}kc`);
+    $('#lbCurrentLineKCal').html(`${Math.round(currentSummaryKCal)}kc`);
 
     // display the result
     $('#divOutput').html('<pre>' + g_controller.foodOutputStr + '</pre>');
@@ -343,9 +345,10 @@ function processInput()
  * @param {Number} iPart 
  * @param {String} currPartHtmlText 
  * @param {String?} color
+ * @param {Object?} metadata
  * @param {String?} timeStamp
  */
-function recordHighlightedInput(iRow, iPart, iCol, currPartHtmlText, color = null, timeStamp = null)
+function recordHighlightedInput(iRow, iPart, iCol, currPartHtmlText, color = null, metadata = null, timeStamp = null)
 {
     // add prefix
     let currPartBeginStr = ''
@@ -360,7 +363,7 @@ function recordHighlightedInput(iRow, iPart, iCol, currPartHtmlText, color = nul
     if (color != null)
         currPartHtmlText = `<font color="${color}">${currPartHtmlText}</font>`;
 
-    let sectionName = g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, iCol, currPartHtmlText, true);
+    let sectionName = g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, iCol, currPartHtmlText, metadata, true);
 
     return sectionName;
 }

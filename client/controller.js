@@ -1,7 +1,7 @@
 export { Controller };
 
 import { nodeXHRComm } from './data/comm.js';
-import { printMoment, getCurrentTimeStr, isError } from './util/util.js';
+import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/util.js';
 import { TextareaExt } from './views/textareaExt.js';
 import { TextareaHighlight } from './views/textareaHighlight';
 import { OutputTable } from './views/outputTable.js';
@@ -110,7 +110,7 @@ class Controller
         }
 
         // add extra dark background color to the current food
-        let thisRowSections = this.mealsDiaryTextHighlight.tempHtmlBuffer.bufferIdxs.get(cursorPos[1]);
+        let thisRowSections = this.mealsDiaryTextHighlight.tempHtmlBuffer.bufferSectionsByRow.get(cursorPos[1]);
         if (thisRowSections)
             for (let i = 0; i < thisRowSections.length; i++)
             {
@@ -119,6 +119,9 @@ class Controller
                     if (thisRowSections[i][2])
                     {
                         this.changeHighlightedFoodPart(`.${thisRowSections[i][2]}`);
+
+                        let foodPart = thisRowSections[i][3]?.foodPart;
+                        document.querySelector('#lbCurrentFoodPartKCal').textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`; 
                         break;
                     }
                 }

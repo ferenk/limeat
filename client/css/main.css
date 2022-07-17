@@ -198,7 +198,7 @@ th {
 #btDateDown,
 #btPrevMeal,
 #btNextMeal {
-    width: 30px;
+    width: 24px;
     height: 18px;
     padding: 0;
     margin: 0;
@@ -206,7 +206,7 @@ th {
 }
 
 #btSave {
-    min-width: 7em;
+    min-width: 6em;
     padding-left: 1em;
     padding-right: 1em;
     font-size: 14;
@@ -237,7 +237,7 @@ th {
     font-size: x-large;
     border-radius: 20%;
     padding: 0 .6vw;
-    min-width: 2em;
+    min-width: 1.5em;
     color: black;
     background-color: hsla(78, 44%, 45%, 0.575);
 }
@@ -252,9 +252,25 @@ th {
 }
 
 #lbCurrentAllKCal,
-#lbCurrentKCal {
-    padding: 0 0.5em !important;
+#lbCurrentLineKCal
+#lbCurrentFoodPartKCal
+{
     white-space: nowrap;
+}
+
+#lbCurrentAllKCal
+{
+    padding: 0 0.5em 0 0 !important;
+}
+
+#lbCurrentLineKCal,
+#lbCurrentFoodPartKCal
+{
+    padding: 0 0.5em !important;
+    text-align: right;
+    min-width: 2.5em;
+    margin: 0;
+    font-size: 1.1em;
 }
 
 #txtMealsDiary {

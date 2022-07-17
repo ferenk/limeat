@@ -58,12 +58,12 @@ class OutputTable
                 this.jqItem.find(`#tr${rowIdx}`).addClass('selectedRow');
 
                 let rowInfo = this.getRowInfo(rowIdx);
-                $('#lbCurrentKCal').html(`${rowInfo.kCal} kc`);
+                $('#lbCurrentLineKCal').html(`${rowInfo.kCal} kc`);
                 $('#lMealTime').html(`${rowInfo.mealTime}`);
             }
             else
             {
-                $('#lbCurrentKCal').html(`- kc`);
+                $('#lbCurrentLineKCal').html(`- kc`);
                 $('#lMealTime').html('--:--');
                 return false;
             }
@@ -81,7 +81,7 @@ class OutputTable
     {
         // update headers (table => header): copy the kcal value from the table to the header kcal field
         /*
-        $('#lbCurrentKCal').html(`${firstColumnVal} kc`);
+        $('#lbCurrentLineKCal').html(`${firstColumnVal} kc`);
         $('#lMealTime').html(secondColumnVal);*/
         let result = new OutputTableRowInfo();
         result.mealTime = this.jqItem.find(`#tr${rowIdx} td:nth-child(2)`).html() ?? '';

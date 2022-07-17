@@ -144,13 +144,15 @@ class TempHtmlBuffer
         this.parent = parent;
         /** @type { String[]} */
         this.buffer = [];
-        this.bufferIdxs = new Map();
+        this.bufferSectionsByRow = new Map();
+        this.bufferSections = new Map();
     }
 
     clear()
     {
         this.buffer = [];
-        this.bufferIdxs.clear();
+        this.bufferSectionsByRow.clear();
+        this.bufferSections.clear();
     }
 
     /**
@@ -160,19 +162,19 @@ class TempHtmlBuffer
      * @param {boolean} addSection generate new section ID and wrap this text with a highlighted span
      * @returns {String} Name for this section (for dynamic highlighting)
      */
-    appendToLine(row, col, htmlText, addSection = false)
+    appendToLine(row, col, htmlText, metadata, addSection = false)
     {
         // add new rows if needed
         while (row >= this.buffer.length)
             this.buffer.push('');
 
         // get the column index
-        let currSections = this.bufferIdxs.get(row),
+        let currRowSections = this.bufferSectionsByRow.get(row),
             currPos = 0;
-        if (currSections != null)
-            currPos = currSections[currSections.length - 1][1] + 1;
+        if (currRowSections != null)
+            currPos = currRowSections[currRowSections.length - 1][1] + 1;
         else
-            this.bufferIdxs.set(row, currSections = []);
+            this.bufferSectionsByRow.set(row, currRowSections = []);
 
         // fill the gap with the original text from the textarea (if needed)
         if (currPos < col)
@@ -192,8 +194,9 @@ class TempHtmlBuffer
         }
 
         this.buffer[row] += htmlText;
-        currSections.push([currPos, currPos + htmlTextStripped.length - 1, sectionName]);
-        this.bufferIdxs.set(row, currSections);
+        let sectionData = [currPos, currPos + htmlTextStripped.length - 1, sectionName, metadata];
+        currRowSections.push(sectionData);
+        this.bufferSections.set(sectionName, sectionData);
 
         return sectionName;
     }
