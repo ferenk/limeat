@@ -17,7 +17,7 @@ var g_mealsDiaryText = traceMethodCalls(new TextareaExt(), false);
 
 /** @type { TextareaHighlight } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareaHighlight'... (Proxy type problem))
-var g_mealsDiaryTextHighlight = traceMethodCalls(new TextareaHighlight(), false);
+var g_mealsDiaryTextHighlight = traceMethodCalls(new TextareaHighlight(g_mealsDiaryText), false);
 
 /** @type { OutputTable } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'OutputTable'... (Proxy type problem))
@@ -75,7 +75,7 @@ function processInput()
         if (foodLine.startsWith('---'))
         {
             appendSeparator();
-            recordHighlightedInput(iCurrentRow, 0, foodLine);
+            recordHighlightedInput(iCurrentRow, 0, 0, foodLine);
             continue;
         }
 
@@ -93,11 +93,24 @@ function processInput()
         let foodNamePrefixStr = '';
         // foodPartStrs: ["apple 40g", "banana 20g"]
         let foodPartStrs = foodLine.split(',');
-        foodPartStrs.forEach(foodPartStr => {
+        let nextFoodPartCol = 0;
+        for (let iPart = 0; iPart < foodPartStrs.length; iPart++)
+        {
+            let foodPartStr = foodPartStrs[iPart];
+
             // foodPartStr: "apple 40g"
             let foodPartArr = foodPartStr.split(/[' ']+/);
             // foodPartArr: ["apple", "40g"]
             let newFoodPart = new Food();
+
+            // calculate & store current text column
+            newFoodPart.startTextCol = nextFoodPartCol > 0 ? nextFoodPartCol : 0;          
+            nextFoodPartCol += foodPartStr.length + 1;
+            if (iPart == 0 && timeSepCol > 0)
+            {
+                newFoodPart.startTextCol += timeSepCol + 1;
+                nextFoodPartCol += timeSepCol + 1;
+            }
 
             newFoodPart.origText = foodPartStr;
 
@@ -181,7 +194,7 @@ function processInput()
             else
                 newFoodPart.isInvalid = true;
             foodParts.push(newFoodPart);
-        });
+        }
 
         // print the currently processed food
         let mdFoodOutputLineStr = '',
@@ -231,7 +244,7 @@ function processInput()
                 }
 
                 // update textbox to have syntax highlighted output
-                let sectionName = recordHighlightedInput(iCurrentRow, iPart, foodPart.origText, partOrigTextColor, timestampStr);
+                let sectionName = recordHighlightedInput(iCurrentRow, iPart, foodPart.startTextCol, foodPart.origText, partOrigTextColor, timestampStr);
                 foodPart.highlighterClass = (sectionName ? `class=${sectionName}` : '');
 
                 if (foodPart && foodPart.name)
@@ -332,22 +345,22 @@ function processInput()
  * @param {String?} color
  * @param {String?} timeStamp
  */
-function recordHighlightedInput(iRow, iPart, currPartHtmlText, color = null, timeStamp = null)
+function recordHighlightedInput(iRow, iPart, iCol, currPartHtmlText, color = null, timeStamp = null)
 {
     // add prefix
     let currPartBeginStr = ''
-    if (iPart == 0 && timeStamp != null)
-        currPartBeginStr += timeStamp + ' ';
-    else if (iPart > 0)
-        currPartBeginStr += ',';
+    //if (iPart == 0 && timeStamp != null)
+        //currPartBeginStr += timeStamp + ' ';
+    //else if (iPart > 0)
+        //currPartBeginStr += ',';
 
-    g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, currPartBeginStr);
+    //g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, iCol, currPartBeginStr);
 
     // colorize this part, if needed
     if (color != null)
         currPartHtmlText = `<font color="${color}">${currPartHtmlText}</font>`;
 
-    let sectionName = g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, currPartHtmlText, true);
+    let sectionName = g_mealsDiaryTextHighlight.tempHtmlBuffer.appendToLine(iRow, iCol, currPartHtmlText, true);
 
     return sectionName;
 }

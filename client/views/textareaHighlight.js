@@ -1,5 +1,7 @@
 export { TextareaHighlight };
 
+import { TextareaExt } from './textareaExt.js';
+
 class TextColor
 {
     /** @type {Number} */
@@ -10,10 +12,15 @@ class TextColor
 
 class TextareaHighlight
 {
-    constructor()
+    /**
+     * 
+     * @param {TextareaExt} textareaExt 
+     */
+    constructor(textareaExt)
     {
         /** @type { TextColor[] } */
         this.lineColors = [];
+        this.textareaExt = textareaExt;
         this.tempHtmlBuffer = new TempHtmlBuffer(this);
     }
 
@@ -153,7 +160,7 @@ class TempHtmlBuffer
      * @param {boolean} addSection generate new section ID and wrap this text with a highlighted span
      * @returns {String} Name for this section (for dynamic highlighting)
      */
-    appendToLine(row, htmlText, addSection = false)
+    appendToLine(row, col, htmlText, addSection = false)
     {
         // add new rows if needed
         while (row >= this.buffer.length)
@@ -166,6 +173,13 @@ class TempHtmlBuffer
             currPos = currSections[currSections.length - 1][1] + 1;
         else
             this.bufferIdxs.set(row, currSections = []);
+
+        // fill the gap with the original text from the textarea (if needed)
+        if (currPos < col)
+        {
+            this.buffer[row] += this.parent.textareaExt.rows[row].substring(currPos, col);
+            currPos = col;
+        }
 
         // calculate the raw text (length) of this row
         let htmlTextStripped = htmlText.replaceAll(/<.*?>/g, '');
