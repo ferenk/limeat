@@ -205,12 +205,19 @@ th {
     line-height: 0;
 }
 
-#btSave {
+#btSave, #btApplySettings {
     min-width: 6em;
     padding-left: 1em;
     padding-right: 1em;
     font-size: 14;
-    background-color: rgba(228, 210, 131, 0.747);
+}
+
+#btSave {
+     background-color: rgba(228, 210, 131, 0.747);
+}
+
+#btApplySettings {
+    background-color: hsl(37, 65%, 62%);
 }
 
 #btPrevMeal:disabled,

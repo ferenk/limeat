@@ -14,6 +14,7 @@
     <link rel="icon" type="image/x-icon" href="css/diet.png">
     <link rel="stylesheet" href="3rdparty/normalize.css">
     <link rel="stylesheet" href="3rdparty/skeleton.css">
+    <link rel="stylesheet" href="3rdparty/sweetalert2-theme-borderless.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/textareaHighlight.css">
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -23,6 +24,7 @@
     <!-- VUE.js -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
+    <script src="/3rdparty/sweetalert2.min.js"></script>
     <script src="/3rdparty/moment-with-locales.js"></script>
     <script src="/3rdparty/mobile-detect.min.js"></script>
 
@@ -132,6 +134,9 @@
         <div id="optsDevSection">
             <div style="height: 1em;"></div>
             <div id="optsDev">
+                <label style="display: inline" for="tClientName" name="tClientName">Name of this device:</label>
+                <input id="optClientId" type="text" size="8" maxlength="50">
+
                 <div>
                     <label id="optScaleTypeLabel" for="optScaleType">Scale type:</label>
                     <select name="optScaleType" id="optScaleType">
@@ -146,6 +151,9 @@
 
                 <input type="checkbox" id="devModeOutputs" name="devModeOutputs">
                 <label for="devModeOutputs" id="devModeOutputsLabel">Show output sections</label>
+
+                <button id="btApplySettings" class="btn_light btn" style="float: right">Apply</button>
+                <div style="clear: both"></div>
             </div>
             <br>
         </div>

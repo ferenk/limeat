@@ -170,15 +170,27 @@ class Controller
 
     onUserOrDateChanged() {
         if (window.localStorage != null) {
-            window.localStorage.currentUser = $('#tUser').val();
+            window.localStorage.optUserName = $('#tUser').val();
         }
 
         let currentDayFormattedStr = printMoment(this.currentDayMoment);
         $('#tDate').val(currentDayFormattedStr);
 
+        this.refreshDayFoods();
+    }
+
+    refreshDayFoods()
+    {
         let currentDayStr = this.currentDayMoment.format('YYYY-MM-DD');
         let self = this;
-        nodeXHRComm('node_api/read_foodrowdb', { user: $('#tUser').val(), date: currentDayStr }, self.onDailyFoodRecordArrived.bind(self));
+        nodeXHRComm(
+            'node_api/read_foodrowdb',
+            {
+                user: $('#tUser').val(),
+                date: currentDayStr
+            },
+            self.onDailyFoodRecordArrived.bind(self)
+        );
     }
 
     //todo Option for auto cleanup (?)

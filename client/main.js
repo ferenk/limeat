@@ -9,7 +9,16 @@ import { OutputTable } from './views/outputTable.js';
 import { traceMethodCalls } from './util/callTracker.js'
 import { CountdownButton } from './util/ui/countdownButton.js';
 
-var optScaleType = 'barista';
+import { SSEClient } from './net/sseClient.js';
+
+import { coolConfirm, coolMessage } from './views/uiHelper.js';
+
+var g_config =
+{
+    scaleType: 'barista',
+    clientId: window.localStorage.optClientId || 'myPC/Phone',
+    finalClientId: window.localStorage.optClientId || 'myPC/Phone'
+};
 
 /** @type { TextareaExt } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareExt'... (Proxy type problem))
@@ -30,6 +39,8 @@ var g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiar
 var g_mobileMode = null;
 
 let g_saveButton = new CountdownButton('#btSave', 'SAVED!', 'SAVE', 3, onSaveButtonPressed, null);
+
+let g_sseClient = new SSEClient(g_config);
 
 class Food
 {
@@ -387,8 +398,8 @@ function roundKCalMeasurement(quant = 0, dbFoodQuant = 1, dbFoodKcal = 0)
  */
 function simulateScaleMeasurement(quant = 0)
 {
-    if (optScaleType != 'barista') {
-        if (optScaleType == 'kitchen')
+    if (g_config.scaleType != 'barista') {
+        if (g_config.scaleType == 'kitchen')
         {
             /** @type {any} */
             let minWeightStr = $('#minimalWeight').val();
@@ -494,7 +505,13 @@ function onSaveButtonPressed()
     // pre-process the current kcal data to be saved (all edit buffer)
     g_mealsDiaryText.updateRowsStr();
     let preprocessedFoodInputText = g_mealsDiaryText.rowsStr.replaceAll('\n', '\\n')
-    nodeXHRComm('node_api/save_foodrowdb', { user: $('#tUser').val(), date: currentDayStr, food_data: preprocessedFoodInputText }, onSaveFinished);
+    nodeXHRComm('node_api/save_foodrowdb',
+        {
+            user: $('#tUser').val(),
+            date: currentDayStr,
+            food_data: preprocessedFoodInputText,
+            clientId: g_config.finalClientId
+        }, onSaveFinished);
 }
 
 /**
@@ -534,12 +551,13 @@ function handleMobileMode() {
     }
 }
 
-function onPageLoaded()
+async function onPageLoaded()
 {
     if (window.localStorage != null) {
-        if (window.localStorage.currentUser != null) {
-            $('#tUser').val(window.localStorage.currentUser);
+        if (window.localStorage.optUserName != null) {
+            $('#tUser').val(window.localStorage.optUserName);
         }
+        $('#optClientId').val(g_config.clientId);
     }
 
     g_mealsDiaryText.initialize('#txtMealsDiary');
@@ -582,13 +600,21 @@ function onPageLoaded()
         else
             $('#optsDevSection').slideUp(100);
     });
+
     $('#optScaleType,.scaleOpts').change(() => {
         // @ts-ignore:next-line (<multiple types> cannot set to 'string')
-        optScaleType = ($('#optScaleType :selected').val());
-        $('.scaleOpts').toggle(optScaleType != 'barista');
+        g_config.scaleType = ($('#optScaleType :selected').val());
+        $('.scaleOpts').toggle(g_config.scaleType != 'barista');
         g_controller.onFoodInputChanged();
     });
     $('.scaleOpts').hide();
+
+    $('#btApplySettings').on('click', () =>
+    {
+        localStorage.optClientId = g_config.finalClientId = g_config.clientId = $('#optClientId').val();
+        g_sseClient.init();
+        coolMessage('success', 'Changes applied', 'Changes have been applied and saved!');
+    });
 
     $('#devModeOutputs').change(function(){
         //? $('#devMode').detach().appendTo('#optsDev');
@@ -618,6 +644,8 @@ function onPageLoaded()
     $('#tableOut').click(g_controller.onTableRowChange.bind(g_controller));
 
     handleMobileMode();
+
+    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller));
 }
 
 window.addEventListener("load", onPageLoaded);

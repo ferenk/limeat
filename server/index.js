@@ -9,6 +9,8 @@ const { url } = require('inspector');
 const bodyParser = require('body-parser');
 const { query } = require('express');
 
+const { SSEService } = require(path.join(__dirname, 'net', 'sseService.js'));
+
 var app = express();
 
 app.use(express.static(path.join(__dirname, '..', 'client'), { extensions: ['html', 'js', 'png'] }));
@@ -21,6 +23,9 @@ app.get('/', function (req, res) {
     console.log('Rendering page... (main.html)');
     res.render('main');
 });
+
+var sseService = new SSEService(app);
+
 
 function getsetCache(user, date, data)
 {
@@ -108,6 +113,7 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
     if (checkQuery(req, ['user', 'date', 'food_data']))
     {
         getsetCache(req.query.user, req.query.date, req.query.food_data);
+        sseService.notifyOtherClients(req.query.clientId, 'updated_db');
         console.log(`SAVED DATA: ${req.query.food_data}`);
         resStr = await connectDb.updateRow('food_records_raw', req.query.user, req.query.date, req.query.food_data);
     }
