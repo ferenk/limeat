@@ -45,17 +45,36 @@ class SSEService
 
     notifyOtherClients(currentClientId, eventName)
     {
-        let currTime = new Date();
-        let modificationTimeStr = `${currTime.getHours().toString().padStart(2, '0')}:${currTime.getMinutes().toString().padStart(2, '0')}`;
-
-        let eventObj = { clientId: SSEService.clients.get(currentClientId).originalClientId , eventName: eventName, modificationTime : modificationTimeStr };
-        let eventObjStr = JSON.stringify(eventObj);
-
-        for (let [clientId, clientInfoObj] of SSEService.clients)
+        try
         {
-            if (clientId != currentClientId)
-                //value.write(`data: ${clientId} ${eventName}\n\n`);
-                clientInfoObj.responseStream.write(`data: ${eventObjStr}\n\n`);
+            if (!currentClientId)
+            {
+                console.error('Error: Unable to find current client (currentClientId == null)! notifyOtherClients() skipped!');
+                return;
+            }
+            let clientRegObj = SSEService.clients.get(currentClientId);
+            if (!clientRegObj)
+            {
+                console.error('Error: Unable to find client registration! An old client is connected?!');
+                return;
+            }
+
+            let currTime = new Date();
+            let modificationTimeStr = `${currTime.getHours().toString().padStart(2, '0')}:${currTime.getMinutes().toString().padStart(2, '0')}`;
+
+            let eventObj = { clientId: clientRegObj.originalClientId, eventName: eventName, modificationTime: modificationTimeStr };
+            let eventObjStr = JSON.stringify(eventObj);
+
+            for (let [clientId, clientInfoObj] of SSEService.clients)
+            {
+                if (clientId != currentClientId)
+                    //value.write(`data: ${clientId} ${eventName}\n\n`);
+                    clientInfoObj.responseStream.write(`data: ${eventObjStr}\n\n`);
+            }
+        }
+        catch (e)
+        {
+            console.error(`Error: ${e}`);
         }
     }
 }

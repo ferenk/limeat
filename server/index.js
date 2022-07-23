@@ -85,40 +85,61 @@ function checkQuery(req, params)
 
 app.get('/node_api/read_calcdb', async function (req, res)
 {
-    console.log(`Query: /node_api/read_calcdb`);
+    try
+    {
+        console.log(`Query: /node_api/read_calcdb`);
 
-    let kcalDb = await connectDb.readKCalDb();
-    res.send(kcalDb);
+        let kcalDb = await connectDb.readKCalDb();
+        res.send(kcalDb);
+    }
+    catch (e)
+    {
+        console.error(`Error: ${e}`);
+    }
 });
 
 app.get('/node_api/read_foodrowdb', function (req, res)
 {
-    console.log(`Query: /node_api/read_calcdb (params: ${JSON.stringify(req.query)}`);
-
-    if (checkQuery(req, ['user', 'date']))
+    try
     {
-        let daydata = getsetCache(req.query.user, req.query.date);
-        res.send(daydata);
-        return;
-    }
+        console.log(`Query: /node_api/read_calcdb (params: ${JSON.stringify(req.query)}`);
 
-    res.send('');
+        if (checkQuery(req, ['user', 'date']))
+        {
+            let daydata = getsetCache(req.query.user, req.query.date);
+            res.send(daydata);
+            return;
+        }
+
+        res.send('');
+    }
+    catch (e)
+    {
+        console.error(`Error: ${e}`);
+    }
 });
 
 app.get('/node_api/save_foodrowdb', async function (req, res)
 {
-    console.log(`Query: /node_api/save_calcdb (params: ${JSON.stringify(req.query)})`);
-    let resStr = '';
-
-    if (checkQuery(req, ['user', 'date', 'food_data']))
+    try
     {
-        getsetCache(req.query.user, req.query.date, req.query.food_data);
-        sseService.notifyOtherClients(req.query.clientId, 'updated_db');
-        console.log(`SAVED DATA: ${req.query.food_data}`);
-        resStr = await connectDb.updateRow('food_records_raw', req.query.user, req.query.date, req.query.food_data);
-    }
+        console.log(`Query: /node_api/save_calcdb (params: ${JSON.stringify(req.query)})`);
+        let resStr = '';
 
-    res.send(resStr);
+        if (checkQuery(req, ['user', 'date', 'food_data']))
+        {
+            getsetCache(req.query.user, req.query.date, req.query.food_data);
+            sseService.notifyOtherClients(req.query.clientId, 'updated_db');
+            console.log(`SAVED DATA: ${req.query.food_data}`);
+            resStr = await connectDb.updateRow('food_records_raw', req.query.user, req.query.date, req.query.food_data);
+        }
+
+        res.send(resStr);
+    }
+    catch (e)
+    {
+        console.error(`Error: ${e}`);
+    }
 });
 
 /** @type { import('./db/connectors/dbconnector.js').DbConnector } */
@@ -127,25 +148,32 @@ var dbData = {};
 
 async function initApp()
 {
-    // basic init
-    require(path.join(__dirname, 'startup')).initEnvVariables();
-
-    // check config
-    if (!process.env.HEROKU)
+    try
     {
-        console.error('Application is not set up correctly!\nPlease use either an app.env config file or use Heroku env variables!\nExiting...');
-        process.exit(1);
+        // basic init
+        require(path.join(__dirname, 'startup')).initEnvVariables();
+
+        // check config
+        if (!process.env.HEROKU)
+        {
+            console.error('Application is not set up correctly!\nPlease use either an app.env config file or use Heroku env variables!\nExiting...');
+            process.exit(1);
+        }
+        console.log(`Initialize HEROKU mode: ${process.env.HEROKU}`);
+
+        // init DB subsystem and read all food data
+        const Db = require(path.join(__dirname, 'db/db'));
+        connectDb = await Db.initDb();
+        await connectDb.connect();
+        await connectDb.readFoodDbRows(dbData);
+
+        // start to listen
+        app.listen(PORT, () => console.log(`KCal web page has been started on port ${PORT} !`));
     }
-    console.log(`Initialize HEROKU mode: ${process.env.HEROKU}`);
-
-    // init DB subsystem and read all food data
-    const Db = require(path.join(__dirname, 'db/db'));
-    connectDb = await Db.initDb();
-    await connectDb.connect();
-    await connectDb.readFoodDbRows(dbData);
-
-    // start to listen
-    app.listen(PORT, () => console.log(`KCal web page has been started on port ${PORT} !`));
+    catch (e)
+    {
+        console.error(`Error: ${e}`);
+    }
 }
 
 initApp();
