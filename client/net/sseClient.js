@@ -10,10 +10,10 @@ class SSEClient
         this.eventSource = null;
     }
 
-    init(refreshDataCB)
+    init(refreshDataCB, statusChangeCB, logCB)
     {
-        if (refreshDataCB)
-            this.refreshDataCB = refreshDataCB;
+        if (statusChangeCB)
+            this.statusChangeCB = statusChangeCB;
 
         let self = this;
         if (!!window.EventSource)
@@ -27,8 +27,7 @@ class SSEClient
             this.eventSource.addEventListener('message',
                 async function SSEMsgHandler(e)
                 {
-                    //$('#lUser').html(`U: ${e.data}`);
-                    console.log(`SSE message object arrived: ${e.data}`);
+                    logCB(`SSE message object arrived: ${e.data}`);
                     let msgObj = JSON.parse(e.data);
                     if (msgObj.eventName == 'updated_db')
                     {
@@ -46,24 +45,35 @@ class SSEClient
                     else if (msgObj.eventName == 'clientid_changed')
                     {
                         self.config.finalClientId = msgObj.clientId;
-                        console.log(`SSE Client: ClientID changed to '${self.config.finalClientId}'`);
+                        logCB(`SSE Client: ClientID changed to '${self.config.finalClientId}'`);
                     }
                 }
             );
+
+            this.eventSource.addEventListener('ping', function (e)
+            {
+                logCB(`Ping received: ${e.data}`);
+            });
+
+            this.eventSource.addEventListener('open', function (e)
+            {
+                self.statusChangeCB('OPENED');
+            });
+
             this.eventSource.addEventListener('error', function (e)
             {
                 if (e.eventPhase == EventSource.CLOSED)
                 {
-                    $('#lUser').html(`U: CLOSED`);
+                    self.statusChangeCB('CLOSED');
                     self.eventSource.close()
                 }
                 if (e.target.readyState == EventSource.CLOSED)
                 {
-                    $('#lUser').html(`U: DISCONNECTED`);
+                    self.statusChangeCB('DISCONNECTED');
                 }
                 else if (e.target.readyState == EventSource.CONNECTING)
                 {
-                    $('#lUser').html(`U: CONNECTING`);
+                    self.statusChangeCB('CONNECTING');
                 }
             }, false);
         }

@@ -551,6 +551,19 @@ function handleMobileMode() {
     }
 }
 
+function sseStateChangeCB(status)
+{
+    console.log(`SSE state changed: ${status}`);
+    if (status == 'OPENED')
+        document.getElementById('lbStatusLED').style.color = 'olivedrab';
+    else if (status == 'CLOSED' || status == 'DISCONNECTED')
+        document.getElementById('lbStatusLED').style.color = 'darkred';
+    else if (status == 'CLOSED' || status == 'CONNECTING')
+        document.getElementById('lbStatusLED').style.color = 'gold';
+    else
+        document.getElementById('lbStatusLED').style.color = 'slategray';
+}
+
 async function onPageLoaded()
 {
     if (window.localStorage != null) {
@@ -612,7 +625,7 @@ async function onPageLoaded()
     $('#btApplySettings').on('click', () =>
     {
         localStorage.optClientId = g_config.finalClientId = g_config.clientId = $('#optClientId').val();
-        g_sseClient.init();
+        g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateChangeCB, console.log);
         coolMessage('success', 'Changes applied', 'Changes have been applied and saved!');
     });
 
@@ -645,7 +658,8 @@ async function onPageLoaded()
 
     handleMobileMode();
 
-    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller));
+    sseStateChangeCB(null);
+    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateChangeCB, console.log);
 }
 
 window.addEventListener("load", onPageLoaded);

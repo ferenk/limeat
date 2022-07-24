@@ -5,9 +5,20 @@ class SSEService
     constructor(app)
     {
         app.get('/sse', SSEService.serviceHandler);
+        // Setup keep-alive timer (needed for Heroku!)
+        setInterval(SSEService.sendKeepAlive, 30000);
         console.log('SSE is initialized!')
     }
 
+    static sendKeepAlive()
+    {
+        let currDateStr = new Date().toISOString().replace(/\..*$/g, '');
+        for (let [clientId, clientInfoObj] of SSEService.clients)
+        {
+            clientInfoObj.responseStream.write(`event: ping\n`);
+            clientInfoObj.responseStream.write(`data: time: ${currDateStr}\n\n`);
+        }
+    }
 
     static serviceHandler(req, responseStream)
     {
@@ -17,7 +28,7 @@ class SSEService
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive'
         });
-        responseStream.write('retry: 10000\n');
+        responseStream.write('retry: 5000\n');
 
         let clientId = null;
         if (req.query.clientId)
@@ -47,22 +58,22 @@ class SSEService
     {
         try
         {
-            if (!currentClientId)
+            let originalClientId = currentClientId;
+            if (currentClientId)
             {
-                console.error('Error: Unable to find current client (currentClientId == null)! notifyOtherClients() skipped!');
-                return;
+                let clientRegObj = SSEService.clients.get(currentClientId);
+                if (clientRegObj)
+                {
+                    originalClientId = clientRegObj.originalClientId;
+                }
+                else console.error('Error: Unable to find client registration! An old client is connected?!');
             }
-            let clientRegObj = SSEService.clients.get(currentClientId);
-            if (!clientRegObj)
-            {
-                console.error('Error: Unable to find client registration! An old client is connected?!');
-                return;
-            }
+            else console.error('Error: Unable to find current client (currentClientId == null)!');
 
             let currTime = new Date();
-            let modificationTimeStr = `${currTime.getHours().toString().padStart(2, '0')}:${currTime.getMinutes().toString().padStart(2, '0')}`;
+            let modificationTimeStr = `${currTime.getHours().toString().padStart(2, '0')}:${currTime.getMinutes().toString().padStart(2, '0')}:${currTime.getSeconds().toString().padStart(2, '0')}`;
 
-            let eventObj = { clientId: clientRegObj.originalClientId, eventName: eventName, modificationTime: modificationTimeStr };
+            let eventObj = { clientId: originalClientId, eventName: eventName, modificationTime: modificationTimeStr };
             let eventObjStr = JSON.stringify(eventObj);
 
             for (let [clientId, clientInfoObj] of SSEService.clients)
