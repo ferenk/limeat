@@ -33,7 +33,7 @@ class SSEClient
                     {
                         let reloadAnswer = await coolConfirm(
                             'warning',
-                            'Update detected',
+                            'Update notification received',
                             `You modified your records on client '${msgObj.clientId}' at ${msgObj.modificationTime}.<br>Refresh here, too?`,
                             null,
                             'Refresh',

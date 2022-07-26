@@ -169,7 +169,7 @@ class SQLiteDb extends DbConnector {
     // Just for debugging purposes:    
     async updateRow(tableName, user, date, food_data)
     {
-        await this.knex(tableName).insert({ user: user, date: date, food_data: food_data.replace(/\n/g, '\\nNEWLINE') })
+        await this.knex(tableName).insert({ user: user, date: date, food_data: food_data })
             .onConflict(['user', 'date'])
             .merge({ food_data: food_data })
             .catch(err => {

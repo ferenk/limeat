@@ -19,7 +19,8 @@ async function coolConfirm(type, title, question, cb, yesAnswer, noAnswer, confi
             confirmButtonText: yesAnswer,
             cancelButtonText: noAnswer,
             focusConfirm: confirmByDefault,
-            reverseButtons: !confirmByDefault
+            reverseButtons: !confirmByDefault,
+            allowOutsideClick: false  // modal
         }
     );
 
@@ -37,6 +38,7 @@ async function coolMessage(type, title, message, opts, timeout, cb)
                     html: message + "<br>Close in <strong></strong> seconds...",
                     icon: type,
                     timer: timeout,
+                    allowOutsideClick: false,  // modal window
                     onBeforeOpen: () => {
                         Swal.showLoading();
                         timerInterval = setInterval(() => {
@@ -64,6 +66,7 @@ async function coolMessage(type, title, message, opts, timeout, cb)
                 confirmButtonColor: 'hsl(96deg 52% 34%)',
                 background: 'hsl(78, 21%, 39%)',
                 backdrop: 'hsl(78, 21%, 39%)',
+                allowOutsideClick: false,  // modal
                 onClose: () => {
                     if (cb)
                         cb();

@@ -525,6 +525,7 @@ function onSaveFinished(xhr, ev)
     if (!isError(ev) && ev.type == 'load') {
         console.log(`XHR communication result: ${xhr.responseText}`);
         g_controller.savedFoodInput = g_mealsDiaryText.rowsStr;
+        g_controller.savedFoodDate = new Date();
         g_saveButton.startCountdown('<span style="color: darkgreen"><b>SAVED!</b></span>', 3);
     // @ts-ignore:next-line (dynamic type check)
     } else if (isError(ev) || ev.type == 'error') {
@@ -551,7 +552,7 @@ function handleMobileMode() {
     }
 }
 
-function sseStateChangeCB(status)
+function sseStateUpdateCB(status)
 {
     console.log(`SSE state changed: ${status}`);
     if (status == 'OPENED')
@@ -625,7 +626,7 @@ async function onPageLoaded()
     $('#btApplySettings').on('click', () =>
     {
         localStorage.optClientId = g_config.finalClientId = g_config.clientId = $('#optClientId').val();
-        g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateChangeCB, console.log);
+        g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateUpdateCB, console.log);
         coolMessage('success', 'Changes applied', 'Changes have been applied and saved!');
     });
 
@@ -658,8 +659,8 @@ async function onPageLoaded()
 
     handleMobileMode();
 
-    sseStateChangeCB(null);
-    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateChangeCB, console.log);
+    sseStateUpdateCB(null);
+    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateUpdateCB, console.log);
 }
 
 window.addEventListener("load", onPageLoaded);

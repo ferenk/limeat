@@ -5,6 +5,7 @@ import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/ut
 import { TextareaExt } from './views/textareaExt.js';
 import { TextareaHighlight } from './views/textareaHighlight';
 import { OutputTable } from './views/outputTable.js';
+import { coolConfirm } from './views/uiHelper.js';
 
 class Controller
 {
@@ -89,6 +90,9 @@ class Controller
         this.processInputCB();
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
+        // recheck the server version - did it change (and we didn't receive an SSE notification somehow) - so should we update?
+        if (new Date() - this.savedFoodDate > 60000)
+            this.refreshDayFoods(true);
         ///!!!
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
     }
@@ -179,8 +183,9 @@ class Controller
         this.refreshDayFoods();
     }
 
-    refreshDayFoods()
+    refreshDayFoods(justCompare = false)
     {
+        console.log(`refreshDayFoods(justCompare: ${justCompare})...`);
         let currentDayStr = this.currentDayMoment.format('YYYY-MM-DD');
         let self = this;
         nodeXHRComm(
@@ -189,7 +194,7 @@ class Controller
                 user: $('#tUser').val(),
                 date: currentDayStr
             },
-            self.onDailyFoodRecordArrived.bind(self)
+            (!justCompare ? self.onDailyFoodRecordArrived.bind(self) : self.onDailyFoodRecordArrived2.bind(self))
         );
     }
 
@@ -256,8 +261,7 @@ class Controller
      * Communication handler: Incoming whole daily food record
      * @param {XMLHttpRequest} xhr 
      * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
-     */
-    onDailyFoodRecordArrived(xhr, ev)
+     */    onDailyFoodRecordArrived(xhr, ev)
     {
         // @ts-ignore:next-line (dynamic type check)
         if (!isError(ev) && ev.type == 'load') {
@@ -267,8 +271,34 @@ class Controller
 
             this.mealsDiaryText.changeText(content, true);
             this.savedFoodInput = content;      // it is the 'changed' text, so the 'unsaved' light will not be active
+            this.savedFoodDate = new Date();
             this.onFoodInputChanged();
             this.updateSavedStateLight();
+        }
+    }
+
+    async onDailyFoodRecordArrived2(xhr, ev)
+    {
+        if (!isError(ev) && ev.type == 'load')
+        {
+            let content = xhr.responseText;
+            content = content.replaceAll('\\n', '\n');
+
+            this.savedFoodDate = new Date();
+            let isServerSideChanged = (this.savedFoodInput.localeCompare(content) != 0);
+            if (isServerSideChanged)
+            {
+                let reloadAnswer = await coolConfirm(
+                    'warning',
+                    'Update detected',
+                    `Your food records has been updated on the server.<br>Refresh here, too?`,
+                    null,
+                    'Refresh',
+                    'Skip',
+                    true);
+                if (reloadAnswer)
+                    this.refreshDayFoods();
+            }
         }
     }
 
@@ -306,6 +336,7 @@ class Controller
             this.mealsDiaryText.updateRowsStr();
 
         this.savedFoodInput = this.mealsDiaryText.rowsStr;
+        this.savedFoodDate = new Date();
     }
 
 

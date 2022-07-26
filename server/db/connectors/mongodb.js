@@ -114,7 +114,7 @@ class MongoDb extends DbConnector
             const dbo = this.mongoDbClient.db('KCalcDB');
             const foodRecordCollection = dbo.collection(tableName);
 
-            let newDocument = { user: user, date: date, food_data: food_data.replace(/\n/g, '\\nNEWLINE') };
+            let newDocument = { user: user, date: date, food_data: food_data };
 
             //foodRecordCollection.insertOne(newDocument);
             foodRecordCollection.updateOne(
