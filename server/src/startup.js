@@ -6,7 +6,7 @@ function initEnvVariables()
         {
             const path = require('path');
             // try to open the file from the PARENT (project's home) folder!
-            require('dotenv').config({ path: path.join(__dirname, '..', 'app.env') });
+            require('dotenv').config({ path: path.join(__dirname, '..', '..', 'app.env') });
         } catch (e)
         {
             console.error('Unable to read environment variables!\n' + e);
