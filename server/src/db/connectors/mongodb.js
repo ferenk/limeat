@@ -32,7 +32,7 @@ class MongoDb extends DbConnector
                 // certificate path is relative to the project root folder
                 if (process.env.DB_MONGO_AUTH_X_509_CERTFILE)
                 {
-                    let certfilePath = path.join(__dirname, '..', '..', process.env.DB_MONGO_AUTH_X_509_CERTFILE);
+                    let certfilePath = path.join(__dirname, '..', '..', '..', process.env.DB_MONGO_AUTH_X_509_CERTFILE);
                     connectUri += `&tlsCertificateKeyFile=${encodeURIComponent(certfilePath)}`;
                 }
                 else

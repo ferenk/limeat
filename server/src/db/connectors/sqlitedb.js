@@ -139,7 +139,7 @@ class SQLiteDb extends DbConnector {
 
     async readKCalDb()
     {
-        return SQLiteDb.readFile(path.join(__dirname, '..', '..', 'kcal_db.md')) 
+        return SQLiteDb.readFile(path.join(__dirname, '..', '..', '..', 'kcal_db.md')) 
     }
 
     static readFile(filename)

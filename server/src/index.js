@@ -13,8 +13,8 @@ const { SSEService } = require(path.join(__dirname, 'net', 'sseService.js'));
 
 var app = express();
 
-app.use(express.static(path.join(__dirname, '..', 'client'), { extensions: ['html', 'js', 'png'] }));
-app.set('views', path.join(__dirname, '..', 'client'));
+app.use(express.static(path.join(__dirname, '..', '..', 'client', 'src'), { extensions: ['html', 'js', 'png'] }));
+app.set('views', path.join(__dirname, '..', '..', 'client', 'src'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
