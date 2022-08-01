@@ -1,8 +1,15 @@
-class DbConnector
+export class DbConnector
 {
+    static null: DbConnector;
+
+    static
+    {
+        DbConnector.null = new DbConnector();
+    }
+
     connect()
     {
-        log.error("Not implemented yet!");
+        console.error('Not implemented yet!');
     }
 
     /**
@@ -11,17 +18,38 @@ class DbConnector
      */
     async readFoodDbRows(dbData)
     {
-        log.error("Not implemented yet!");
+        console.error('Not implemented yet!');
     }
 
     /**
      * 
-     * @returns {String} KCal DB file's content
+     * @returns {string} KCal DB file's content
      */
     async readKCalDb()
     {
-        return readFile(path.join(__dirname, '..', 'server', 'kcal_db.md')) 
+        return '';
+    }
+
+    async updateRow(tableName, user, date, food_data): Promise<string>
+    {
+        console.error('Not implemented yet!');
+        return '';
     }
 }
 
-module.exports = { DbConnector };
+export class FoodDbItem
+{
+    user: string;
+    date: string;
+    food_data: string;
+}
+
+export class FoodDbItemStore
+{
+    foods_raw: FoodDbItem[];
+
+    constructor()
+    {
+        this.foods_raw = [];
+    }
+}

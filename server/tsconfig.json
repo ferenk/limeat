@@ -1,4 +1,9 @@
 {
+  "ts-node": {
+    // It is faster to skip typechecking.
+    "transpileOnly": true,
+    "experimentalResolver": true
+  },
   "compilerOptions": {
     "lib": ["es2021", "DOM"],
     "skipLibCheck": true,

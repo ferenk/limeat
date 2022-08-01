@@ -1,6 +1,6 @@
 export { TextareaHighlight };
 
-import { TextareaExt } from './textareaExt.js';
+import { TextareaExt } from './textareaExt.mjs';
 
 class TextColor
 {

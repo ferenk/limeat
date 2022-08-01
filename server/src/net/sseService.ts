@@ -1,4 +1,4 @@
-class SSEService
+export class SSEService
 {
     static clients = new Map();
 
@@ -30,7 +30,7 @@ class SSEService
         });
         responseStream.write('retry: 5000\n');
 
-        let clientId = null;
+        let clientId: string = '<null>';
         if (req.query.clientId)
         {
             // calculate unique client ID
@@ -89,5 +89,3 @@ class SSEService
         }
     }
 }
-
-module.exports = { SSEService };

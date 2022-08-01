@@ -1,17 +1,17 @@
-import { getCurrentMoment, toNumericOrZero, toFixedFloat, printToFixedFloat, isError, copyText2Clipboard } from './util/util.js';
-import { nodeXHRComm } from './data/comm.js';
-import { processQuantity } from './data/foodsLang.js';
-import { FoodsDb } from './data/foodsDb.js';
-import { Controller } from './controller.js';
-import { TextareaExt } from './views/textareaExt.js';
-import { TextareaHighlight } from './views/textareaHighlight.js';
-import { OutputTable } from './views/outputTable.js';
-import { traceMethodCalls } from './util/callTracker.js'
-import { CountdownButton } from './util/ui/countdownButton.js';
+import { getCurrentMoment, toNumericOrZero, toFixedFloat, printToFixedFloat, isError, copyText2Clipboard } from './util/util.mjs';
+import { nodeXHRComm } from './data/comm.mjs';
+import { processQuantity } from './data/foodsLang.mjs';
+import { FoodsDb } from './data/foodsDb.mjs';
+import { Controller } from './controller.mjs';
+import { TextareaExt } from './views/textareaExt.mjs';
+import { TextareaHighlight } from './views/textareaHighlight.mjs';
+import { OutputTable } from './views/outputTable.mjs';
+import { traceMethodCalls } from './util/callTracker.mjs'
+import { CountdownButton } from './util/ui/countdownButton.mjs';
 
-import { SSEClient } from './net/sseClient.js';
+import { SSEClient } from './net/sseClient.mjs';
 
-import { coolConfirm, coolMessage } from './views/uiHelper.js';
+import { coolConfirm, coolMessage } from './views/uiHelper.mjs';
 
 var g_config =
 {

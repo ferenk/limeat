@@ -1,4 +1,4 @@
-import { traceMethodCalls } from './callTracker.js'
+import { traceMethodCalls } from './callTracker.mjs'
 
 class firstClass
 {

@@ -1,7 +1,8 @@
-/**
- * @returns { import('./clipboard.js').DbConnector }
- */
-async function initDb()
+import { DbConnector } from './connectors/dbconnector';
+import { SQLiteDb } from './connectors/sqlitedb';
+import { MongoDb } from './connectors/mongodb';
+
+export async function initDb() : Promise<DbConnector>
 {
     console.log(`DB_MODE: ${process.env.DB_MODE}`);
 
@@ -10,9 +11,7 @@ async function initDb()
         console.log('Initializing SQLite DB...');
 
         const path = require('path');
-        const DBModule_SQLite = require(path.join(__dirname, 'connectors', 'sqlitedb'));
-
-        let connectDb = new DBModule_SQLite.SQLiteDb(path.join(__dirname, '..'));
+        let connectDb = new SQLiteDb(path.join(__dirname, '..', '..'));
 
         console.log('Reading tables...');
         await connectDb.createDbs();
@@ -23,10 +22,7 @@ async function initDb()
     {
         console.log('Initializing MongoDB...');
 
-        const path = require('path');
-        const DBModule_MongoDB = require(path.join(__dirname, 'connectors', 'mongodb'));
-
-        let connectDb = new DBModule_MongoDB.MongoDb();
+        let connectDb = new MongoDb();
         await connectDb.connect();
         await connectDb.createDbs();
 
@@ -37,6 +33,5 @@ async function initDb()
         console.error('DB_MODE is not set correctly! (sqlite or mongodb) Exiting...');
         process.exit(2);
     }
+    return DbConnector.null;
 }
-
-module.exports = { initDb };

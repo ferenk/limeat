@@ -1,9 +1,13 @@
+import { DbConnector }  from './dbconnector';
+
+const { MongoClient } = require('mongodb');
 const path = require('path');
 
-const { DbConnector } = require(path.join(__dirname, 'dbconnector'));
-
-class MongoDb extends DbConnector
+export class MongoDb extends DbConnector
 {
+    connectUri: string;
+    mongoDbClient: typeof MongoClient;
+
     /**
      * 
      * @param {String} uri 
@@ -12,14 +16,11 @@ class MongoDb extends DbConnector
     {
         super();
 
-        const { MongoClient } = require('mongodb');
-
         this.connectUri = MongoDb.prepareConnectURI();
-        /** @type {MongoClient} */
         this.mongoDbClient = new MongoClient(this.connectUri, { useUnifiedTopology: true });
     }
 
-    static prepareConnectURI()
+    static prepareConnectURI(): string
     {
         let connectUri = process.env.DB_MONGO_URI; 
         if (connectUri && process.env.DB_MONGO_AUTH == 'X.509')
@@ -107,7 +108,7 @@ class MongoDb extends DbConnector
         }
     }
 
-    async updateRow(tableName, user, date, food_data)
+    async updateRow(tableName, user, date, food_data): Promise<string>
     {
         try
         {
@@ -127,7 +128,6 @@ class MongoDb extends DbConnector
         {
             console.error(`ERROR: While reading food data from MongoDB: ${e}`);
         }
+        return 'OK';
     }
 }
-
-module.exports = { MongoDb };

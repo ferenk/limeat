@@ -1,19 +1,22 @@
-//app.use('/scripts', express.static(__dirname + '/node_modules/bootstrap/dist/'));
+import { DbConnector, FoodDbItemStore, FoodDbItem } from './db/connectors/dbconnector';
+import { SSEService } from './net/sseService';
+import { initDb } from './db/db';
+import { initEnvVariables } from './startup';
 
-const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 8089;
 const express = require('express');
-const { url } = require('inspector');
 const bodyParser = require('body-parser');
 const { query } = require('express');
 
-const { SSEService } = require(path.join(__dirname, 'net', 'sseService.js'));
+var connectDb: DbConnector = DbConnector.null;
+var g_allFoodRows = new FoodDbItemStore();
+
 
 var app = express();
 
-app.use(express.static(path.join(__dirname, '..', '..', 'client', 'src'), { extensions: ['html', 'js', 'png'] }));
+app.use(express.static(path.join(__dirname, '..', '..', 'client', 'src'), { extensions: ['html', 'js', 'mjs', 'css', 'png', 'svg'] }));
 app.set('views', path.join(__dirname, '..', '..', 'client', 'src'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
@@ -26,21 +29,20 @@ app.get('/', function (req, res) {
 
 var sseService = new SSEService(app);
 
-
-function getsetCache(user, date, data)
+function getsetCache(user: string, date: string, data: string)
 {
-    for (let idx = 0; idx< dbData.foods_raw.length; idx++)
+    for (let idx = 0; idx< g_allFoodRows.foods_raw.length; idx++)
     {
-        if (dbData.foods_raw[idx].user == user && dbData.foods_raw[idx].date == date)
+        if (g_allFoodRows.foods_raw[idx].user == user && g_allFoodRows.foods_raw[idx].date == date)
         {
             if (data == null)
             {
                 console.log(`Cache: GET data FOUND (user: "${user}" date: "${date}")`);
-                return dbData.foods_raw[idx].food_data;
+                return g_allFoodRows.foods_raw[idx].food_data;
             }
             else
             {
-                dbData.foods_raw[idx].food_data = data;
+                g_allFoodRows.foods_raw[idx].food_data = data;
                 console.log(`Cache: SET data UPDATED (user: "${user}" date: "${date}")`);
                 return null;
             }
@@ -49,7 +51,7 @@ function getsetCache(user, date, data)
 
     if (data != null)
     {
-        dbData.foods_raw.push({ user: user, date: date, food_data: data });
+        g_allFoodRows.foods_raw.push({ user: user, date: date, food_data: data });
         console.log(`Cache: SET data ADDED (user: "${user}" date: "${date}")`);
     }
     else
@@ -66,7 +68,7 @@ async function updateFoodRow(user, date, data)
 
 function checkQuery(req, params)
 {
-    if (dbData.foods_raw == null)
+    if (g_allFoodRows.foods_raw == null)
     {
         console.log("DB not found!");
         return false;
@@ -106,7 +108,7 @@ app.get('/node_api/read_foodrowdb', function (req, res)
 
         if (checkQuery(req, ['user', 'date']))
         {
-            let daydata = getsetCache(req.query.user, req.query.date);
+            let daydata = getsetCache(req.query.user, req.query.date, req.query.data);
             res.send(daydata);
             return;
         }
@@ -142,16 +144,12 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
     }
 });
 
-/** @type { import('./db/connectors/dbconnector.js').DbConnector } */
-var connectDb = null;
-var dbData = {};
-
 async function initApp()
 {
     try
     {
         // basic init
-        require(path.join(__dirname, 'startup')).initEnvVariables();
+        initEnvVariables();
 
         // check config
         if (!process.env.HEROKU)
@@ -162,10 +160,9 @@ async function initApp()
         console.log(`Initialize HEROKU mode: ${process.env.HEROKU}`);
 
         // init DB subsystem and read all food data
-        const Db = require(path.join(__dirname, 'db/db'));
-        connectDb = await Db.initDb();
+        connectDb = await initDb();
         await connectDb.connect();
-        await connectDb.readFoodDbRows(dbData);
+        await connectDb.readFoodDbRows(g_allFoodRows);
 
         // start to listen
         app.listen(PORT, () => console.log(`KCal web page has been started on port ${PORT} !`));

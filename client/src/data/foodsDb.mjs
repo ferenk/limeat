@@ -1,6 +1,6 @@
 export { FoodsDb, FoodsDbItem }
 
-import { processQuantity } from './foodsLang.js';
+import { processQuantity } from './foodsLang.mjs';
 
 class FoodsDbItem
 {

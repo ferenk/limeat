@@ -1,4 +1,4 @@
-import { coolConfirm } from '../views/uiHelper.js';
+import { coolConfirm } from '../views/uiHelper.mjs';
 
 export { SSEClient };
 

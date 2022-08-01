@@ -1,11 +1,11 @@
 export { Controller };
 
-import { nodeXHRComm } from './data/comm.js';
-import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/util.js';
-import { TextareaExt } from './views/textareaExt.js';
-import { TextareaHighlight } from './views/textareaHighlight';
-import { OutputTable } from './views/outputTable.js';
-import { coolConfirm } from './views/uiHelper.js';
+import { nodeXHRComm } from './data/comm.mjs';
+import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
+import { TextareaExt } from './views/textareaExt.mjs';
+import { TextareaHighlight } from './views/textareaHighlight.mjs';
+import { OutputTable } from './views/outputTable.mjs';
+import { coolConfirm } from './views/uiHelper.mjs';
 
 class Controller
 {

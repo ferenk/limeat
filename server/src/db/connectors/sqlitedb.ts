@@ -1,16 +1,17 @@
-// bookshelf-app/server/db.js
+import { DbConnector } from './dbconnector';
 
-// Import path module
-const path = require('path');
 const fs = require('fs');
-
-const { DbConnector } = require(path.join(__dirname, 'dbconnector'));
+const path = require('path');
 
 // users: 'id', 'name', 'password_hash', 'email'
 // foods: 'id', 'name', 'variant_name', 'creator', 'date', 'calories', 'weights'
 // tracking: 'user_id', 'date', 'foods'
 
-class SQLiteDb extends DbConnector {
+export class SQLiteDb extends DbConnector
+{
+    foodDbPath: string;
+    knex: any;
+
     /**
      * Initializes the SQlite DB connector
      * @param {String} dbRootFolder The folder where the DB files are stored
@@ -25,8 +26,6 @@ class SQLiteDb extends DbConnector {
 
     initWithKnex()
     {
-        //const sqlite = require('sqlite3');
-
         // Create connection to SQLite database
         const knex = require('knex')({
             client: 'sqlite3',
@@ -139,14 +138,14 @@ class SQLiteDb extends DbConnector {
 
     async readKCalDb()
     {
-        return SQLiteDb.readFile(path.join(__dirname, '..', '..', '..', 'kcal_db.md')) 
+        return SQLiteDb.readFile(path.join(__dirname, '..', '..', '..', 'kcal_db.md'));
     }
 
     static readFile(filename)
     {
         try
         {
-            const data = fs.readFileSync(filename, 'utf8')
+            const data = fs.readFileSync(filename, 'utf8');
             return data;
         }
         catch (err)
@@ -167,7 +166,7 @@ class SQLiteDb extends DbConnector {
     }
 
     // Just for debugging purposes:    
-    async updateRow(tableName, user, date, food_data)
+    async updateRow(tableName, user, date, food_data): Promise<string>
     {
         await this.knex(tableName).insert({ user: user, date: date, food_data: food_data })
             .onConflict(['user', 'date'])
@@ -176,9 +175,7 @@ class SQLiteDb extends DbConnector {
                 console.log(`ERROR (.catch() handler): ${err}`);
                 return `ERROR: ${err}`;
             });
+        return 'OK';
     }
 }
 
-
-// Export the database
-module.exports = { SQLiteDb };

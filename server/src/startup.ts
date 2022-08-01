@@ -1,4 +1,4 @@
-function initEnvVariables()
+export function initEnvVariables()
 {
     if (process.env.HEROKU !== "true")
     {
@@ -13,5 +13,3 @@ function initEnvVariables()
         }
     }
 }
-
-module.exports = { initEnvVariables };

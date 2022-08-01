@@ -1,7 +1,7 @@
 export { processQuantity }
 
-import { isNumeric } from '../util/util.js';
-import { FoodsDbItem } from './foodsDb.js';
+import { isNumeric } from '../util/util.mjs';
+import { FoodsDbItem } from './foodsDb.mjs';
 
 /**
  * 
