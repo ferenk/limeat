@@ -1,15 +1,29 @@
 import { coolConfirm } from '../views/uiHelper.mjs';
 
+import { Config } from '../app/config.mjs'
+
 export { SSEClient };
 
+    
+/**
+ * @callback ProcessInputCallBack
+ */
 class SSEClient
 {
+    /**
+     * @param {Config} config
+     */
     constructor(config)
     {
         this.config = config;
         this.eventSource = null;
     }
 
+    /**
+     * @param {function} refreshDataCB
+     * @param {function} statusChangeCB
+     * @param {function} logCB
+     */
     init(refreshDataCB, statusChangeCB, logCB)
     {
         if (statusChangeCB)
@@ -18,10 +32,7 @@ class SSEClient
         let self = this;
         if (!!window.EventSource)
         {
-            if (this.eventSource != null)
-            {
-                self.eventSource.close();
-            }
+            self.eventSource?.close();
 
             this.eventSource = new EventSource(`/sse?clientId=${ self.config.clientId }`);
             this.eventSource.addEventListener('message',
@@ -55,25 +66,27 @@ class SSEClient
                 logCB(`Ping received: ${e.data}`);
             });
 
-            this.eventSource.addEventListener('open', function (e)
+            this.eventSource.addEventListener('open', function ()
             {
-                self.statusChangeCB('OPENED');
+                self.statusChangeCB?.('OPENED');
             });
 
             this.eventSource.addEventListener('error', function (e)
             {
                 if (e.eventPhase == EventSource.CLOSED)
                 {
-                    self.statusChangeCB('CLOSED');
-                    self.eventSource.close()
+                    self.statusChangeCB?.('CLOSED');
+                    self.eventSource?.close()
                 }
-                if (e.target.readyState == EventSource.CLOSED)
+                // @ts-ignore (Property 'readyState' does not exist on type 'EventTarget'.)
+                if (e.target?.readyState == EventSource.CLOSED)
                 {
-                    self.statusChangeCB('DISCONNECTED');
+                    self.statusChangeCB?.('DISCONNECTED');
                 }
-                else if (e.target.readyState == EventSource.CONNECTING)
+                // @ts-ignore (Property 'readyState' does not exist on type 'EventTarget'.)
+                else if (e.target?.readyState == EventSource.CONNECTING)
                 {
-                    self.statusChangeCB('CONNECTING');
+                    self.statusChangeCB?.('CONNECTING');
                 }
             }, false);
         }

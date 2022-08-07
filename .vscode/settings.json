@@ -1,6 +1,6 @@
 {
     "jest.debugMode": true,
-    "jest.jestCommandLine": "NODE_OPTIONS=--experimental-vm-modules node_modules/.bin/jest",
+    "jest.jestCommandLine": "node --experimental-vm-modules node_modules\\jest\\bin\\jest.js",
     "jest.testExplorer": {
         "enabled": true
     }

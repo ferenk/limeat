@@ -2,59 +2,39 @@ export { Controller };
 
 import { nodeXHRComm } from './data/comm.mjs';
 import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
+
 import { TextareaExt } from './views/textareaExt.mjs';
 import { TextareaHighlight } from './views/textareaHighlight.mjs';
 import { OutputTable } from './views/outputTable.mjs';
+import { MealListLang } from './data/mealListLang.mjs';
+
 import { coolConfirm } from './views/uiHelper.mjs';
 
 class Controller
 {
-    dayParts =
-    [{ pattern: '  |          |***(reggeli,tízórai)***', kcal: 0, g:0 },
-     { pattern: '  |          |***(ebéd,uzsonna)***', kcal:0, g:0 },
-     { pattern: '  |          |***(vacsora,nasik)***', kcal:0, g:0 },
-     { pattern: '  |          |', kcal: 0, g: 0 }];
-    mdHeader = '  | kCal     |  Idő    | Kaja típusa  \n  | -------- | ------- | -----------  \n';
-
-    /* Output text generation */
-    /** @type { Number } */
-    currentDayPart = 0;
-    /** @type { String } */
-    foodOutputStr = '';
-    /** @type { String[] } */
-    foodSourceModifiedOutput = [];
-
-    /* Time management */
-
-    /** @type {any ?} */
-    currentDayMoment = null;
-
-    savedFoodInput = '';
     saveButtonNormalMsg = "SAVE";
 
     /** @type {String | null} */
     currentCursorSection = null;
 
+    lastDbFoodInput = '';
+    /** @type {number} */
+    lastDbUpdate = Number(new Date());
 
-    /**
-     * XML HTTP communication: Callback for the received message
-     *
-     * @callback ProcessInputCallBack
-     */
 
     /**
      * Creates a new output table widget
      * @param { TextareaExt } mealsDiaryText
      * @param { TextareaHighlight } mealsDiaryTextHighlight
      * @param { OutputTable } outputTable
-     * @param { ProcessInputCallBack } processInputCB
+     * @param { MealListLang } mealListLang
      */
-    constructor(mealsDiaryText, mealsDiaryTextHighlight, outputTable,  processInputCB)
+    constructor(mealsDiaryText, mealsDiaryTextHighlight, outputTable, mealListLang)
     {
         this.mealsDiaryText = mealsDiaryText;
         this.mealsDiaryTextHighlight = mealsDiaryTextHighlight;
         this.outputTable = outputTable;
-        this.processInputCB = processInputCB;
+        this.mealListLang = mealListLang;
         this.mainHeaderIsOnTop = true;
     }
 
@@ -68,30 +48,18 @@ class Controller
     /* ------------------------
        HIGH LEVEL logic
     */
-    initCounters()
-    {
-        for (let i = 0; i < this.dayParts.length; i++) {
-            this.dayParts[i].kcal = 0;
-            this.dayParts[i].g = 0;
-        }
-        this.currentDayPart = 0;
-        this.foodOutputStr = `### ${printMoment(this.currentDayMoment).slice(8)}  \n` + this.mdHeader;
-        this.foodSourceModifiedOutput = [];
-        $('.mealRow').remove();
-    }
-
     onFoodInputChanged()
     {
         this.mealsDiaryText.mealLineFirst = this.mealsDiaryText.mealLineLast = -1;
-        this.initCounters();
+        this.mealListLang.initCounters();
         this.updateSavedStateLight();
         //! Currently in main.js, move it the data module!
         // @ts-ignore:next-line (Cannot find name 'MobileDetect')
-        this.processInputCB();
+        this.mealListLang.processInput();
         this.updateUi_FocusedMode();
         this.updatePrevNextMealButtons();
         // recheck the server version - did it change (and we didn't receive an SSE notification somehow) - so should we update?
-        if (new Date() - this.savedFoodDate > 60000)
+        if (Number(new Date()) - this.lastDbUpdate > 60000)
             this.refreshDayFoods(true);
         ///!!!
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
@@ -125,7 +93,10 @@ class Controller
                         this.changeHighlightedFoodPart(`.${thisRowSections[i][2]}`);
 
                         let foodPart = thisRowSections[i][3]?.foodPart;
-                        document.querySelector('#lbCurrentFoodPartKCal').textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`; 
+                        let allKCalLabel = document.querySelector('#lbCurrentFoodPartKCal')
+                        if (allKCalLabel)
+                            allKCalLabel.textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`; 
+
                         break;
                     }
                 }
@@ -177,7 +148,7 @@ class Controller
             window.localStorage.optUserName = $('#tUser').val();
         }
 
-        let currentDayFormattedStr = printMoment(this.currentDayMoment);
+        let currentDayFormattedStr = printMoment(this.mealListLang.currentDayMoment);
         $('#tDate').val(currentDayFormattedStr);
 
         this.refreshDayFoods();
@@ -186,7 +157,7 @@ class Controller
     refreshDayFoods(justCompare = false)
     {
         console.log(`refreshDayFoods(justCompare: ${justCompare})...`);
-        let currentDayStr = this.currentDayMoment.format('YYYY-MM-DD');
+        let currentDayStr = this.mealListLang.currentDayMoment.format('YYYY-MM-DD');
         let self = this;
         nodeXHRComm(
             'node_api/read_foodrowdb',
@@ -231,9 +202,9 @@ class Controller
 
         // calculate timestamp
         const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
-        const currentMoment = this.currentDayMoment.milliseconds();
+        const currentMoment = this.mealListLang.currentDayMoment.milliseconds();
 
-        this.currentDayMoment.milliseconds(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
+        this.mealListLang.currentDayMoment.milliseconds(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
         this.onUserOrDateChanged();
 
         let newSelectedLine = this.outputTable.checkPrevNextMeal(null,
@@ -270,22 +241,28 @@ class Controller
             console.log('foodRecordRowArrived: ' + content);
 
             this.mealsDiaryText.changeText(content, true);
-            this.savedFoodInput = content;      // it is the 'changed' text, so the 'unsaved' light will not be active
-            this.savedFoodDate = new Date();
+            this.lastDbFoodInput = content;      // it is the 'changed' text, so the 'unsaved' light will not be active
+            this.lastDbUpdate = Number(new Date());
             this.onFoodInputChanged();
             this.updateSavedStateLight();
         }
     }
 
+    /**
+     * Communication handler: Incoming whole daily food record
+     * @param {XMLHttpRequest} xhr 
+     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+     */
     async onDailyFoodRecordArrived2(xhr, ev)
     {
+        // @ts-ignore (Property 'type' does not exist on type 'ProgressEvent<XMLHttpRequestEventTarget> | Error'.)
         if (!isError(ev) && ev.type == 'load')
         {
             let content = xhr.responseText;
             content = content.replaceAll('\\n', '\n');
 
-            this.savedFoodDate = new Date();
-            let isServerSideChanged = (this.savedFoodInput.localeCompare(content) != 0);
+            this.lastDbUpdate = Number(new Date());
+            let isServerSideChanged = (this.lastDbFoodInput.localeCompare(content) != 0);
             if (isServerSideChanged)
             {
                 let reloadAnswer = await coolConfirm(
@@ -313,7 +290,7 @@ class Controller
             this.mealsDiaryText.updateRowsStr();
 
         if (!isSaved)
-            isSaved = (this.mealsDiaryText.rowsStr.localeCompare(this.savedFoodInput) == 0);
+            isSaved = (this.mealsDiaryText.rowsStr.localeCompare(this.lastDbFoodInput) == 0);
 
         if (isSaved == true) {
             //! TODO: move the save button logics to a separate class
@@ -335,8 +312,8 @@ class Controller
         if (updateTextView)
             this.mealsDiaryText.updateRowsStr();
 
-        this.savedFoodInput = this.mealsDiaryText.rowsStr;
-        this.savedFoodDate = new Date();
+        this.lastDbFoodInput = this.mealsDiaryText.rowsStr;
+        this.lastDbUpdate = Number(new Date());
     }
 
 

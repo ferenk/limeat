@@ -25,5 +25,5 @@
     "noUnusedLocals": true,
     "declaration": true
   },
-  "include": ["client/**/*.js"]
+  "include": ["src/**/*.ts"]
 }
