@@ -1,6 +1,7 @@
 {
     "jest.debugMode": true,
-    "jest.jestCommandLine": "node --experimental-vm-modules node_modules\\jest\\bin\\jest.js",
+    "jest.autoRun": { "watch": false },
+    "jest.jestCommandLine": "node_modules\\node\\bin\\node.exe --experimental-vm-modules node_modules\\jest\\bin\\jest.js",
     "jest.testExplorer": {
         "enabled": true
     }

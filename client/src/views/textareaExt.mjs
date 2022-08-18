@@ -1,6 +1,8 @@
 export { TextareaExt };
 
-class TextareaExt {
+import { TextSection, TextContainer } from '../util/text/textContainers.mjs';
+
+class TextareaExt extends TextContainer {
     /** @type {String} The whole text of the textarea, separated by '\n's (WARNING: not updated automatically, you need to call updateRowStr()!)  */
     rowsStr = '';
     /** @type {String[]} All rows of the textarea */
@@ -37,6 +39,7 @@ class TextareaExt {
      */
     constructor()
     {
+        super();
         this.resetState();
     }
 
@@ -142,6 +145,23 @@ class TextareaExt {
                 this.domItem.dispatchEvent(refreshEvent);
             }
         }
+    }
+
+    /**
+     * @override
+     * @param {number} iRow
+     */
+    getRow(iRow)
+    {
+        return this.rows[iRow];
+    }
+
+    /**
+     * @override
+     */
+    getRowCount()
+    {
+        return this.rows.length;
     }
 
     updateRows()

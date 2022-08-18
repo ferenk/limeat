@@ -1,190 +1,123 @@
-export { TextareaHighlight };
+export { HtmlBuffer };
 
-import { TextareaExt } from './textareaExt.mjs';
+import { TextSection, TextContainer } from './textContainers.mjs';
 
-class TextColor
-{
-    /** @type {Number} */
-    lineNo = 0;
-    /** @type {Number} */
-
-}
-
-class TextareaHighlight
-{
-    /**
-     * 
-     * @param {TextareaExt} textareaExt 
-     */
-    constructor(textareaExt)
-    {
-        /** @type { TextColor[] } */
-        this.lineColors = [];
-        this.textareaExt = textareaExt;
-        this.tempHtmlBuffer = new TempHtmlBuffer(this);
-    }
-
-    /**
-     * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} selector selector for a textarea HTML widget 
-     */
-    initialize(selector)
-    {
-        /** @type {HTMLTextAreaElement?} */
-        this.domText = document.querySelector(selector);
-        if (this.domText)
-        {
-            // add the highlighter layer
-            if (this.domText.parentElement)
-            {
-                this.domHighlighter = document.createElement('pre');
-                this.domHighlighter.classList.add('textarea_highlighter');
-                this.domHighlighter.setAttribute('aria-hidden', 'true');
-                this.domText.parentElement.insertBefore(this.domHighlighter, this.domText);
-                this.domText.classList.add('textarea_editor');
-
-                // put the textarea into a new common parent with the highlighter layer
-                let domTextParentOrig = this.domText.parentElement;
-                let domTextParentNew = document.createElement('div');
-                domTextParentOrig.insertBefore(domTextParentNew, this.domText);
-                this.domText.remove();
-                domTextParentNew.classList.add('textarea_parent');
-                domTextParentNew.appendChild(this.domHighlighter);
-                domTextParentNew.appendChild(this.domText);
-
-                this.domText.setAttribute('mode', 'normal');
-                this.domHighlighter.setAttribute('mode', 'normal');
-            }
-
-            // subscribe to textarea's events
-            let self = this;
-            //this.domText.addEventListener('input', () => { self.update(this.) }));
-            this.domText.addEventListener('scroll', self.sync_scroll.bind(self));
-            this.domText.addEventListener('focus', () => { self.domHighlighter?.setAttribute('focused', 'true'); });
-            this.domText.addEventListener('blur', () => { self.domHighlighter?.setAttribute('focused', 'false'); });
-        }
-    }
-
-
-    /**
-     * @param {String?} htmlText
-     */
-    update(htmlText = null)
-    {
-        // Update code
-        if (this.domText && this.domHighlighter)
-        {
-            if (htmlText == null)
-                htmlText = this.domText.value;
-            if (htmlText[htmlText.length - 1] == '\n')
-                htmlText += ' ';
-            htmlText += '\n\n\n';
-            this.domHighlighter.innerHTML = htmlText;
-        }
-    }
-
-    /**
-     * @param {String[]?} textLines 
-     */
-    updateLines(textLines = null)
-    {
-        // Update code
-        if (this.domText && this.domHighlighter)
-        {
-            if (textLines == null)
-                textLines = this.domText.value.split('\n');
-            // workaround for a textarea bug (when the last row is empty)
-            if (textLines[textLines.length - 1].endsWith('\n'))
-                textLines[textLines.length - 1] += ' ';
-            this.domHighlighter.innerHTML = textLines.join('\n');
-        }
-    }
-
-    /**
-     * 
-     * @param {Number} cursorRow 
-     */
-    render(cursorRow)
-    {
-        let highlightedStr = '';
-        for (let iRow = 0; iRow < this.tempHtmlBuffer.buffer.length; iRow++)
-        {
-            if (iRow > 0)
-                highlightedStr += '\n';
-            // add cursor to the appropriate row
-            let rowStr = this.tempHtmlBuffer.buffer[iRow];
-            if (iRow === cursorRow)
-                rowStr = `<div class="textCurrentRow" style="width:100%">${rowStr}</div>`;
-            highlightedStr += rowStr;
-        }
-        this.update(highlightedStr);
-    }
-
-    sync_scroll()
-    {
-        /* Scroll result to scroll coords of event - sync with textarea */
-        if (this.domHighlighter && this.domText)
-        {
-            // Get and set x and y
-            this.domHighlighter.scrollTop = this.domText.scrollTop;
-            this.domHighlighter.scrollLeft = this.domText.scrollLeft;
-        }
-    }
-
-}
-
-class TempHtmlBuffer
+class HtmlBuffer extends TextContainer
 {
     /**
      * Creates a new temporary HTML buffer
-     * @param {TextareaHighlight} parent 
+     * @param {TextContainer | null} inBuffer 
+     * @param { { autoCloseLines: boolean }? } options
      */
-    constructor(parent)
+    constructor(inBuffer, options = { autoCloseLines: true })
     {
-        this.parent = parent;
+        super();
         /** @type { String[]} */
-        this.buffer = [];
-        this.bufferSectionsByRow = new Map();
-        this.bufferSections = new Map();
+        this.outBuffer = [];
+        /** @type { Map<number, TextSection[]> } */
+        this.outBufferSectionsByRow = new Map();
+        /** @type { Map<string, TextSection> } */
+        this.outBufferSections = new Map();
+        this.inBuffer = inBuffer;
+        this.options = options;
     }
 
     clear()
     {
-        this.buffer = [];
-        this.bufferSectionsByRow.clear();
-        this.bufferSections.clear();
+        this.outBuffer = [];
+        this.outBufferSectionsByRow.clear();
+        this.outBufferSections.clear();
+    }
+
+    /**
+     * @override
+     * @param {number} row
+     * @returns {string}}
+     */
+    getRow(row)
+    {
+        // option: autoCloseLines
+        if (this.options?.autoCloseLines == true)
+        {
+            if (this.inBuffer == null)
+                throw new Error(`ERROR: 'autoCloseLines' option is enabled but no input buffer was provided in the constructor!`);
+            
+            if (0 <= row && row <= this.inBuffer.getRowCount())
+                this.appendToLine(row, -1, null, null, false);
+        }
+
+        // Error check: Out of bounds (output buffer)
+        if (row < 0 || row >= this.outBuffer.length)
+        {
+            let maxIndex = (this.inBuffer == null ? this.outBuffer.length-1 : this.inBuffer.getRowCount()-1);
+            throw new RangeError(`ERROR: index ${row} is out of range [0, ${this.outBuffer.length}]`);
+        }
+
+        return this.outBuffer[row];
+    }
+
+    /**
+     * @override
+     * @returns {number}
+     */
+    getRowCount()
+    {
+        return this.outBuffer.length;
+    }
+
+    /**
+     * Remove markup from a HTML text
+     * @param {string?} htmlText 
+     */
+    static stripHtml(htmlText = '')
+    {
+        return (htmlText || '').replace(/<.*?>/g, '');
     }
 
     /**
      * Add a new row section to highlight
-     * @param {Number} row Row number
-     * @param {String} htmlText HTML text to add 
+     * @param {number} row Row number
+     * @param {number} col Column number
+     * @param {string?} htmlText HTML text to add
+     * @param { { foodPart: Object}? } metadata (for storing FoodPart metadata)
      * @param {boolean} addSection generate new section ID and wrap this text with a highlighted span
-     * @returns {String} Name for this section (for dynamic highlighting)
+     * @returns {string} Name for this section (for dynamic highlighting)
      */
     appendToLine(row, col, htmlText, metadata, addSection = false)
     {
+        if (col == -1)
+        {
+            if (!this.inBuffer)
+            {
+                console.error('It\'s not possible to use the additional input buffer (inBuffer) AND setting col to -1!');
+                return '';
+            }
+            else
+                col = this.inBuffer.getRow(row).length;
+        }
+
         // add new rows if needed
-        while (row >= this.buffer.length)
-            this.buffer.push('');
+        while (row >= this.outBuffer.length)
+            this.outBuffer.push('');
 
         // get the column index
-        let currRowSections = this.bufferSectionsByRow.get(row),
-            currPos = 0;
+        let currRowSections = this.outBufferSectionsByRow.get(row);
+        let currPos = 0;
         if (currRowSections != null)
-            currPos = currRowSections[currRowSections.length - 1][1] + 1;
+            currPos = currRowSections[currRowSections.length - 1].endPos + 1;
         else
-            this.bufferSectionsByRow.set(row, currRowSections = []);
+            this.outBufferSectionsByRow.set(row, currRowSections = []);
 
         // fill the gap with the original text from the textarea (if needed)
         if (currPos < col)
         {
-            this.buffer[row] += this.parent.textareaExt.rows[row].substring(currPos, col);
+            if (this.inBuffer?.getRow(row) != null)
+                this.outBuffer[row] += this.inBuffer.getRow(row).substring(currPos, col);
             currPos = col;
         }
 
         // calculate the raw text (length) of this row
-        let htmlTextStripped = htmlText.replaceAll(/<.*?>/g, '');
+        let htmlTextStripped = HtmlBuffer.stripHtml(htmlText);
 
         let sectionName = '';
         if (addSection)
@@ -193,11 +126,22 @@ class TempHtmlBuffer
             htmlText = `<span class="${sectionName}">${htmlText}</span>`;
         }
 
-        this.buffer[row] += htmlText;
-        let sectionData = [currPos, currPos + htmlTextStripped.length - 1, sectionName, metadata];
+        if (htmlText != null)
+            this.outBuffer[row] += htmlText;
+        let sectionData = new TextSection(currPos, currPos + htmlTextStripped.length - 1, null, sectionName, metadata);
         currRowSections.push(sectionData);
-        this.bufferSections.set(sectionName, sectionData);
+        this.outBufferSections.set(sectionName, sectionData);
 
         return sectionName;
+    }
+
+    /**
+     * @param {number} row
+     * @param {TextSection} section 
+     * @param {boolean} addSection
+     */
+    appendToLine2(row, section, addSection)
+    {
+        this.appendToLine(row, section.startPos, section.htmlText, section.metadata, addSection);
     }
 }

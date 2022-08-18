@@ -82,17 +82,17 @@ class Controller
         }
 
         // add extra dark background color to the current food
-        let thisRowSections = this.mealsDiaryTextHighlight.tempHtmlBuffer.bufferSectionsByRow.get(cursorPos[1]);
+        let thisRowSections = this.mealsDiaryTextHighlight.htmlBuffer.outBufferSectionsByRow.get(cursorPos[1]);
         if (thisRowSections)
             for (let i = 0; i < thisRowSections.length; i++)
             {
-                if (thisRowSections[i][0] <= cursorPos[0] && cursorPos[0] <= thisRowSections[i][1] + 1)
+                if (thisRowSections[i].startPos <= cursorPos[0] && cursorPos[0] <= thisRowSections[i].endPos + 1)
                 {
-                    if (thisRowSections[i][2])
+                    if (thisRowSections[i].htmlText)
                     {
-                        this.changeHighlightedFoodPart(`.${thisRowSections[i][2]}`);
+                        this.changeHighlightedFoodPart(`.${thisRowSections[i].htmlText}`);
 
-                        let foodPart = thisRowSections[i][3]?.foodPart;
+                        let foodPart = thisRowSections[i].metadata?.foodPart;
                         let allKCalLabel = document.querySelector('#lbCurrentFoodPartKCal')
                         if (allKCalLabel)
                             allKCalLabel.textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`; 

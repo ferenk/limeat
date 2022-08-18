@@ -1,13 +1,13 @@
 export {
     getCurrentMoment, getCurrentTimeStr, printMoment, isNumeric, isError,
-    toNumericOrZero, toFixedFloat, printToFixedFloat,
+    toNumericOrZero, toFixedFloat, printToFixedFloat, safeEval,
     copyText2Clipboard
 };
 
 /**
  * 
  * @param {String} thresholdTime 
- * @returns {import("client/3rdparty/ts/moment").Moment}
+ * @returns {import("../3rdparty/moment-with-locales.js").Moment}
  */
 function getCurrentMoment(thresholdTime)
 {
@@ -89,7 +89,14 @@ function toFixedFloat(num = 0, decimals = 1) {
     /** @type {Number} */
     let realNum;
     if (typeof (num) == 'string')
-        realNum = parseFloat(num);
+        try
+        {
+            realNum = parseFloat(num);
+        }
+        catch(_err)
+        {
+            realNum = 0;
+        }
     else
         realNum = num;
     let decimalPower = Math.pow(10, decimals);
@@ -115,6 +122,22 @@ function printToFixedFloat(num, decimals, padDecimals) {
         numStr += ' '.repeat(paddingNeeded);
     }
     return numStr;
+}
+
+/**
+ * 
+ * @param {string} str 
+ * @returns 
+ */
+function safeEval(str)
+{
+    try
+    {
+        return eval(str);
+    }
+    catch (_err) {
+        return 0;
+    }
 }
 
 /**

@@ -1,4 +1,5 @@
-import { getCurrentMoment, printMoment, toNumericOrZero, toFixedFloat, printToFixedFloat } from '../util/util.mjs';
+import { getCurrentMoment, printMoment, toNumericOrZero, toFixedFloat, printToFixedFloat, safeEval } from '../util/util.mjs';
+import { TextContainer } from '../util/text/textContainers.mjs';
 
 import { Config } from '../app/config.mjs'
 
@@ -35,7 +36,7 @@ class MealListLang
 
     /**
      * @param {Config} config
-     * @param {TextareaExt} mealLogText 
+     * @param {TextareaExt | null} mealLogText 
      * @param {TextareaHighlight} mealLogHighlight 
      */
     constructor(config, mealLogText, mealLogHighlight)
@@ -44,7 +45,7 @@ class MealListLang
         this.config = config;
         this.currentDayMoment = getCurrentMoment('04:00');
 
-        this.mealsDiaryText = mealLogText;
+        this.mealLogText = mealLogText;
         this.mealLogHighlight = mealLogHighlight;
 
         this.initCounters();
@@ -61,23 +62,32 @@ class MealListLang
         this.currentDayPart = 0;
         this.foodOutputStr = `### ${printMoment(this.currentDayMoment).slice(8)}  \n` + this.mdHeader;
         this.foodSourceModifiedOutput = [];
-        $('.mealRow').remove();
+        // remove each meal row
+        [].forEach.call(document.querySelectorAll('.mealRow'), (/** @type {Element} */ el) =>
+        {
+            el?.parentNode?.removeChild(el);
+        });
+        
     }
 
-    processInput()
+    /**
+     * @param { TextContainer ?} logText 
+     */
+    processInput(logText)
     {
-        let foodLines = this.mealsDiaryText.rows;
+        if (!logText)
+            logText = this.mealLogText;
 
         let currentSummaryStr = '';
         let currentSummaryKCal = 0;
 
-        this.mealLogHighlight.tempHtmlBuffer.clear();
+        this.mealLogHighlight.htmlBuffer.clear();
 
 
-        for (let iCurrentRow = 0; iCurrentRow < foodLines.length; iCurrentRow++)
+        for (let iCurrentRow = 0; iCurrentRow < (logText?.getRowCount() || 0); iCurrentRow++)
         {
             // foodLine: "10:25 apple 10g, banana 20g"
-            let foodLine = foodLines[iCurrentRow];
+            let foodLine = logText?.getRow(iCurrentRow) || '';
 
             // print summary
             if (foodLine.startsWith('---'))
@@ -94,6 +104,8 @@ class MealListLang
                 timestampStr = foodLine.substring(0, timeSepCol);
                 foodLine = foodLine.substring(timeSepCol + 1);
             }
+            else
+                timeSepCol = 0;
 
             // parse food (name, quantity, unit)
             /** @type {Food[]} */
@@ -150,7 +162,7 @@ class MealListLang
                             unit = units[unitsIdx];
                             let foodPartNameWOUnitStr = foodPartNameStr.replaceAll(unit, '');
                             if (/^[.*/+-0123456789()]+$/.test(foodPartNameWOUnitStr))
-                                quantity = toFixedFloat(eval(foodPartNameWOUnitStr));
+                                quantity = toFixedFloat(safeEval(foodPartNameWOUnitStr));
                             break;
                         }
                     }
@@ -297,7 +309,7 @@ class MealListLang
             // append this line to the table output
             let foodKCalStrFormatted = foodKCalStr.replace(/(..)$/, '<span style="font-size:0.85em;">$1</span>');  // decimal characters are smaller
             // calculate prefix
-            foodNamePrefixStr ??= '';
+            foodNamePrefixStr = foodNamePrefixStr || '';
             if (foodNamePrefixStr.length > 0)
             {
                 foodNamePrefixStr = foodNamePrefixStr.replaceAll('___', '').replaceAll(/ $/g, '');
@@ -310,14 +322,25 @@ class MealListLang
                 `<td style="text-align:right;" class="preBold kcalBg effectSmallerLast" value="${toFixedFloat(foodKCal, 1)}">${foodKCalStrFormatted}</td>` +
                 `<td style="text-align:right; font-size:0.85em;" class="preBold timeBg">${timestampStr?timestampStr:''}</td>` +
                 `<td class="preReg">${foodNamePrefixStr + htmlfoodOutputLineStr}</td></tr>`;
-            if (this.mealsDiaryText.mealLineFirst == -1)
-                this.mealsDiaryText.mealLineFirst = iCurrentRow;
-            this.mealsDiaryText.mealLineLast = iCurrentRow;
-            $('#tableOut tr:last').after(currTableRowStr);
+            if (this.mealLogText)
+            {
+                if (this.mealLogText.mealLineFirst == -1)
+                    this.mealLogText.mealLineFirst = iCurrentRow;
+                this.mealLogText.mealLineLast = iCurrentRow;
+            }
+
+            /** @type { HTMLTableElement? } */
+            let domTableOutBody = document.querySelector('#tableOut>tbody');
+            if (domTableOutBody)
+            {
+                let newRow = domTableOutBody.insertRow();
+                newRow.classList.add('mealRow');
+                newRow.innerHTML = currTableRowStr;
+            }
 
             // append this line to the main output (and optionally to the summary text)
             this.foodOutputStr += currentOutputLine;
-            if (iCurrentRow == this.mealsDiaryText.cursorPos[1]) {
+            if (this.mealLogText && iCurrentRow == this.mealLogText.cursorPos[1]) {
                 currentSummaryStr += foodNamePrefixStr + htmlfoodOutputLineStr;
                 currentSummaryKCal = foodKCal;
             }
@@ -339,12 +362,25 @@ class MealListLang
             this.appendSeparator();
         }
 
-        $('#tCurrentLine').html(`${currentSummaryStr}`);
-        $('#lbCurrentAllKCal').html(`<b>${Math.round(this.dayParts[this.currentDayPart - 1].kcal)}kc</b>`);
-        $('#lbCurrentLineKCal').html(`${Math.round(currentSummaryKCal)}kc`);
+        MealListLang.domSetHtml('#tCurrentLine', currentSummaryStr);
+
+        MealListLang.domSetHtml('#tCurrentLine', currentSummaryStr);
+        MealListLang.domSetHtml('#lbCurrentAllKCal', `<b>${Math.round(this.dayParts[this.currentDayPart - 1].kcal)}kc</b>`);
+        MealListLang.domSetHtml('#lbCurrentLineKCal', `${Math.round(currentSummaryKCal)}kc`);
 
         // display the result
-        $('#divOutput').html('<pre>' + this.foodOutputStr + '</pre>');
+        MealListLang.domSetHtml('#divOutput', `<pre>${this.foodOutputStr}</pre>`);
+    }
+
+    /**
+     * @param {string} queryStr 
+     * @param {string} htmlStr
+     */
+    static domSetHtml(queryStr, htmlStr)
+    {
+        let domItem = document.querySelector(queryStr);
+        if (domItem)
+            domItem.innerHTML = htmlStr;
     }
 
     /**
@@ -354,7 +390,7 @@ class MealListLang
      * @param {Number} iCol
      * @param {String} currPartHtmlText 
      * @param {String?} color
-     * @param {Object?} metadata
+     * @param {{ foodPart: Object }? } metadata
      * @param {String?} _timeStamp
      */
     recordHighlightedInput(iRow, _iPart, iCol, currPartHtmlText, color = null, metadata = null, _timeStamp = null)
@@ -372,7 +408,7 @@ class MealListLang
         if (color != null)
             currPartHtmlText = `<font color="${color}">${currPartHtmlText}</font>`;
 
-        let sectionName = this.mealLogHighlight.tempHtmlBuffer.appendToLine(iRow, iCol, currPartHtmlText, metadata, true);
+        let sectionName = this.mealLogHighlight.htmlBuffer.appendToLine(iRow, iCol, currPartHtmlText, metadata, true);
 
         return sectionName;
     }
@@ -400,9 +436,9 @@ class MealListLang
             if (Config.getInstance().scaleType == 'kitchen')
             {
                 /** @type {any} */
-                let minWeightStr = $('#minimalWeight').val();
+                let minWeightStr = document.querySelector('#minimalWeight')?.nodeValue;
                 /** @type {any} */
-                let corrWeightStr = $('#minimalWeightCorrection').val();
+                let corrWeightStr = document.querySelector('#minimalWeightCorrection')?.nodeValue;
                 let minWeight = (isNaN(Number(minWeightStr)) ? 3 : parseFloat(minWeightStr)), 
                     corrWeight = (isNaN(Number(corrWeightStr)) ? 0 : parseFloat(corrWeightStr)); 
                 quant = (quant < minWeight ? corrWeight : quant);
@@ -429,7 +465,14 @@ class MealListLang
                 `<td style="text-align:right;" class="preBold timeSepBg"></td>` +
                 `<td class="preBold foodSepBg"><u>${Math.round(this.dayParts[this.currentDayPart].g)}g ${pattern.slice(14).replaceAll('***', '')}</u></td>` +
             '</tr>';
-        $('#tableOut tr:last').after(sHtmlSeparator);
+        /** @type { HTMLTableElement? } */
+        let domTableOutBody = document.querySelector('#tableOut>tbody');
+        if (domTableOutBody)
+        {
+            let newRow = domTableOutBody.insertRow();
+            newRow.classList.add('mealRow', 'trSep');
+            newRow.innerHTML = sHtmlSeparator;
+        }
 
         this.currentDayPart++;
     }

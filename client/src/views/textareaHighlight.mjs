@@ -1,6 +1,7 @@
 export { TextareaHighlight };
 
 import { TextareaExt } from './textareaExt.mjs';
+import { HtmlBuffer } from '../util/text/htmlBuffer.mjs';
 
 class TextColor
 {
@@ -14,14 +15,16 @@ class TextareaHighlight
 {
     /**
      * 
-     * @param {TextareaExt} textareaExt 
+     * @param { TextareaExt | null } textareaExt 
+     * @param { { withoutUI: boolean }? } options
      */
-    constructor(textareaExt)
+    constructor(textareaExt = null, options = { withoutUI: false })
     {
         /** @type { TextColor[] } */
         this.lineColors = [];
         this.textareaExt = textareaExt;
-        this.tempHtmlBuffer = new TempHtmlBuffer(this);
+        this.htmlBuffer = new HtmlBuffer(textareaExt);
+        this.options = options;
     }
 
     /**
@@ -30,6 +33,9 @@ class TextareaHighlight
      */
     initialize(selector)
     {
+        if (this.options?.withoutUI)
+            return;
+
         /** @type {HTMLTextAreaElement?} */
         this.domText = document.querySelector(selector);
         if (this.domText)
@@ -107,12 +113,12 @@ class TextareaHighlight
     render(cursorRow)
     {
         let highlightedStr = '';
-        for (let iRow = 0; iRow < this.tempHtmlBuffer.buffer.length; iRow++)
+        for (let iRow = 0; iRow < this.htmlBuffer.getRowCount(); iRow++)
         {
             if (iRow > 0)
                 highlightedStr += '\n';
             // add cursor to the appropriate row
-            let rowStr = this.tempHtmlBuffer.buffer[iRow];
+            let rowStr = this.htmlBuffer.getRow(iRow);
             if (iRow === cursorRow)
                 rowStr = `<div class="textCurrentRow" style="width:100%">${rowStr}</div>`;
             highlightedStr += rowStr;
@@ -131,73 +137,4 @@ class TextareaHighlight
         }
     }
 
-}
-
-class TempHtmlBuffer
-{
-    /**
-     * Creates a new temporary HTML buffer
-     * @param {TextareaHighlight} parent 
-     */
-    constructor(parent)
-    {
-        this.parent = parent;
-        /** @type { String[]} */
-        this.buffer = [];
-        this.bufferSectionsByRow = new Map();
-        this.bufferSections = new Map();
-    }
-
-    clear()
-    {
-        this.buffer = [];
-        this.bufferSectionsByRow.clear();
-        this.bufferSections.clear();
-    }
-
-    /**
-     * Add a new row section to highlight
-     * @param {Number} row Row number
-     * @param {String} htmlText HTML text to add 
-     * @param {boolean} addSection generate new section ID and wrap this text with a highlighted span
-     * @returns {String} Name for this section (for dynamic highlighting)
-     */
-    appendToLine(row, col, htmlText, metadata, addSection = false)
-    {
-        // add new rows if needed
-        while (row >= this.buffer.length)
-            this.buffer.push('');
-
-        // get the column index
-        let currRowSections = this.bufferSectionsByRow.get(row),
-            currPos = 0;
-        if (currRowSections != null)
-            currPos = currRowSections[currRowSections.length - 1][1] + 1;
-        else
-            this.bufferSectionsByRow.set(row, currRowSections = []);
-
-        // fill the gap with the original text from the textarea (if needed)
-        if (currPos < col)
-        {
-            this.buffer[row] += this.parent.textareaExt.rows[row].substring(currPos, col);
-            currPos = col;
-        }
-
-        // calculate the raw text (length) of this row
-        let htmlTextStripped = htmlText.replaceAll(/<.*?>/g, '');
-
-        let sectionName = '';
-        if (addSection)
-        {
-            sectionName = `section_${row}_${currPos}-${currPos + htmlTextStripped.length-1}`;
-            htmlText = `<span class="${sectionName}">${htmlText}</span>`;
-        }
-
-        this.buffer[row] += htmlText;
-        let sectionData = [currPos, currPos + htmlTextStripped.length - 1, sectionName, metadata];
-        currRowSections.push(sectionData);
-        this.bufferSections.set(sectionName, sectionData);
-
-        return sectionName;
-    }
 }
