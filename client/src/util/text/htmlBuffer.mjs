@@ -93,7 +93,8 @@ class HtmlBuffer extends TextContainer
                 return '';
             }
             else
-                col = this.inBuffer.getRow(row).length;
+                if (row < this.inBuffer.getRowCount())  // it is not guaranteed that we will always have an input row (e.g in case of changing days)
+                    col = this.inBuffer.getRow(row).length;
         }
 
         // add new rows if needed

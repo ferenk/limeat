@@ -6,6 +6,7 @@ import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/ut
 import { TextareaExt } from './views/textareaExt.mjs';
 import { TextareaHighlight } from './views/textareaHighlight.mjs';
 import { OutputTable } from './views/outputTable.mjs';
+import { Food } from './data/foodData.mjs';
 import { MealListLang } from './data/mealListLang.mjs';
 
 import { coolConfirm } from './views/uiHelper.mjs';
@@ -88,10 +89,12 @@ class Controller
             {
                 if (thisRowSections[i].startPos <= cursorPos[0] && cursorPos[0] <= thisRowSections[i].endPos + 1)
                 {
-                    if (thisRowSections[i].htmlText)
+                    if (thisRowSections[i].sectionName)
                     {
-                        this.changeHighlightedFoodPart(`.${thisRowSections[i].htmlText}`);
+                        this.changeHighlightedFoodPart(`.${thisRowSections[i].sectionName}`);
 
+                        /** @type { Food | undefined } */
+                        // @ts-ignore:next-line ('Object' is not assignable to type 'Food')
                         let foodPart = thisRowSections[i].metadata?.foodPart;
                         let allKCalLabel = document.querySelector('#lbCurrentFoodPartKCal')
                         if (allKCalLabel)

@@ -335,7 +335,7 @@ class MealListLang
             {
                 let newRow = domTableOutBody.insertRow();
                 newRow.classList.add('mealRow');
-                newRow.innerHTML = currTableRowStr;
+                newRow.outerHTML = currTableRowStr;
             }
 
             // append this line to the main output (and optionally to the summary text)
@@ -380,7 +380,7 @@ class MealListLang
     {
         let domItem = document.querySelector(queryStr);
         if (domItem)
-            domItem.innerHTML = htmlStr;
+            domItem.outerHTML = htmlStr;
     }
 
     /**
@@ -471,7 +471,7 @@ class MealListLang
         {
             let newRow = domTableOutBody.insertRow();
             newRow.classList.add('mealRow', 'trSep');
-            newRow.innerHTML = sHtmlSeparator;
+            newRow.outerHTML = sHtmlSeparator;
         }
 
         this.currentDayPart++;
