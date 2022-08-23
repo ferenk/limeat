@@ -334,7 +334,6 @@ class MealListLang
             if (domTableOutBody)
             {
                 let newRow = domTableOutBody.insertRow();
-                newRow.classList.add('mealRow');
                 newRow.outerHTML = currTableRowStr;
             }
 
@@ -362,9 +361,7 @@ class MealListLang
             this.appendSeparator();
         }
 
-        MealListLang.domSetHtml('#tCurrentLine', currentSummaryStr);
-
-        MealListLang.domSetHtml('#tCurrentLine', currentSummaryStr);
+        //? MealListLang.domSetHtml('#tCurrentLine', currentSummaryStr);
         MealListLang.domSetHtml('#lbCurrentAllKCal', `<b>${Math.round(this.dayParts[this.currentDayPart - 1].kcal)}kc</b>`);
         MealListLang.domSetHtml('#lbCurrentLineKCal', `${Math.round(currentSummaryKCal)}kc`);
 
@@ -375,12 +372,18 @@ class MealListLang
     /**
      * @param {string} queryStr 
      * @param {string} htmlStr
+     * @param {boolean} htmlStr
      */
-    static domSetHtml(queryStr, htmlStr)
+    static domSetHtml(queryStr, htmlStr, outerHTML = false)
     {
         let domItem = document.querySelector(queryStr);
         if (domItem)
-            domItem.outerHTML = htmlStr;
+        {
+            if (outerHTML)
+                domItem.outerHTML = htmlStr;
+            else
+                domItem.innerHTML = htmlStr;
+        }
     }
 
     /**
@@ -471,7 +474,7 @@ class MealListLang
         {
             let newRow = domTableOutBody.insertRow();
             newRow.classList.add('mealRow', 'trSep');
-            newRow.outerHTML = sHtmlSeparator;
+            newRow.innerHTML = sHtmlSeparator;
         }
 
         this.currentDayPart++;

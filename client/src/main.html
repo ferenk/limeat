@@ -32,7 +32,7 @@
 </head>
 
 <body>
-    <div class="header sticky">
+    <div class="header1 sticky1">
         <div class="topContent">
             <div id="dKCals">
                 <button id="btAddMeal" class="btn">+</button>
@@ -41,6 +41,30 @@
                 <!--div id="tCurrentLine" style="display: none;"></div-->
                 <!--button id="btMealPrev" class="btn">&lt;</button>
                 <button id="btMealNext" class="btn">&gt;</button-->
+
+                <button id="btRefresh" title="btRefresh"></button>
+                <button id="btSave" class="btn">Save</button>
+                <div id="lSaveErrorMsg">Unknown error!</div>
+
+                <font size="+2" style="text-decoration: underline; margin-left: 0.3em;"></font>
+                <span id="lbCurrentAllKCal">0</span>
+                <!--div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216;</div--><!-- div>  11034</div-->
+            </div>
+        </div>
+    </div>
+    <div class="header2 sticky2">
+        <div class="topContent">
+            <div id="dSettingsHeader">
+                <div id="lDate">D:</div>
+                <div id="dDate">
+                    <input id="tDate" type="text" size="10" maxlength="50">
+                    <div id="divDateUpDown">
+                        <button id="btDateUp" class="btn_light">&#9650;</button>
+                        <button id="btDateDown" class="btn_light">&#9660;</button>
+                    </div>
+                </div>
+
+                <div>T: &nbsp;</div>
                 <div id="divMealSelection">
                     <div id="lMealTime" class="biggerText" style="margin-right: 6px;">00:00</div>
                     <div id="divMealUpDown">
@@ -49,34 +73,16 @@
                     </div>
                 </div>
 
-                <button id="btSave" class="btn" style="margin-left: auto;">Save</button>
-                <div id="lSaveErrorMsg">Unknown error!</div>
+                <div id="lUser" style="margin-left: auto;">U:</div>
+                <input id="tUser" type="text" size="3" maxlength="50">
 
-                <div id="lbStatusLED">&#11044;</div>
-                <font size="+2" style="text-decoration: underline; margin-left: 0.3em;"><span id="lbCurrentAllKCal">0</span></font>
-                <!--div id="focusedModeIcon" style="font-size: 20; align-self: flex-end; padding: 4px 0 0 4px;">&#11216;</div--><!-- div>  11034</div-->
+                <div style="height: 0.5em;"></div>
             </div>
         </div>
     </div>
 
-
     <div id="mainDiv">
-        <div style="font-size: 3em; font-weight: 600;">KCal calculator</div>
-
-        <div id="dSettingsHeader">
-            <div id="lUser">U:</div>
-            <input id="tUser" type="text" size="3" maxlength="50">
-            <div id="lDate">D:</div>
-
-            <div id="dDate">
-                <input id="tDate" type="text" size="10" maxlength="50">
-                <div id="divDateUpDown">
-                    <button id="btDateUp" class="btn_light">&#9650;</button>
-                    <button id="btDateDown" class="btn_light">&#9660;</button>
-                </div>
-            </div>
-            <div style="height: 0.5em;"></div>
-        </div>
+        <div id="titleBg" style="font-size: 3em; font-weight: 600; height: 7rem;">KCal calculator</div>
         <hr class="noMargin">
 
         <!-- MEALS! -->

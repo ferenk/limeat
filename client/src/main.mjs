@@ -116,12 +116,31 @@ function handleMobileMode() {
         $('body').css('width', '100%');
         $('body').css('margin', '0px');
         $('body > div').css('padding', '1em');
+        $('.header1,.header2').css('font-size', '12px');
+        $('.header1,.header2').css('padding-top', '4px');
+        $('.header1,.header2').css('padding-bottom', '4px');
+        $('.topContent').css('padding-right', '12px');
         $('#tableOut').css('font-size', '110%');
     }
     else {
         $('body').css('width', '640px');
-        $('.header').css('width', '616px');
+        $('.header1,.header2').css('width', '616px');
     }
+}
+
+function placementCorrections()
+{
+    /** @type { HTMLElement | null } */
+    let header1 = document.querySelector('.header1');
+    /** @type { HTMLElement | null } */
+    let header2 = document.querySelector('.header2');
+    if (header1 && header2)
+        header2.style.top = header1.offsetHeight + 'px';
+    let elPlacement = header2?.getBoundingClientRect();
+    let elTitlePlaceholder = document.getElementById('titleBg');
+    if (elTitlePlaceholder)
+        elTitlePlaceholder.style.height = `${elPlacement?.bottom ?? 100}px`;
+
 }
 
 /**
@@ -130,17 +149,17 @@ function handleMobileMode() {
 function sseStateUpdateCB(status)
 {
     console.log(`SSE state changed: ${status}`);
-    let domLED = document.getElementById('lbStatusLED');
+    let domLED = document.getElementById('btRefresh');
     if (domLED != null)
     {
         if (status == 'OPENED')
-            domLED.style.color = 'olivedrab';
+            domLED.style.background = 'olivedrab';
         else if (status == 'CLOSED' || status == 'DISCONNECTED')
-            domLED.style.color = 'darkred';
+            domLED.style.background = 'darkred';
         else if (status == 'CLOSED' || status == 'CONNECTING')
-            domLED.style.color = 'gold';
+            domLED.style.background = 'gold';
         else
-            domLED.style.color = 'slategray';
+            domLED.style.background = 'slategray';
     }
 }
 
@@ -163,6 +182,7 @@ async function onPageLoaded()
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     g_controller.onUserOrDateChanged();
     $('#lSaveErrorMsg').hide();
+    $('#btRefresh').click(() => { g_mealsDiaryText.changeText('', true); g_controller.refreshDayFoods(); });
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
@@ -241,6 +261,7 @@ async function onPageLoaded()
     $('#tableOut').click(g_controller.onTableRowChange.bind(g_controller));
 
     handleMobileMode();
+    placementCorrections();
 
     sseStateUpdateCB(null);
     g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateUpdateCB, console.log);

@@ -13,24 +13,38 @@ body {
 }
 
 #mainDiv {
-    padding: 4em 5em;
+    padding: 0 4em 5em 4em;
     margin: 0em;
     background: #e9e9e9;
 }
 
 /* Style the header */
-.header {
-  padding: 8px  12px;
-  background: rgb(189, 189, 189);
+.header1,.header2 {
+  padding: 8px 12px;
   box-sizing: content-box;
   z-index: 10;
 }
 
+.header1 {
+  background: hsl(0, 0%, 74%);
+}
+
+.header2 {
+  background: hsl(0, 0%, 69%);
+}
+
 /* The sticky class is added to the header with JS when it reaches its scroll position */
-.sticky {
+.sticky1,.sticky2
+{
   position: fixed;
-  top: 0;
   width: 100%;
+}
+
+.sticky1 {
+  top: 0;
+}
+.sticky2 {
+  top: 1em;
 }
 
 h1 {
@@ -205,6 +219,16 @@ th {
     line-height: 0;
 }
 
+#btRefresh {
+    font-size: 18;
+    margin: auto 0.5em auto auto;
+    width: 2.5em;
+    height: 2.5em;
+    border-radius: 50%;
+    border: 6px solid rgba(0, 0, 0, 15%);
+    background-color: rgba(228, 210, 131, 0.747);
+}
+
 #btSave, #btApplySettings {
     min-width: 6em;
     padding-left: 1em;
@@ -267,14 +291,9 @@ th {
 
 #lbCurrentAllKCal
 {
+    font-size: 1.5em;
     padding: 0 0.5em 0 0 !important;
 }
-
-#lbStatusLED
-{
-    padding: 0 0 0 0.5em !important;
-}
-
 
 #lbCurrentLineKCal,
 #lbCurrentFoodPartKCal
@@ -284,6 +303,11 @@ th {
     min-width: 2.5em;
     margin: 0;
     font-size: 1.1em;
+}
+
+#txtMealsAboveDock
+{
+    margin-top: 0.5em;
 }
 
 #txtMealsDiary {
