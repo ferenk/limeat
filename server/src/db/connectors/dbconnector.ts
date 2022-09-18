@@ -1,3 +1,5 @@
+import { FoodDbItemStore } from '../../data/requests';
+
 export class DbConnector
 {
     static null: DbConnector;
@@ -9,16 +11,16 @@ export class DbConnector
 
     connect()
     {
-        console.error('Not implemented yet!');
+        console.error('Abstract class - Methods are not implemented!');
     }
 
     /**
      * Read ALL food data from the file
-     * @param {Object} dbData 
+     * @param {Object} _dbData 
      */
-    async readFoodDbRows(dbData)
+    async readFoodDbRows(_dbData: FoodDbItemStore)
     {
-        console.error('Not implemented yet!');
+        console.error('Abstract class - Methods are not implemented!');
     }
 
     /**
@@ -30,26 +32,9 @@ export class DbConnector
         return '';
     }
 
-    async updateRow(tableName, user, date, food_data): Promise<string>
+    async updateRow(_tableName: string, _user: string, _date: string, _food_data: string): Promise<string>
     {
-        console.error('Not implemented yet!');
+        console.error('Abstract class - Methods are not implemented!');
         return '';
-    }
-}
-
-export class FoodDbItem
-{
-    user: string;
-    date: string;
-    food_data: string;
-}
-
-export class FoodDbItemStore
-{
-    foods_raw: FoodDbItem[];
-
-    constructor()
-    {
-        this.foods_raw = [];
     }
 }

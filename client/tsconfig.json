@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "ES2017",
     "lib": ["es2021", "DOM"],
     "skipLibCheck": true,
     "moduleResolution": "node",

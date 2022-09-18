@@ -1,4 +1,7 @@
+import { Knex } from 'knex';
+
 import { DbConnector } from './dbconnector';
+import { FoodDbItemStore } from '../../data/requests';
 
 const fs = require('fs');
 const path = require('path');
@@ -10,13 +13,13 @@ const path = require('path');
 export class SQLiteDb extends DbConnector
 {
     foodDbPath: string;
-    knex: any;
+    knex: Knex;
 
     /**
      * Initializes the SQlite DB connector
      * @param {String} dbRootFolder The folder where the DB files are stored
      */
-    constructor(dbRootFolder)
+    constructor(dbRootFolder: string)
     {
         super();
 
@@ -38,12 +41,12 @@ export class SQLiteDb extends DbConnector
         return knex;
     }
 
-    async connect()
+    override async connect()
     {
         console.log('Connecting is not needed in case of SQLite DBs. Skipped.');
     }
 
-    findFoodDbFile(dbRootFolder)
+    findFoodDbFile(dbRootFolder: string)
     {
         if (dbRootFolder == null)
             dbRootFolder = __dirname;
@@ -51,7 +54,7 @@ export class SQLiteDb extends DbConnector
         // Find the food DB file: first sqlite file which begins with 'foods-' (e.g 'foods-test.sqlite')
         var foodDbPath =  path.resolve(dbRootFolder, 'foods-default.sqlite');
 
-        let fileNames = fs.readdirSync(dbRootFolder);
+        let fileNames: string[] = fs.readdirSync(dbRootFolder);
         let found = false;
         fileNames.some(fileName => {
             if (fileName.startsWith('foods-') && fileName.endsWith('.sqlite')) {
@@ -73,7 +76,7 @@ export class SQLiteDb extends DbConnector
         // Create a foods table in the db if needed
         await this.knex.schema
             .hasTable('foods')
-            .then((exists) => {
+            .then((exists: boolean) => {
                 if (!exists) {
                     let tableName = 'foods';
                     return this.knex.schema.createTable(tableName, (table) => {
@@ -88,23 +91,24 @@ export class SQLiteDb extends DbConnector
                             // Log success message
                             console.log(`Table \'${tableName}\' created`);
                         })
-                        .catch((error) => {
+                        .catch((error: Error) => {
                             console.error(`There was an error creating table: ${error}`);
                         })
                 }
+                return null;
             })
-            .catch((error) => {
+            .catch((error: Error) => {
                 console.error(`There was an error setting up the database: ${error}`);
             });
 
         await this.knex.schema
             .hasTable('food_records_raw')
-            .then((exists) => {
+            .then((exists: boolean) => {
                 if (!exists)
                 {
                     let tableName = 'food_records_raw';
 
-                    return this.knex.schema.createTable(tableName, (table) =>
+                    return this.knex.schema.createTable(tableName, (table: Knex.TableBuilder) =>
                     {
                         table.string('user');
                         table.string('date');
@@ -119,6 +123,7 @@ export class SQLiteDb extends DbConnector
                             console.error(`There was an error creating table: ${error}`);
                         });
                 }
+                return null;
             })
             .catch((error) => {
                 console.error(`There was an error setting up the database: ${error}`);
@@ -127,7 +132,7 @@ export class SQLiteDb extends DbConnector
 
     // Just for debugging purposes:
     // Log all data in "books" table
-    async selectAllRows(tableName) {
+    async selectAllRows(tableName: string): Promise<string[] | any /** TODO */> {
         return await this.knex.select('*').from(tableName)
             .then(data => {
                 console.log('data:', data);
@@ -136,12 +141,12 @@ export class SQLiteDb extends DbConnector
             .catch(err => console.log(`ERROR (.catch() handler): ${err}`));
     }
 
-    async readKCalDb()
+    override async readKCalDb()
     {
         return SQLiteDb.readFile(path.join(__dirname, '..', '..', '..', 'kcal_db.md'));
     }
 
-    static readFile(filename)
+    static readFile(filename: string)
     {
         try
         {
@@ -157,16 +162,15 @@ export class SQLiteDb extends DbConnector
 
     /**
      * Read all food data from the file (read from the SQLite DB)
-     * @param {Object} dbData 
      */
-    async readFoodDbRows(dbData)
+    override async readFoodDbRows(dbData: FoodDbItemStore)
     {
         dbData.foods_raw = await this.selectAllRows('food_records_raw');
         console.log(`DB rows read: ${dbData.foods_raw}`);
     }
 
     // Just for debugging purposes:    
-    async updateRow(tableName, user, date, food_data): Promise<string>
+    override async updateRow(tableName: string, user: string, date: string, food_data: string): Promise<string>
     {
         await this.knex(tableName).insert({ user: user, date: date, food_data: food_data })
             .onConflict(['user', 'date'])

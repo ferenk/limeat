@@ -235,7 +235,8 @@ class Controller
      * Communication handler: Incoming whole daily food record
      * @param {XMLHttpRequest} xhr 
      * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
-     */    onDailyFoodRecordArrived(xhr, ev)
+     */
+    onDailyFoodRecordArrived(xhr, ev)
     {
         // @ts-ignore:next-line (dynamic type check)
         if (!isError(ev) && ev.type == 'load') {

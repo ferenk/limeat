@@ -1,8 +1,6 @@
+
 import { coolConfirm } from '../views/uiHelper.mjs';
-
-import { Config } from '../app/config.mjs'
-
-export { SSEClient };
+import { Config } from '../app/config.mjs';
 
     
 /**
@@ -29,6 +27,7 @@ class SSEClient
         if (statusChangeCB)
             this.statusChangeCB = statusChangeCB;
 
+        /** @type SSEClient */
         let self = this;
         if (!!window.EventSource)
         {

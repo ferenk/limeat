@@ -5,6 +5,7 @@
     "experimentalResolver": true
   },
   "compilerOptions": {
+    "target": "es2017",
     "lib": ["es2021", "DOM"],
     "skipLibCheck": true,
     "moduleResolution": "node",

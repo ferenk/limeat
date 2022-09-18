@@ -1,11 +1,13 @@
 export { Config }
 
-let ConfigPW = 'PeWet1427'
-
 class Config
 {
     /** @type {Config} */
     static instance;
+
+    scaleType = 'barista';
+    clientId = 'myPC/Phone';
+    finalClientId = 'myPC/Phone';
     
     /**
      * @param {Config | null} values
@@ -13,7 +15,7 @@ class Config
     static getInstance(values = null)
     {
         if (!Config.instance)
-            Config.instance = new Config(ConfigPW, values);
+            Config.instance = new Config(CONFIG_PW, values);
         return Config.instance;
     }
 
@@ -21,13 +23,15 @@ class Config
      * @param {string} pw
      * @param {Config | null} values
      */
-    constructor(pw, values = null)
+    constructor(pw = '', values = null)
     {
-        if (pw != ConfigPW)
+        if (pw != CONFIG_PW)
             throw new Error('You should not call the constructor directly. Use Config.getInstance() instead.');
 
-        this.scaleType = values?.scaleType || 'barista';
-        this.clientId =  values?.scaleType || 'myPC/Phone',
-        this.finalClientId = values?.scaleType || 'myPC/Phone'
+        this.scaleType = values?.scaleType || this.scaleType;
+        this.clientId = values?.clientId || this.clientId;
+        this.finalClientId = values?.finalClientId || this.finalClientId;
     }
 }
+
+let CONFIG_PW = 'PeWet1427'

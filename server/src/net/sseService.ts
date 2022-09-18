@@ -1,8 +1,12 @@
+import { Request, Response, Application } from 'express';
+
+import { ClientQuery } from '../data/requests';
+
 export class SSEService
 {
     static clients = new Map();
 
-    constructor(app)
+    constructor(app: Application)
     {
         app.get('/sse', SSEService.serviceHandler);
         // Setup keep-alive timer (needed for Heroku!)
@@ -13,16 +17,17 @@ export class SSEService
     static sendKeepAlive()
     {
         let currDateStr = new Date().toISOString().replace(/\..*$/g, '');
-        for (let [clientId, clientInfoObj] of SSEService.clients)
+        for (let [_clientId, clientInfoObj] of SSEService.clients)
         {
             clientInfoObj.responseStream.write(`event: ping\n`);
             clientInfoObj.responseStream.write(`data: time: ${currDateStr}\n\n`);
         }
     }
 
-    static serviceHandler(req, responseStream)
+    static serviceHandler(req: Request, responseStream: Response)
     {
-        console.log(`Query: /sse (params: ${JSON.stringify(req.query)})`);
+        let reqQuery = req.query as unknown as ClientQuery;
+        console.log(`Query: /sse (params: ${JSON.stringify(reqQuery)})`);
         responseStream.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
@@ -34,7 +39,8 @@ export class SSEService
         if (req.query.clientId)
         {
             // calculate unique client ID
-            clientId = req.query.clientId;
+            let reqQuery = req.query as unknown as ClientQuery;
+            clientId = reqQuery.clientId;
             if (SSEService.clients.get(req.query.clientId))
                 clientId += `_${new Date().toISOString().toString().replace(/-/g, '').replace(/:/g, '').replace('T', '_').replace(/\..*$/, '')}`;
             SSEService.clients.set(clientId, { responseStream: responseStream, originalClientId: req.query.clientId });
@@ -54,7 +60,7 @@ export class SSEService
         );
     }
 
-    notifyOtherClients(currentClientId, eventName)
+    notifyOtherClients(currentClientId: string, eventName: string)
     {
         try
         {

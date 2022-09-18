@@ -1,20 +1,22 @@
-import { DbConnector, FoodDbItemStore, FoodDbItem } from './db/connectors/dbconnector';
+import { Request, Response, Application } from 'express';
+const express = require('express');
+
+import { DbConnector } from './db/connectors/dbconnector';
+import { FoodDbItemStore } from './data/requests';
 import { SSEService } from './net/sseService';
 import { initDb } from './db/db';
 import { initEnvVariables } from './startup';
 
+import { ClientQuery } from './data/requests';
+
 const path = require('path');
 
 const PORT = process.env.PORT || 8089;
-const express = require('express');
-const bodyParser = require('body-parser');
-const { query } = require('express');
 
 var connectDb: DbConnector = DbConnector.null;
 var g_allFoodRows = new FoodDbItemStore();
 
-
-var app = express();
+var app:Application = express();
 
 app.use(express.static(path.join(__dirname, '..', '..', 'client', 'src'), { extensions: ['html', 'js', 'mjs', 'css', 'png', 'svg'] }));
 app.set('views', path.join(__dirname, '..', '..', 'client', 'src'));
@@ -22,9 +24,9 @@ app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
 // WEB server
-app.get('/', function (req, res) {
+app.get('/', function(_req:Request, _res:Response) {
     console.log('Rendering page... (main.html)');
-    res.render('main');
+    _res.render('main');
 });
 
 var sseService = new SSEService(app);
@@ -57,16 +59,17 @@ function getsetCache(user: string, date: string, data: string)
     else
     {
         console.log(`Cache: GET data NOT FOUND, returning empty value (user: "${user}" date: "${date}")`);
-        return '';
     }
+    return '';
 }
 
+/*
 async function updateFoodRow(user, date, data)
 {
     
-}
+}*/
 
-function checkQuery(req, params)
+function checkQuery(req: Request, params: string[]): boolean
 {
     if (g_allFoodRows.foods_raw == null)
     {
@@ -85,7 +88,7 @@ function checkQuery(req, params)
     return true;
 }
 
-app.get('/node_api/read_calcdb', async function (req, res)
+app.get('/node_api/read_calcdb', async function (_req: Request, res: Response): Promise<void>
 {
     try
     {
@@ -108,7 +111,8 @@ app.get('/node_api/read_foodrowdb', function (req, res)
 
         if (checkQuery(req, ['user', 'date']))
         {
-            let daydata = getsetCache(req.query.user, req.query.date, req.query.data);
+            let reqQuery: ClientQuery = req.query as unknown as ClientQuery;
+            let daydata = getsetCache(reqQuery.user, reqQuery.date, reqQuery.data);
             res.send(daydata);
             return;
         }
@@ -130,10 +134,11 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
 
         if (checkQuery(req, ['user', 'date', 'food_data']))
         {
-            getsetCache(req.query.user, req.query.date, req.query.food_data);
-            sseService.notifyOtherClients(req.query.clientId, 'updated_db');
+            let reqQuery: ClientQuery = req.query as unknown as ClientQuery;
+            getsetCache(reqQuery.user, reqQuery.date, reqQuery.food_data);
+            sseService.notifyOtherClients(reqQuery.clientId, 'updated_db');
             console.log(`SAVED DATA: ${req.query.food_data}`);
-            resStr = await connectDb.updateRow('food_records_raw', req.query.user, req.query.date, req.query.food_data);
+            resStr = await connectDb.updateRow('food_records_raw', reqQuery.user, reqQuery.date, reqQuery.food_data);
         }
 
         res.send(resStr);
