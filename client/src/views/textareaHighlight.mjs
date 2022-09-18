@@ -126,6 +126,19 @@ class TextareaHighlight
         this.update(highlightedStr);
     }
 
+    /**
+     * Enable/disable the meal log textarea
+     * @param {boolean} enabled
+     */
+    setUiEnabled(enabled = true)
+    {
+        console.log(`Set activity status of MealLogTextArea: ${enabled}`);
+        if (this.domText)
+            this.domText.disabled = !enabled;
+        if (this.domHighlighter)
+            this.domHighlighter.style.opacity = (enabled ? 100 : 50) + '%';
+    }
+
     sync_scroll()
     {
         /* Scroll result to scroll coords of event - sync with textarea */

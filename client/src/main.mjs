@@ -149,18 +149,31 @@ function placementCorrections()
 function sseStateUpdateCB(status)
 {
     console.log(`SSE state changed: ${status}`);
-    let domLED = document.getElementById('btRefresh');
-    if (domLED != null)
+    let domLEDs = document.getElementsByClassName('btRefreshBg');
+    if (domLEDs != null && domLEDs.length > 0)
     {
         if (status == 'OPENED')
-            domLED.style.background = 'olivedrab';
+            // @ts-ignore:next-line (Property 'style' does not exist on type 'Element')
+            domLEDs[0].style.background = 'olivedrab';
         else if (status == 'CLOSED' || status == 'DISCONNECTED')
-            domLED.style.background = 'darkred';
+            // @ts-ignore:next-line (Property 'style' does not exist on type 'Element')
+            domLEDs[0].style.background = 'indianred';
         else if (status == 'CLOSED' || status == 'CONNECTING')
-            domLED.style.background = 'gold';
+            // @ts-ignore:next-line (Property 'style' does not exist on type 'Element')
+            domLEDs[0].style.background = 'gold';
         else
-            domLED.style.background = 'slategray';
+            // @ts-ignore:next-line (Property 'style' does not exist on type 'Element')
+            domLEDs[0].style.background = 'slategray';
     }
+}
+
+/**
+ * Init/reinit the SSE client
+ */
+function initSseClient()
+{
+    sseStateUpdateCB(null);
+    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateUpdateCB, console.log);
 }
 
 async function onPageLoaded()
@@ -182,7 +195,22 @@ async function onPageLoaded()
     // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
     g_controller.onUserOrDateChanged();
     $('#lSaveErrorMsg').hide();
-    $('#btRefresh').click(() => { g_mealsDiaryText.changeText('', true); g_controller.refreshDayFoods(); });
+    $('#btRefresh').click(() =>
+    {
+        // reset idle timer
+        let currentTime = Number(new Date());
+        console.log(`UI: Refresh button pressed. Resetting current idle timer (${(currentTime - g_controller.lastDbUpdate)/1000} s)`);
+        g_controller.lastDbUpdate = currentTime;
+
+        // disable the meal log textarea and initiate the refresh
+        g_mealsDiaryTextHighlight.setUiEnabled(false);
+        $('.btRefreshBg').addClass('led-loading');
+        g_controller.refreshDayFoods();
+
+        // re-init SSE if needed
+        if (g_sseClient.status != 'OPENED')
+            initSseClient();
+    });
 
     // initiate DB reload
     nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
@@ -263,8 +291,7 @@ async function onPageLoaded()
     handleMobileMode();
     placementCorrections();
 
-    sseStateUpdateCB(null);
-    g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateUpdateCB, console.log);
+    initSseClient();
 }
 
 window.addEventListener("load", onPageLoaded);

@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="3rdparty/skeleton.css">
     <link rel="stylesheet" href="3rdparty/sweetalert2-theme-borderless.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/spinner.css">
     <link rel="stylesheet" href="css/textareaHighlight.css">
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700;800&display=swap" rel="stylesheet">
 
@@ -42,7 +43,11 @@
                 <!--button id="btMealPrev" class="btn">&lt;</button>
                 <button id="btMealNext" class="btn">&gt;</button-->
 
-                <button id="btRefresh" title="btRefresh"></button>
+                <div class="btRefreshParent container-parent">
+                    <button class="container-child btRefresh btRefreshBg"><b>&#x27F3;</b></button>
+                    <button class="container-child btRefresh btRefreshContent btn" id="btRefresh" title="Refresh"><b>&#x27F3;</b></button>
+                </div>
+
                 <button id="btSave" class="btn">Save</button>
                 <div id="lSaveErrorMsg">Unknown error!</div>
 

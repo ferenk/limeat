@@ -1,3 +1,4 @@
+export { SSEClient };
 
 import { coolConfirm } from '../views/uiHelper.mjs';
 import { Config } from '../app/config.mjs';
@@ -15,6 +16,7 @@ class SSEClient
     {
         this.config = config;
         this.eventSource = null;
+        this.status = 'CREATED';
     }
 
     /**
@@ -33,7 +35,8 @@ class SSEClient
         {
             self.eventSource?.close();
 
-            this.eventSource = new EventSource(`/sse?clientId=${ self.config.clientId }`);
+            let config = self.config;
+            this.eventSource = new EventSource(`/sse?clientId=${ config.clientId }`);
             this.eventSource.addEventListener('message',
                 async function SSEMsgHandler(e)
                 {
@@ -67,25 +70,25 @@ class SSEClient
 
             this.eventSource.addEventListener('open', function ()
             {
-                self.statusChangeCB?.('OPENED');
+                self.statusChangeCB?.(self.status = 'OPENED');
             });
 
             this.eventSource.addEventListener('error', function (e)
             {
                 if (e.eventPhase == EventSource.CLOSED)
                 {
-                    self.statusChangeCB?.('CLOSED');
+                    self.statusChangeCB?.(self.status = 'CLOSED');
                     self.eventSource?.close()
                 }
                 // @ts-ignore (Property 'readyState' does not exist on type 'EventTarget'.)
                 if (e.target?.readyState == EventSource.CLOSED)
                 {
-                    self.statusChangeCB?.('DISCONNECTED');
+                    self.statusChangeCB?.(self.status = 'DISCONNECTED');
                 }
                 // @ts-ignore (Property 'readyState' does not exist on type 'EventTarget'.)
                 else if (e.target?.readyState == EventSource.CONNECTING)
                 {
-                    self.statusChangeCB?.('CONNECTING');
+                    self.statusChangeCB?.(self.status = 'CONNECTING');
                 }
             }, false);
         }

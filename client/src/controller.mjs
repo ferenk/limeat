@@ -249,6 +249,8 @@ class Controller
             this.lastDbUpdate = Number(new Date());
             this.onFoodInputChanged();
             this.updateSavedStateLight();
+            setTimeout(() => { $('.btRefreshBg').removeClass('led-loading'); }, 200);
+            this.mealsDiaryTextHighlight.setUiEnabled(true);
         }
     }
 
@@ -280,6 +282,9 @@ class Controller
                 if (reloadAnswer)
                     this.refreshDayFoods();
             }
+
+            setTimeout(() => { $('.btRefreshBg').removeClass('led-loading'); }, 200);
+            this.mealsDiaryTextHighlight.setUiEnabled(true);
         }
     }
 

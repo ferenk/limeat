@@ -214,19 +214,42 @@ th {
 #btNextMeal {
     width: 24px;
     height: 18px;
-    padding: 0;
     margin: 0;
     line-height: 0;
 }
 
-#btRefresh {
-    font-size: 18;
-    margin: auto 0.5em auto auto;
-    width: 2.5em;
-    height: 2.5em;
+.btRefreshParent {
+    display: block;
+    margin: auto 0.1em auto auto;
+    width: calc(1.5em + 12px);
+    height: calc(1.5em + 16px);
+    padding: 0;
+}
+
+.btRefresh {
+    display: flex;
+    top: 0;
+    left: 0;
+    width: 1.5em;
+    height: 1.5em;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    border: 6px solid rgba(0, 0, 0, 15%);
+    border: 3px solid transparent;
+    font-size: 1.5em;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 900;
+}
+
+.btRefreshBg {
+    color: transparent;
     background-color: rgba(228, 210, 131, 0.747);
+}
+
+.btRefreshContent {
+    color: black !important;
+    height: 1.45em;
+    background-color: transparent;
 }
 
 #btSave, #btApplySettings {
@@ -234,6 +257,17 @@ th {
     padding-left: 1em;
     padding-right: 1em;
     font-size: 14;
+}
+
+/* Disable skeleton.css and normalize.css effects */
+.btRefresh:hover {
+    border: 3px solid rgba(0,0,0, 0.2);
+}
+.btRefresh:focus {
+    border: 3px solid transparent;
+}
+.btRefreshBg:hover, .btRefreshBg:focus {
+    color: transparent;
 }
 
 #btSave {
@@ -259,7 +293,7 @@ th {
 }
 
 #lSaveErrorMsg {
-    color: darkred;
+    color: appleRed;
     font-weight: bold;
     text-align: center;
 }

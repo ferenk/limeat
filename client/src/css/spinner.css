@@ -1,0 +1,26 @@
+.led {
+    margin: auto;
+    border: 20px solid #00000030;
+    border-radius: 50%;
+    background-color: #7dd853;
+}
+
+.container-parent {
+    position: relative;
+}
+
+.container-child {
+    position: absolute;
+}
+
+.led-loading {
+    position: absolute;
+    border: 3px solid rgba(0,0,0, 0.2);
+    border-top: 3px solid rgba(0,0,0, 0.45) !important;
+    animation: led-loading-anim 0.6s linear infinite;
+}
+
+@keyframes led-loading-anim {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
