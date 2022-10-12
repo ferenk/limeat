@@ -80,9 +80,10 @@ class MealListLang
 
         let currentSummaryStr = '';
         let currentSummaryKCal = 0;
+        /** @type Map<string, Number[]> */
+        let lastFoodAmounts = new Map();
 
         this.mealLogHighlight.htmlBuffer.clear();
-
 
         for (let iCurrentRow = 0; iCurrentRow < (logText?.getRowCount() || 0); iCurrentRow++)
         {
@@ -163,6 +164,9 @@ class MealListLang
                             let foodPartNameWOUnitStr = foodPartNameStr.replaceAll(unit, '');
                             if (/^[.*/+-0123456789()]+$/.test(foodPartNameWOUnitStr))
                                 quantity = toFixedFloat(safeEval(foodPartNameWOUnitStr));
+                            // handle continued meals
+                            if (unit == 'g' && foodPartNameWOUnitStr.startsWith('-'))
+                                newFoodPart.isContinuation = true;
                             break;
                         }
                     }
@@ -213,6 +217,32 @@ class MealListLang
                 }
                 else
                     newFoodPart.isInvalid = true;
+
+                if (!newFoodPart.isInvalid && newFoodPart.name != null && newFoodPart.name != '')
+                {
+                    let quantityInGrams = newFoodPart.quantity ?? 0;
+                    let kcalPerGrams = 0;
+                    if (newFoodPart.kcalunit == 'kcal/100g')
+                        kcalPerGrams = newFoodPart.kcal ?? 0;
+
+                    let foodPartPrevState = lastFoodAmounts.get(newFoodPart.name);
+                    if (foodPartPrevState != null)
+                    {
+                        if (newFoodPart.kcal == null && foodPartPrevState[1] != null)
+                        {
+                            newFoodPart.kcal = foodPartPrevState[1];
+                            newFoodPart.kcalunit = 'kcal/100g';
+                        }
+
+                        if (newFoodPart.isContinuation && newFoodPart.quantity != null && foodPartPrevState[0] != null && foodPartPrevState[0] != 0)
+                        {
+                            newFoodPart.quantity += foodPartPrevState[0];
+                        }
+                    }
+
+                    lastFoodAmounts.set(newFoodPart.name, [ quantityInGrams, kcalPerGrams ] );
+                }
+
                 foodParts.push(newFoodPart);
             }
 

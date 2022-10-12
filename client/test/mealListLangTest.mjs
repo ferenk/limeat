@@ -46,9 +46,22 @@ class TestLogText extends TextContainer
     }
 }
 
+class TestResult
+{
+    /**
+     * @param {HtmlBuffer} highlightedText 
+     * @param {String} mdOutput 
+     */
+    constructor(highlightedText, mdOutput)
+    {
+        this.highlightedText = highlightedText;
+        this.mdOutput = mdOutput;
+    }
+}
+
 /**
  * @param { string[] } inputLines 
- * @returns { HtmlBuffer }
+ * @returns { TestResult }
  */
 function doTest(inputLines)
 {
@@ -58,7 +71,7 @@ function doTest(inputLines)
     let mealLangParser = new MealListLang(Config.getInstance(), null, highlighter);
     mealLangParser.initCounters();
     mealLangParser.processInput(inputTextContainer);
-    return highlighter.htmlBuffer;
+    return new TestResult(highlighter.htmlBuffer, mealLangParser.foodOutputStr);
 }
 
 test('Process input: Known food with some additional text', () =>
@@ -68,27 +81,27 @@ test('Process input: Known food with some additional text', () =>
         'apple 35kc/ 100g additional_text'
     ];
 
-    let processedText = doTest(inputText);
+    let testResult = doTest(inputText);
 
     // output contains the input food
-    expect(processedText.getRow(0).indexOf('apple')).toBeGreaterThan(-1);
+    expect(testResult.highlightedText.getRow(0).indexOf('apple')).toBeGreaterThan(-1);
 });
 
 test('Process input: Known/unknown food differences', () =>
 {
     var inputText =
     [
-        'apple 35kc/ 100g additional_text',
-        'apple       100g additional_text'
+        'apple         35kc/ 100g additional_text',
+        'special_fruit       100g additional_text'
     ];
 
-    let processedText = doTest(inputText);
+    let testResult = doTest(inputText);
 
     // secondLine is longer, about 8-10 chars added because of the unknown food (no kcal/ value for the 2nd 'apple') is highlighted
-    expect(processedText.getRow(0).indexOf('<font color="black">apple')).toBeGreaterThan(-1);
+    expect(testResult.highlightedText.getRow(0).indexOf('<font color="black">apple')).toBeGreaterThan(-1);
 
     // stripped version doesn't contain colors, now the first string is longer (with the additional '35kc/ ')
-    expect(processedText.getRow(1).indexOf('<font color="red">apple')).toBeGreaterThan(-1);
+    expect(testResult.highlightedText.getRow(1).indexOf('<font color="red">special_fruit')).toBeGreaterThan(-1);
 });
 
 test('Process input: Processing bug in line 4: replaceAll Regexp problem', () =>
@@ -98,10 +111,10 @@ test('Process input: Processing bug in line 4: replaceAll Regexp problem', () =>
         '10:16 soup 83kc/ 54g [it_was_good!]'
     ];
 
-    let processedText = doTest(inputText);
+    let testResult = doTest(inputText);
 
     // secondLine is longer, about 8-10 chars added because of the unknown food (no kcal/ value for the 2nd 'apple') is highlighted
-    expect(processedText.getRow(0).indexOf('[it_was_good!]')).toBeGreaterThan(-1);
+    expect(testResult.highlightedText.getRow(0).indexOf('[it_was_good!]')).toBeGreaterThan(-1);
 });
 
 test('Process input: Wrong (incomplete) timestamp at the beginning of the line', () =>
@@ -111,11 +124,22 @@ test('Process input: Wrong (incomplete) timestamp at the beginning of the line',
         '10:0 Coffee'
     ];
 
-    let processedText = doTest(inputText);
+    let testResult = doTest(inputText);
 
     // secondLine is longer, about 8-10 chars added because of the unknown food (no kcal/ value for the 2nd 'apple') is highlighted
-    expect(inputText[0]).toBe(HtmlBuffer.stripHtml( processedText.getRow(0)));
+    expect(inputText[0]).toBe(HtmlBuffer.stripHtml( testResult.highlightedText.getRow(0)));
 });
 
+test('Process input: Meal continuation', () =>
+{
+    var inputText =
+    [
+        '10:00 special_fruit 35kc/ 100-50g',
+        '10:30 special_fruit -20g',
+    ];
 
-//'10:0 Coffee'
+    let testResult = doTest(inputText);
+
+    // The second meal has to start from +50g (-20g == 30g), and its kcal has to be 35kc/ (as the firest meal).
+    expect(testResult.mdOutput.indexOf('special fruit (30g, 35kc/, =11kc)')).toBeGreaterThan(-1);
+});

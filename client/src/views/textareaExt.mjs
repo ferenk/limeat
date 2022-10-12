@@ -256,7 +256,7 @@ class TextareaExt extends TextContainer {
      * @returns 
      */
     switchMode(focusedMode, selectedLine = null) {
-        if (selectedLine == null || selectedLine == NaN)
+        if (selectedLine == null || isNaN(selectedLine))
             selectedLine = -1;
 
         if (this.focusedMode == focusedMode && this.selectedLine == selectedLine)

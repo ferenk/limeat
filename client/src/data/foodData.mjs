@@ -5,6 +5,7 @@ class Food
     constructor()
     {
         this.origText = '';
+        this.isContinuation = false;
     }
     /** @type { String | undefined } */
     name;
