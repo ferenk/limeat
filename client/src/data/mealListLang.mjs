@@ -80,7 +80,7 @@ class MealListLang
 
         let currentSummaryStr = '';
         let currentSummaryKCal = 0;
-        /** @type Map<string, Number[]> */
+        /** @type Map<string, (Number|undefined)[]> */
         let lastFoodAmounts = new Map();
 
         this.mealLogHighlight.htmlBuffer.clear();
@@ -162,8 +162,17 @@ class MealListLang
                         {
                             unit = units[unitsIdx];
                             let foodPartNameWOUnitStr = foodPartNameStr.replaceAll(unit, '');
-                            if (/^[.*/+-0123456789()]+$/.test(foodPartNameWOUnitStr))
+                            console.log(`foodPartNameWOUnitStr: "${foodPartNameWOUnitStr}"`);
+                            if (/^ *[/\+\-\*\/\.0123456789()]+$/.test(foodPartNameWOUnitStr))
+                            {
                                 quantity = toFixedFloat(safeEval(foodPartNameWOUnitStr));
+                            }
+                            // handle leftover food
+                            let leftoverAmountStr = foodPartNameWOUnitStr.replace(/.*-/, '-');
+                            if (/^-[\.0123456789]+$/.test(leftoverAmountStr))
+                            {
+                                newFoodPart.leftoverQuantity = toFixedFloat(- safeEval(leftoverAmountStr));
+                            }
                             // handle continued meals
                             if (unit == 'g' && foodPartNameWOUnitStr.startsWith('-'))
                                 newFoodPart.isContinuation = true;
@@ -220,11 +229,6 @@ class MealListLang
 
                 if (!newFoodPart.isInvalid && newFoodPart.name != null && newFoodPart.name != '')
                 {
-                    let quantityInGrams = newFoodPart.quantity ?? 0;
-                    let kcalPerGrams = 0;
-                    if (newFoodPart.kcalunit == 'kcal/100g')
-                        kcalPerGrams = newFoodPart.kcal ?? 0;
-
                     let foodPartPrevState = lastFoodAmounts.get(newFoodPart.name);
                     if (foodPartPrevState != null)
                     {
@@ -236,11 +240,15 @@ class MealListLang
 
                         if (newFoodPart.isContinuation && newFoodPart.quantity != null && foodPartPrevState[0] != null && foodPartPrevState[0] != 0)
                         {
-                            newFoodPart.quantity += foodPartPrevState[0];
+                            newFoodPart.quantity = toFixedFloat(newFoodPart.quantity + foodPartPrevState[0]);
                         }
                     }
 
-                    lastFoodAmounts.set(newFoodPart.name, [ quantityInGrams, kcalPerGrams ] );
+                    // store current food part
+                    let kcalPerGrams = undefined;
+                    if (newFoodPart.kcalunit == 'kcal/100g')
+                        kcalPerGrams = newFoodPart.kcal;
+                    lastFoodAmounts.set(newFoodPart.name, [ newFoodPart.leftoverQuantity, kcalPerGrams ] );
                 }
 
                 foodParts.push(newFoodPart);

@@ -12,6 +12,8 @@ class Food
     /** @type { Number | undefined } */
     quantity;
     /** @type { Number | undefined } */
+    leftoverQuantity;
+    /** @type { Number | undefined } */
     kcal;
     /** @type { String | undefined } */
     kcalunit;

@@ -134,12 +134,12 @@ test('Process input: Meal continuation', () =>
 {
     var inputText =
     [
-        '10:00 special_fruit 35kc/ 100-50g',
-        '10:30 special_fruit -20g',
+        '10:00 special_fruit 35kc/ 100-70g',
+        '10:30 special_fruit -10g',
     ];
 
     let testResult = doTest(inputText);
 
     // The second meal has to start from +50g (-20g == 30g), and its kcal has to be 35kc/ (as the firest meal).
-    expect(testResult.mdOutput.indexOf('special fruit (30g, 35kc/, =11kc)')).toBeGreaterThan(-1);
+    expect(testResult.mdOutput.indexOf('special fruit (60g, 35kc/, =21kc)')).toBeGreaterThan(-1);
 });
