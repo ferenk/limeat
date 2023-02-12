@@ -1,8 +1,14 @@
 {
     "jest.debugMode": true,
     "jest.autoRun": { "watch": false },
-    "jest.jestCommandLine": "node_modules\\node\\bin\\node.exe --experimental-vm-modules node_modules\\jest\\bin\\jest.js",
+    "jest.jestCommandLineDisabled": "node_modules\\node\\bin\\node.exe --experimental-vm-modules node_modules\\jest\\bin\\jest.js",
+    "jest.jestCommandLine": "node_modules/node/bin/node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "jest.testExplorer": {
         "enabled": true
+    },
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/*/**": true
     }
 }

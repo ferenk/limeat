@@ -10,8 +10,10 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "module": "commonjs",
+    "sourceMap": true,
     "baseUrl": ".",
     "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
@@ -27,5 +29,5 @@
     "declaration": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "**/*.d.ts"]
+  "exclude": ["node_modules", "**/*.d.ts", "./disabled/*"]
 }

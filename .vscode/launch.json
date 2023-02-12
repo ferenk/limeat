@@ -8,21 +8,11 @@
             "name": "Server - Node.JS (TSNode)",
             "type": "node",
             "request": "launch",
-            "runtimeExecutable": "node",
-            "runtimeArgs": [
-                "--nolazy",
-                "-r",
-                "ts-node/register"
-            ],
-            "args": [
-                "src/index.ts"
-            ],
-            "cwd": "${workspaceRoot}/server",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node-esm",
+            "args": ["index.ts"],
+            "cwd": "${workspaceRoot}/server/src",
             "internalConsoleOptions": "openOnSessionStart",
-            "skipFiles": [
-                "<node_internals>/**",
-                "node_modules/**"
-            ]
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
         {
             "name": "vscode-jest-tests.v2",
@@ -33,12 +23,7 @@
             "disableOptimisticBPs": true,
             "cwd": "${workspaceFolder}/client",
             "runtimeExecutable": "npm",
-            "args": [
-                "test",
-                "--",
-                "--runInBand",
-                "--watchAll=false"
-            ],
+            "args": ["test", "--", "--runInBand", "--watchAll=false"],
             "env": {
                 "NODE_OPTIONS": "--experimental-vm-modules"
             }

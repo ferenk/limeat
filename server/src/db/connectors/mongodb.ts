@@ -40,7 +40,7 @@ export class MongoDb extends DbConnector
                     console.error(`ERROR: X.509 certificate file is not set! Please use the DB_MONGO_AUTH_X_509_CERTFILE env variable!`);
             }
         }
-        console.log(`MongoDb connect URI: ${connectUri.replace(/\/\/.*@/, '\/\/<User>:<PW>@')}`);
+        console.log(`MongoDb connect URI: ${connectUri.replace(/\/\/(...).*:(...).*@/, '\/\/<User>\($1...\):<PW>\($2...\)@')}`);
 
         return connectUri;
     }
