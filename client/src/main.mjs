@@ -221,6 +221,7 @@ async function onPageLoaded()
     $('#btNextMeal').on('click', () => g_controller.onPrevNextMeal(true));
     $('#btPrevMeal').on('click', () => g_controller.onPrevNextMeal(false));
     $('#btAddMeal').on('click', () => g_controller.onAddMeal());
+    $('#tDate').on('change', () => g_controller.onDateEntered());
 
     $('input[type=radio][name=txtMealsModes]').change((e) => {
         // memo: How to get the current value of the radio button

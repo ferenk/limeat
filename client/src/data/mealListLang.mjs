@@ -29,10 +29,6 @@ class MealListLang
     /** @type { String[] } */
     foodSourceModifiedOutput = [];
 
-    /* Time management */
-
-    /** @type {any ?} */
-    currentDayMoment = null;
 
     /**
      * @param {Config} config
@@ -43,6 +39,8 @@ class MealListLang
     {
         ///todo: make this configurable!!
         this.config = config;
+
+        /* Time management */
         this.currentDayMoment = getCurrentMoment('04:00');
 
         this.mealLogText = mealLogText;

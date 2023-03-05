@@ -1,5 +1,5 @@
 export {
-    getCurrentMoment, getCurrentTimeStr, printMoment, isNumeric, isError,
+    getCurrentMoment, getCurrentTimeStr, printMoment, parseIsoDate, isNumeric, isError,
     toNumericOrZero, toFixedFloat, printToFixedFloat, safeEval,
     copyText2Clipboard
 };
@@ -7,7 +7,7 @@ export {
 /**
  * 
  * @param {String} thresholdTime 
- * @returns {import("../3rdparty/moment-with-locales.js").Moment}
+ * @returns {moment}
  */
 function getCurrentMoment(thresholdTime)
 {
@@ -36,18 +36,30 @@ function getCurrentTimeStr()
 
 /**
  * 
- * @param {import("client/3rdparty/ts/moment").Moment} currMoment 
+ * @param {moment} currMoment 
  * @returns 
  */
 function printMoment(currMoment)
 {
      // Field: WeekdaysMin
     // @ts-ignore:next-line (moment undefined)
-    let weekDayMin = moment.localeData().weekdaysMin(currMoment);
-    weekDayMin = weekDayMin.charAt(0).toUpperCase() + weekDayMin.slice(1);
+    let weekDayPrintedShort = moment.localeData().weekdaysMin(currMoment);
+    weekDayPrintedShort = weekDayPrintedShort.charAt(0).toUpperCase() + weekDayPrintedShort.slice(1);
 
     // Result
-    return `${currMoment.format('YYYY-MM-DD')}.${weekDayMin}`;
+    return `${currMoment.format('YYYY-MM-DD')}.${weekDayPrintedShort}`;
+}
+
+/**
+ * 
+ * @param {String} isoDate 
+ * @returns {moment?}
+ */
+function parseIsoDate(isoDate)
+{
+    //let parsedMoment = moment(isoDate, 'en', false);
+    let parsedMoment = moment(new Date(isoDate));
+    return parsedMoment;
 }
 
 /**

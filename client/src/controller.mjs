@@ -1,7 +1,7 @@
 export { Controller };
 
 import { nodeXHRComm } from './data/comm.mjs';
-import { printMoment, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
+import { printMoment, parseIsoDate, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
 
 import { TextareaExt } from './views/textareaExt.mjs';
 import { TextareaHighlight } from './views/textareaHighlight.mjs';
@@ -157,6 +157,25 @@ class Controller
         this.refreshDayFoods();
     }
 
+    onDateEntered()
+    {
+        // get the date part of the entered text
+        /** @type {HTMLInputElement ?} */
+        let domDateInput = document.getElementById('tDate');
+        if (domDateInput == null)
+            return;
+
+        let enteredDateStr = (domDateInput ? domDateInput.value || '' : '');
+        enteredDateStr = enteredDateStr.trim().substring(0, 10);
+        /// TODO Format error handling
+        let enteredMoment = parseIsoDate(enteredDateStr);
+        if (enteredMoment != null)
+        {
+            this.mealListLang.currentDayMoment = enteredMoment;
+            this.onUserOrDateChanged();
+        }
+    }
+
     refreshDayFoods(justCompare = false)
     {
         console.log(`refreshDayFoods(justCompare: ${justCompare})...`);
@@ -207,7 +226,16 @@ class Controller
         const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
         const currentMoment = this.mealListLang.currentDayMoment.milliseconds();
 
-        this.mealListLang.currentDayMoment.milliseconds(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
+        this.onSpecificDay(nextDay ? currentMoment + ONE_DAY_MILLIS : currentMoment - ONE_DAY_MILLIS);
+    }
+
+    /**
+     * Switch to the specified day
+     * @param {number} dayMoment 
+     */
+    onSpecificDay(dayMoment)
+    {
+        this.mealListLang.currentDayMoment.milliseconds(dayMoment);
         this.onUserOrDateChanged();
 
         let newSelectedLine = this.outputTable.checkPrevNextMeal(null,
