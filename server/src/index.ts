@@ -2,12 +2,13 @@ import { Request, Response, Application } from 'express';
 const express = require('express');
 
 import { DbConnector } from './db/connectors/dbconnector';
-import { FoodDbItemStore } from './data/requests';
+import { FoodDbItemStore, FoodObjBase, FoodObjList } from './data/requests';
 import { SSEService } from './net/sseService';
 import { initDb } from './db/db';
 import { initEnvVariables } from './startup';
 
 import { ClientQuery } from './data/requests';
+import { connect } from 'http2';
 
 const path = require('path');
 
@@ -81,7 +82,7 @@ function checkQuery(req: Request, params: string[]): boolean
     {
         if (req.query[params[i]] == null)
         {
-            console.log(`Query problem! ${params[i]}: null`);
+            console.log(`ERROR: Query problem! Param '${params[i]}' not received!`);
             return false;
         }
     }
@@ -149,6 +150,36 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
     }
 });
 
+app.get('/node_api/search_meal_history', async function (req, res)
+{
+    try
+    {
+        let resStr = '';
+        if (checkQuery(req, ['user', 'firstDay', 'keyword']))
+        {
+            console.log(`Query: /node_api/search_meals (params: ${JSON.stringify(req.query)})`);
+            let paramUserName = (req.query.user ?? '') as string;
+            let paramFirstDay = (req.query.firstDay ?? '') as string;
+            let paramKeyword = (req.query.keyword ?? '') as string;
+
+            var queryObj = { user: paramUserName, 'date': { $gte: paramFirstDay }, food_data: { $regex: paramKeyword, $options: 'i'} };
+
+            let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, true);
+            console.log(`Result arrived:\r\n${resultMeals}`);
+            resStr = JSON.stringify(resultMeals);
+            res.send(resStr);
+        } else
+        {
+            console.log(`ERROR: Query param error! (Query: /node_api/search_meals (params: ${JSON.stringify(req.query)}))`);
+        }
+        res.send('');
+    }
+    catch (e)
+    {
+        console.error(`ERROR: ${e}`);
+    }
+});
+    
 async function initApp()
 {
     try

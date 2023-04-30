@@ -6,6 +6,12 @@ export async function initDb() : Promise<DbConnector>
 {
     console.log(`DB_MODE: ${process.env.DB_MODE}`);
 
+    if (process.env.DB_DATABASE_NAME == null)
+    {
+        process.env.DB_NAME = 'KCalcDB-Test';
+    }
+    console.log(`Selected DB: ${process.env.DB_NAME}`);
+
     if (process.env.DB_MODE === 'sqlite')
     {
         console.log('Initializing SQLite DB...');

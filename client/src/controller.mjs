@@ -2,12 +2,14 @@ export { Controller };
 
 import { nodeXHRComm } from './data/comm.mjs';
 import { printMoment, parseIsoDate, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
+import { showMessage } from './util/ui/uiUtils.mjs';
 
 import { TextareaExt } from './views/textareaExt.mjs';
 import { TextareaHighlight } from './views/textareaHighlight.mjs';
 import { OutputTable } from './views/outputTable.mjs';
 import { Food } from './data/foodData.mjs';
 import { MealListLang } from './data/mealListLang.mjs';
+import { SearchTools } from './views/tools/search.mjs';
 
 import { coolConfirm } from './views/uiHelper.mjs';
 
@@ -36,7 +38,9 @@ class Controller
         this.mealsDiaryTextHighlight = mealsDiaryTextHighlight;
         this.outputTable = outputTable;
         this.mealListLang = mealListLang;
+        this.searchTools = new SearchTools(this);
         this.mainHeaderIsOnTop = true;
+        showMessage('Welcome to LimEat!', 5000);
     }
 
     /**

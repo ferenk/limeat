@@ -19,22 +19,29 @@ body {
 }
 
 /* Style the header */
-.header1,.header2 {
+.header1,.header2,.header3 {
   padding: 8px 12px;
-  box-sizing: content-box;
-  z-index: 10;
+  box-sizing: border-box;
 }
 
 .header1 {
   background: hsl(0, 0%, 74%);
+  z-index: 9;
 }
 
 .header2 {
   background: hsl(0, 0%, 69%);
+  z-index: 10;
+}
+
+.header3 {
+  background: hsla(78, 75%, 35%, 0.95);
+  padding: 8px 2em;
+  z-index: 11;
 }
 
 /* The sticky class is added to the header with JS when it reaches its scroll position */
-.sticky1,.sticky2
+.sticky1,.sticky2,.sticky3
 {
   position: fixed;
   width: 100%;
@@ -46,9 +53,24 @@ body {
 .sticky2 {
   top: 1em;
 }
+.sticky3 {
+  top: 4em;
+}
 
 h1 {
     font-weight: 700;
+}
+
+#searchTools
+{
+    margin: 0.5em 0;
+    padding: 0.3em;
+    border: 3px solid hsla(78, 75%, 35%, 0);
+}
+
+#searchTools.active
+{
+    border: 3px solid hsla(78, 75%, 35%, 0.95);
 }
 
 #tableOut
@@ -252,7 +274,7 @@ th {
     background-color: transparent;
 }
 
-#btSave, #btApplySettings {
+#btSave, #btApplySettings, #btSearch {
     min-width: 6em;
     padding-left: 1em;
     padding-right: 1em;

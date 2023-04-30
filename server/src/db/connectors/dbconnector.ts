@@ -37,4 +37,28 @@ export class DbConnector
         console.error('Abstract class - Methods are not implemented!');
         return '';
     }
+
+    /**
+     * General interface for reading table rows (as an Object)
+     * @param tableName table name
+     * @param keys the query JSON object
+     * @returns read result message
+     */
+    async findDocuments(tableName: string, query: Object, findMany: boolean): Promise<Object>
+    {
+        console.error('Abstract class - Methods are not implemented!');
+        return '';
+    }
+
+    /**
+     * General interface for creating/updating table rows (with an Object)
+     * @param tableName table name
+     * @param keys map which contains all keys in <key>:<value> format
+     * @returns update result message
+     */
+    async updateDocument(tableName: string, keys: Map<String, String>, object: Object): Promise<string>
+    {
+        console.error('Abstract class - Methods are not implemented!');
+        return '';
+    }
 }

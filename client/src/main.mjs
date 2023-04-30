@@ -116,15 +116,15 @@ function handleMobileMode() {
         $('body').css('width', '100%');
         $('body').css('margin', '0px');
         $('body > div').css('padding', '1em');
-        $('.header1,.header2').css('font-size', '12px');
-        $('.header1,.header2').css('padding-top', '4px');
-        $('.header1,.header2').css('padding-bottom', '4px');
+        $('.header1,.header2,.header3').css('font-size', '12px');
+        $('.header1,.header2,.header3').css('padding-top', '4px');
+        $('.header1,.header2,.header3').css('padding-bottom', '4px');
         $('.topContent').css('padding-right', '12px');
         $('#tableOut').css('font-size', '110%');
     }
     else {
         $('body').css('width', '640px');
-        $('.header1,.header2').css('width', '616px');
+        $('.header1,.header2,.header3').css('width', '616px');
     }
 }
 
@@ -134,8 +134,13 @@ function placementCorrections()
     let header1 = document.querySelector('.header1');
     /** @type { HTMLElement | null } */
     let header2 = document.querySelector('.header2');
-    if (header1 && header2)
+    /** @type { HTMLElement | null } */
+    let header3 = document.querySelector('.header3');
+    if (header1 && header2 && header3)
+    {
         header2.style.top = header1.offsetHeight + 'px';
+        header3.style.top = header1.offsetHeight + header2.offsetHeight + 'px';
+    }
     let elPlacement = header2?.getBoundingClientRect();
     let elTitlePlaceholder = document.getElementById('titleBg');
     if (elTitlePlaceholder)
@@ -223,6 +228,14 @@ async function onPageLoaded()
     $('#btAddMeal').on('click', () => g_controller.onAddMeal());
     $('#tDate').on('change', () => g_controller.onDateEntered());
 
+    $('#searchDays').on('change', () => g_controller.searchTools.onSearchOptionsChanged('daysChanged'));
+    $('#searchDays').on('click', () => g_controller.searchTools.onSearchOptionsChanged('daysClicked'));
+    $('#searchResultFormat').on('change', () => g_controller.searchTools.onSearchOptionsChanged('resultChanged'));
+    $('#searchResultFormat').on('click', () => g_controller.searchTools.onSearchOptionsChanged('resultClicked'));
+    $('#tSearch').on('keydown', (event) => { if (event.which == 13) g_controller.searchTools.onSearchStarted() });
+    $('#btSearch').on('click', () => g_controller.searchTools.onSearchStarted());
+    $('#searchMealsResult').on('click', g_controller.searchTools.onSearchResultClicked.bind(g_controller.searchTools));
+
     $('input[type=radio][name=txtMealsModes]').change((e) => {
         // memo: How to get the current value of the radio button
         let selectedMode = ($(e.target).attr('id') ?? '').replace(/^txtMeals/, '').replace(/Mode$/, '');
@@ -287,7 +300,10 @@ async function onPageLoaded()
     });
 
     // @ts-ignore:next-line (callback is not assignable)
-    $('#tableOut').click(g_controller.onTableRowChange.bind(g_controller));
+    $('#tableOut').on('click', g_controller.onTableRowChange.bind(g_controller));
+
+    $('#searchOpenClose').on('click', () => { g_controller.searchTools.onSearchOpenClose(); });
+    $('#searchClear').on('click', () => { g_controller.searchTools.onSearchClear(); });
 
     handleMobileMode();
     placementCorrections();

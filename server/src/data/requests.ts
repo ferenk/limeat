@@ -29,6 +29,12 @@ export class FoodDbItem
     }
 }
 
+export class KCalTextDbItem
+{
+    version: string = '';
+    kcaldbfile: string = '';
+}
+
 export class FoodDbItemStore
 {
     foods_raw: FoodDbItem[];
@@ -37,4 +43,18 @@ export class FoodDbItemStore
     {
         this.foods_raw = [];
     }
+}
+
+export class FoodObjBase
+{
+    name: string = '';
+    amount: number = 0;
+    unit: string = '';
+    kcal: number = 0;
+}
+
+export class FoodObjList
+{
+    user: string = '';
+    data: FoodObjBase[] = [];
 }

@@ -1,4 +1,20 @@
-export { Food }
+export { Meal, Food }
+
+class Meal
+{
+    /** @type { Food[] } */
+    foodParts = [];
+    /** @type { Food } */
+    foodSum = new Food();
+    /** @type {string} */
+    timeStampPrefix = '';
+    /** @type {string} the name of the meal */
+    mealNamePrefix = '';
+    /** @type {string} the unprocessed part of the input row */
+    leftoverText = '';
+    /** @type {string} the whole input string */
+    inputLine = '';
+}
 
 class Food
 {
@@ -9,8 +25,8 @@ class Food
     }
     /** @type { String | undefined } */
     name;
-    /** @type { Number | undefined } */
-    quantity;
+    /** @type { Number } */
+    quantity = 0;
     /** @type { Number | undefined } */
     leftoverQuantity;
     /** @type { Number | undefined } */
@@ -29,6 +45,6 @@ class Food
     // helper properties
     /** @type { Number | undefined } */
     startTextCol;
-    /** @type { Number | undefined } */
-    computedkcal;
+    /** @type { Number } */
+    computedkcal = 0;
 }

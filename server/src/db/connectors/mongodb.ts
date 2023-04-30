@@ -1,4 +1,6 @@
-import { DbConnector }  from './dbconnector';
+import { FindCursor } from 'mongodb';
+import { DbConnector } from './dbconnector';
+import { FoodDbItemStore, FoodDbItem, KCalTextDbItem } from '../../data/requests';
 
 const { MongoClient } = require('mongodb');
 const path = require('path');
@@ -16,11 +18,17 @@ export class MongoDb extends DbConnector
     {
         super();
 
-        this.connectUri = MongoDb.prepareConnectURI();
-        this.mongoDbClient = new MongoClient(this.connectUri, { useUnifiedTopology: true });
+        let connectUri = MongoDb.prepareConnectURI();
+        if (connectUri)
+        {
+            this.connectUri = connectUri;
+            this.mongoDbClient = new MongoClient(this.connectUri, { useUnifiedTopology: true });
+        }
+        else
+            throw('No MongoDB URI has been specified!');
     }
 
-    static prepareConnectURI(): string
+    static prepareConnectURI(): string | undefined
     {
         let connectUri = process.env.DB_MONGO_URI; 
         if (connectUri && process.env.DB_MONGO_AUTH == 'X.509')
@@ -40,12 +48,13 @@ export class MongoDb extends DbConnector
                     console.error(`ERROR: X.509 certificate file is not set! Please use the DB_MONGO_AUTH_X_509_CERTFILE env variable!`);
             }
         }
-        console.log(`MongoDb connect URI: ${connectUri.replace(/\/\/(...).*:(...).*@/, '\/\/<User>\($1...\):<PW>\($2...\)@')}`);
+        let connectUriStripped = connectUri ? connectUri.replace(/\/\/(...).*:(...).*@/, '\/\/<User>\($1...\):<PW>\($2...\)@') : '<null>';
+        console.log(`MongoDb connect URI: ${connectUriStripped}`);
 
         return connectUri;
     }
 
-    async connect()
+    override async connect()
     {
         try
         {
@@ -61,7 +70,7 @@ export class MongoDb extends DbConnector
      * For testing purposes. Simple DB command execution
      * @param {String} command 
      */
-    async dbCommand(command)
+    async dbCommand(command: string)
     {
         try
         {
@@ -75,30 +84,23 @@ export class MongoDb extends DbConnector
 
     async createDbs()
     {
-        console.log('Creating MongoDB databases... are currently NOT necessary. Skipped.');
+        console.log('Creating MongoDB databases... are NOT necessary. Skipped.');
     }
 
-    async readKCalDb()
+    override async readKCalDb()
     {
-        const dbo = this.mongoDbClient.db('KCalcDB');
-        const foodRecordCollection = dbo.collection('foods');
+        var foodFileRecord = await this.findDocuments('foods', { 'version': 'kcaldb 0.0' }, false) as KCalTextDbItem[];
 
-        var foodFileRecord = await foodRecordCollection.findOne( { version: "kcaldb 0.0" } );
-
-        return foodFileRecord.kcaldbfile;
+        return foodFileRecord[0].kcaldbfile;
     }
 
-    async readFoodDbRows(dbData)
+    override async readFoodDbRows(dbData: FoodDbItemStore)
     {
         dbData.foods_raw = [];
 
         try
         {
-            const dbo = this.mongoDbClient.db('KCalcDB');
-            const foodRecordCollection = dbo.collection('food_records_raw');
-
-            const cursor = await foodRecordCollection.find({ });
-            await cursor.forEach((foodItem) => { dbData.foods_raw.push(foodItem); });
+            dbData.foods_raw = await this.findDocuments('food_records_raw', {}, true) as FoodDbItem[];
 
             //console.log(`Cursor: ${ JSON.stringify(foodRecord)}`);
         }
@@ -108,25 +110,49 @@ export class MongoDb extends DbConnector
         }
     }
 
-    async updateRow(tableName, user, date, food_data): Promise<string>
+    override async findDocuments(tableName: string, query: Object, findMany: boolean): Promise<Object[]>
+    {
+        const dbo = this.mongoDbClient.db(process.env.DB_NAME);
+        const foodRecordCollection = dbo.collection(tableName);
+
+        let resultArray: Object[] = [];
+
+        if (findMany)
+        {
+            let cursor: FindCursor = await foodRecordCollection.find(query);
+            await cursor.forEach((item) => { resultArray.push(item); });
+        }
+        else
+        {
+            resultArray.push(await foodRecordCollection.findOne(query));
+        }
+
+        return resultArray;
+    }
+
+    override async updateRow(tableName: string, user: string, date: string, food_data: string): Promise<string>
+    {
+        let objKeys = new Map([ [ 'user', user], ['date', date], ]);
+        let fullObj = { user: user, date: date, food_data: food_data };
+        return this.updateDocument(tableName, objKeys, fullObj);
+    }
+
+    override async updateDocument(tableName: string, keys: Map<String, String>, obj: Object): Promise<string>
     {
         try
         {
-            const dbo = this.mongoDbClient.db('KCalcDB');
+            const dbo = this.mongoDbClient.db(process.env.DB_NAME);
             const foodRecordCollection = dbo.collection(tableName);
 
-            let newDocument = { user: user, date: date, food_data: food_data };
-
-            //foodRecordCollection.insertOne(newDocument);
             foodRecordCollection.updateOne(
-                { 'user': user, 'date': date },
-                { $set: newDocument },
+                keys,
+                { $set: obj },
                 { upsert: true }
             );
         }
         catch (e)
         {
-            console.error(`ERROR: While reading food data from MongoDB: ${e}`);
+            console.error(`ERROR: While updating food data in MongoDB: ${e}`);
         }
         return 'OK';
     }

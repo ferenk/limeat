@@ -85,6 +85,8 @@
             </div>
         </div>
     </div>
+    <div class="header3 sticky3" id="quickMessageBar">
+    </div>
 
     <div id="mainDiv">
         <div id="titleBg" style="font-size: 3em; font-weight: 600; height: 7rem;">KCal calculator</div>
@@ -108,6 +110,28 @@
                 <label for="txtMealsFocusedMode" id="txtMealsFocusedModeLabel">focused</label>
             </fieldset>
         </div>
+
+        <div id="searchTools">
+            <label style="display: inline" for="tSearch" name="tSearch">History:</label>
+            <input id="tSearch" type="text" size="6" maxlength="60" placeholder="food name">
+            <select title="Search time period" id="searchDays">
+                <option value="last10" selected>10d</option>
+                <option value="last31">mo</option>
+                <option value="lastyear">yr</option>
+            </select>
+            <select title="Search result format" id="searchResultFormat">
+                <option value="food" selected>f</option>
+                <option value="meal">m</option>
+            </select>
+            <button id="btSearch" class="btn">Search</button>
+            <div id="searchMealsResult"></div>
+            <div id="searchFooter" hidden>
+                <span id="searchFooterMessage"></span>
+                <button id="searchOpenClose">&nbsp; ^ &nbsp;</button>
+                <button id="searchClear">&nbsp; X &nbsp;</button>
+            </div>
+        </div>
+
 
         <!-- OUTPUT TABLE! -->
         <table id="tableOut" style="display: block; position: relative;">
