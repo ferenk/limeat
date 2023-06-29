@@ -16,6 +16,8 @@ import { SSEClient } from './net/sseClient.mjs';
 
 import { coolMessage } from './views/uiHelper.mjs';
 
+const HEROKU_CLOUD_URL = 'limeat.herokuapp.com';
+
 var g_config = Config.getInstance(
     {
         scaleType: 'barista',
@@ -284,6 +286,12 @@ async function onPageLoaded()
             $('#devOutputs').slideUp(100);
     });
     $('#devOutputs').hide();
+    if (location.hostname != HEROKU_CLOUD_URL)
+    {
+        let headersDiv = document.getElementById('txtMealsDiary');
+        if (headersDiv != null)
+            headersDiv.style.outline = '4px dashed rgba(255, 165, 18, 0.9)';
+    }
 
     /** Button, feature: Export MD output to the clipboard */
     $('#btCopyMD').on('click', () => { 
