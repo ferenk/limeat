@@ -157,16 +157,17 @@ app.get('/node_api/search_meal_history', async function (req, res)
         let resStr = '';
         if (checkQuery(req, ['user', 'firstDay', 'keyword']))
         {
-            console.log(`Query: /node_api/search_meals (params: ${JSON.stringify(req.query)})`);
+            console.log(`Query: /node_api/search_meals (params: query: ${JSON.stringify(req.query)})`);
             let paramUserName = (req.query.user ?? '') as string;
             let paramFirstDay = (req.query.firstDay ?? '') as string;
             let paramKeyword = (req.query.keyword ?? '') as string;
 
-            var queryObj = { user: paramUserName, 'date': { $gte: paramFirstDay }, food_data: { $regex: paramKeyword, $options: 'i'} };
+            var queryObj = { user: paramUserName, date: { $gte: paramFirstDay }, food_data: { $regex: paramKeyword, $options: 'i' } };
+            var optionsObj = { sort: { date: -1 }  }; 
 
-            let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, true);
-            console.log(`Result arrived:\r\n${resultMeals}`);
+            let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, optionsObj, true);
             resStr = JSON.stringify(resultMeals);
+            console.log(`Result arrived:\r\n${resStr}`);
             res.send(resStr);
         } else
         {

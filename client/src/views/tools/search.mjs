@@ -15,6 +15,7 @@ class SearchTools
     constructor(controller)
     {
         this.g_controller = controller;
+        this.onSearchOpenClose(false);
     }
 
     /**
@@ -74,7 +75,8 @@ class SearchTools
 
     async onSearchStarted()
     {
-        let searchStr = $('#tSearch').val();
+        // the autocomplete function of a phone's virtual keyboard usually adds an extra, unneeded space
+        let searchStr = String($('#tSearch').val()).trim();
 
         let firstDayStr = this.getSearchDaysRange();
         console.log(`mealSearch: starting search for '${searchStr}' (starting from day ${firstDayStr})...`);
@@ -147,17 +149,25 @@ class SearchTools
                 }
             }
 
-            if (foundMealsObj.length > 0)
-            {
-                $('#searchTools').addClass('active');
-                $('#searchFooterMessage').text(`Received ${foundMealsObj.length} days.`);
-                this.onSearchOpenClose(true);
-                $('#searchFooter').slideDown('fast');
-            }
+            let hits = foundMealsObj.length;
+            let findResultMessage = (hits > 0 ? `${foundMealsObj.length} row${hits > 1 ? 's' : ''} found` : 'No rows found');
 
-            this.onSearchOpenClose(false);
-            $('#searchMealsResult').html(searchResult);
-            this.onSearchOpenClose(true);
+            // update footer
+
+            let closeTimeout = 0;
+            if (this.searchOpened)
+            {
+                closeTimeout = 200;
+                this.onSearchOpenClose(false);
+            }
+            
+            setTimeout(() =>
+            {
+                $('#searchFooterMessage').text(findResultMessage);
+                $('#searchMealsResult').html(searchResult);
+                $('#searchTools').addClass('active');
+                this.onSearchOpenClose(true);
+            }, closeTimeout);
         }
         else
             alert('Search ERROR!');
@@ -171,24 +181,22 @@ class SearchTools
      */
     onSearchOpenClose(open = null, speed = null)
     {
-        open ||= !this.searchOpened;
+        open ??= !this.searchOpened;
         this.searchOpened = open;
 
         if (open)
         {
-            speed ||= 400;
+            speed ??= 400;
             $('#searchMealsResult').slideDown(speed);
+            $('#searchFooter').slideDown(speed);
             $('#searchOpenClose').html('&nbsp; ▲ &nbsp;');
         }
         else
         {
-            speed ||= 200;
+            speed ??= 200;
             $('#searchMealsResult').slideUp(speed);
+            $('#searchFooter').slideUp(speed);
             $('#searchOpenClose').html('&nbsp; ▼ &nbsp;');
-            setTimeout(() =>
-            {
-                $('#searchMealsResult').addClass('active');
-            }, speed + 200);
         }
     }
 

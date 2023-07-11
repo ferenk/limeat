@@ -44,7 +44,7 @@ export class DbConnector
      * @param keys the query JSON object
      * @returns read result message
      */
-    async findDocuments(tableName: string, query: Object, findMany: boolean): Promise<Object>
+    async findDocuments(tableName: string, query: Object, options: Object | undefined, findMany: boolean): Promise<Object>
     {
         console.error('Abstract class - Methods are not implemented!');
         return '';

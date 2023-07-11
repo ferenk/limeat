@@ -1,14 +1,13 @@
-import { FindCursor } from 'mongodb';
 import { DbConnector } from './dbconnector';
 import { FoodDbItemStore, FoodDbItem, KCalTextDbItem } from '../../data/requests';
 
-const { MongoClient } = require('mongodb');
+import * as mongoDB from "mongodb";
 const path = require('path');
 
 export class MongoDb extends DbConnector
 {
     connectUri: string;
-    mongoDbClient: typeof MongoClient;
+    mongoDbClient: mongoDB.MongoClient;
 
     /**
      * 
@@ -22,7 +21,7 @@ export class MongoDb extends DbConnector
         if (connectUri)
         {
             this.connectUri = connectUri;
-            this.mongoDbClient = new MongoClient(this.connectUri, { useUnifiedTopology: true });
+            this.mongoDbClient = new mongoDB.MongoClient(this.connectUri, { });
         }
         else
             throw('No MongoDB URI has been specified!');
@@ -89,7 +88,7 @@ export class MongoDb extends DbConnector
 
     override async readKCalDb()
     {
-        var foodFileRecord = await this.findDocuments('foods', { 'version': 'kcaldb 0.0' }, false) as KCalTextDbItem[];
+        var foodFileRecord = await this.findDocuments('foods', { 'version': 'kcaldb 0.0' }, undefined, false) as KCalTextDbItem[];
 
         return foodFileRecord[0].kcaldbfile;
     }
@@ -100,7 +99,7 @@ export class MongoDb extends DbConnector
 
         try
         {
-            dbData.foods_raw = await this.findDocuments('food_records_raw', {}, true) as FoodDbItem[];
+            dbData.foods_raw = await this.findDocuments('food_records_raw', {}, undefined, true) as FoodDbItem[];
 
             //console.log(`Cursor: ${ JSON.stringify(foodRecord)}`);
         }
@@ -110,7 +109,7 @@ export class MongoDb extends DbConnector
         }
     }
 
-    override async findDocuments(tableName: string, query: Object, findMany: boolean): Promise<Object[]>
+    override async findDocuments(tableName: string, query: Object, options: Object | undefined, findMany: boolean): Promise<Object[]>
     {
         const dbo = this.mongoDbClient.db(process.env.DB_NAME);
         const foodRecordCollection = dbo.collection(tableName);
@@ -119,12 +118,15 @@ export class MongoDb extends DbConnector
 
         if (findMany)
         {
-            let cursor: FindCursor = await foodRecordCollection.find(query);
+            //let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
+            let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
             await cursor.forEach((item) => { resultArray.push(item); });
         }
         else
         {
-            resultArray.push(await foodRecordCollection.findOne(query));
+            let oneResult = await foodRecordCollection.findOne(query, options);
+            if (oneResult)
+                resultArray.push(oneResult);
         }
 
         return resultArray;
