@@ -111,7 +111,7 @@ export class MongoDb extends DbConnector
 
     override async findDocuments(tableName: string, query: Object, options: Object | undefined, findMany: boolean): Promise<Object[]>
     {
-        const dbo = this.mongoDbClient.db(process.env.DB_NAME);
+        const dbo = this.mongoDbClient.db(process.env.DB_MONGO_DBNAME);
         const foodRecordCollection = dbo.collection(tableName);
 
         let resultArray: Object[] = [];
@@ -119,6 +119,7 @@ export class MongoDb extends DbConnector
         if (findMany)
         {
             //let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
+            console.log(`findDocuments(): mongo options: ${JSON.stringify(options)}`);
             let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
             await cursor.forEach((item) => { resultArray.push(item); });
         }
@@ -143,7 +144,7 @@ export class MongoDb extends DbConnector
     {
         try
         {
-            const dbo = this.mongoDbClient.db(process.env.DB_NAME);
+            const dbo = this.mongoDbClient.db(process.env.DB_MONGO_DBNAME);
             const foodRecordCollection = dbo.collection(tableName);
 
             foodRecordCollection.updateOne(

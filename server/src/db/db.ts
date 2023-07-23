@@ -2,15 +2,14 @@ import { DbConnector } from './connectors/dbconnector';
 import { SQLiteDb } from './connectors/sqlitedb';
 import { MongoDb } from './connectors/mongodb';
 
-export async function initDb() : Promise<DbConnector>
+var DB_MONGO_DEFAULT_DBNAME = 'KCalcDB-Test';
+
+export async function initDb(): Promise<DbConnector>
 {
     console.log(`DB_MODE: ${process.env.DB_MODE}`);
 
-    if (process.env.DB_DATABASE_NAME == null)
-    {
-        process.env.DB_NAME = 'KCalcDB-Test';
-    }
-    console.log(`Selected DB: ${process.env.DB_NAME}`);
+    process.env.DB_MONGO_DBNAME = process.env.DB_MONGO_DBNAME ?? DB_MONGO_DEFAULT_DBNAME;
+    console.log(`Selected DB: ${process.env.DB_MONGO_DBNAME}`);
 
     if (process.env.DB_MODE === 'sqlite')
     {
