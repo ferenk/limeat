@@ -37,6 +37,7 @@ function getCurrentTimeStr()
 /**
  * 
  * @param {moment} currMoment 
+ * @throws {TypeError} if the input moment is invalid
  * @returns 
  */
 function printMoment(currMoment)
@@ -119,19 +120,27 @@ function toFixedFloat(num = 0, decimals = 1) {
 /**
  * 
  * @param {Number} num 
- * @param {Number} decimals 
- * @param {boolean} padDecimals 
- * @returns 
+ * @param {Number} decimals
+ * @param {string?} paddingChar
+ * @returns the number as a string
  */
-function printToFixedFloat(num, decimals, padDecimals) {
+function printToFixedFloat(num, decimals = 1, paddingChar = null) {
     if (decimals == null)
         decimals = 0;
     let numStr = toFixedFloat(num, decimals).toString();
-    if (padDecimals == true) {
+    if (paddingChar != null) {
         let decimalPointPos = numStr.search('\\.');
-        let paddingNeeded = (decimalPointPos >= 0 ? (numStr.length - decimalPointPos - 1) - decimals : decimals + 1);
-        //debug console.log(`numStr: ${numStr}, decimals: ${decimals}, paddingNeeded: ${paddingNeeded}, decimalpointpos: ${decimalPointPos}`);
-        numStr += ' '.repeat(paddingNeeded);
+        if (decimalPointPos < 0)
+        {
+            // can cause 'index out of bounds' like situation - works for the ' ' padding, '1' -> '1  '
+            decimalPointPos = numStr.length;
+            if (paddingChar == '0')  // additional '.' is needed
+                numStr += '.';
+        }
+        let fractionPartChars = numStr.length - decimalPointPos - 1;
+        // debug
+        //!TODO log console.log(`numStr: ${numStr}, decimals: ${decimals}, paddingChar: ${paddingChar}, decimalpointpos: ${decimalPointPos}, fractionPartChars: ${fractionPartChars}`);
+        numStr += paddingChar.repeat(decimals - fractionPartChars);
     }
     return numStr;
 }

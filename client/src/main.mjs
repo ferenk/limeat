@@ -28,6 +28,7 @@ var g_config = Config.getInstance(
 
 /** @type { TextareaExt } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareExt'... (Proxy type problem))
+//var g_mealsDiaryText = new TextareaExt();
 var g_mealsDiaryText = traceMethodCalls(new TextareaExt(), false);
 
 /** @type { TextareaHighlight } */
@@ -44,7 +45,8 @@ var g_mealListLang = traceMethodCalls(new MealListLang(g_config, g_mealsDiaryTex
 
 /** @type { Controller } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'Controller'... (Proxy type problem))
-var g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang), false);
+//var g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang), false);
+var g_controller = new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang);
 
 var g_mobileMode = null;
 
@@ -192,6 +194,11 @@ async function onPageLoaded()
         $('#optClientId').val(g_config.clientId);
     }
 
+    window.onerror = onUnhandledError;
+	window.addEventListener('abort', onUnhandledError);
+	window.addEventListener('error', onUnhandledError);
+	window.addEventListener('unhandledrejection', onUnhandledError);
+
     g_mealsDiaryText.initialize('#txtMealsDiary');
     g_mealsDiaryTextHighlight.initialize('#txtMealsDiary');
 
@@ -317,6 +324,29 @@ async function onPageLoaded()
     placementCorrections();
 
     initSseClient();
+}
+
+/**
+ * @param {string | Object | null} errMsg
+ * @param {string | null} url
+ * @param {number | null} lineNumber
+ */
+function onUnhandledError(errMsg, url, lineNumber /*, colno, error*/)
+{
+    console.error("ERROR:: onUnhandled() called");
+	// 1. errMsg is an Event
+	if (errMsg.reason != null && errMsg instanceof PromiseRejectionEvent) {
+		console.error("ERROR: Unhandled Promise exception occured: " + errMsg.reason);
+		console.log(errMsg);
+		errMsg.preventDefault();
+	}
+	// 2. errMsg is an Error obj
+	else if (errMsg != null && typeof errMsg === 'object') {
+		console.error("ERROR:: Unhandled exception occured at file: " + errMsg.filename + ", line: " + errMsg.lineno + ", msg: " + errMsg.message); // log error obj
+	}
+	// 3. errMsg is a String
+	else console.error(null, "ERROR:: Unhandled exception occured at url: " + url + ", line: " + lineNumber + ", msg: " + errMsg); // log parametrized error message
+	return true;
 }
 
 window.addEventListener("load", onPageLoaded);

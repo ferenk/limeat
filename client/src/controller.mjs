@@ -419,7 +419,7 @@ class Controller
             this.mealsDiaryText.moveCursorTo(this.mealsDiaryText.rows[mealIdx_checked].length, mealIdx_checked);
             this.outputTable.selectRow(mealIdx_checked);
         }
-        //! Recheck!
+        //!TODO Recheck!
         this.mealsDiaryText.updateUi();
         this.updatePrevNextMealButtons();
 

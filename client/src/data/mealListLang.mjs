@@ -190,7 +190,7 @@ class MealListLang
                     {
                         unit = units[unitsIdx];
                         let foodPartNameWOUnitStr = foodPartNameStr.replaceAll(unit, '');
-                        console.log(`foodPartNameWOUnitStr: "${foodPartNameWOUnitStr}"`);
+                        //!TODO log console.log(`foodPartNameWOUnitStr: "${foodPartNameWOUnitStr}"`);
                         if (/^ *[/\+\-\*\/\.0123456789()]+$/.test(foodPartNameWOUnitStr))
                         {
                             quantity = toFixedFloat(safeEval(foodPartNameWOUnitStr));
@@ -405,7 +405,7 @@ class MealListLang
             }
         }
 
-        let foodKCalStr = printToFixedFloat(meal.foodSum.computedkcal, 1, true);
+        let foodKCalStr = printToFixedFloat(meal.foodSum.computedkcal, 1, '0');
 
         // update the 'current line' field
         let currentOutputLine = this.formatFoodData(foodKCalStr, meal.timeStampPrefix, meal.mealNamePrefix + mdFoodOutputLineStr) + '  \n';
@@ -418,7 +418,7 @@ class MealListLang
         {
             displayedFoodNamePrefixStr = displayedFoodNamePrefixStr.replaceAll('___', '').replaceAll(/ $/g, '');
             displayedFoodNamePrefixStr = `<u><b>${displayedFoodNamePrefixStr}</b></u>`;
-            displayedFoodNamePrefixStr += ` (${printToFixedFloat(meal.foodSum.quantity, 1, true)}g, ${printToFixedFloat(meal.foodSum.computedkcal/(meal.foodSum.quantity/100), 1, true)}kc/)\n`
+            displayedFoodNamePrefixStr += ` (${printToFixedFloat(meal.foodSum.quantity, 1, '0')}g, ${printToFixedFloat(meal.foodSum.computedkcal/(meal.foodSum.quantity/100), 1, '0')}kc/)\n`
         }
         displayedFoodNamePrefixStr = !displayedFoodNamePrefixStr ? '' : displayedFoodNamePrefixStr.replaceAll('___', ''); 
         let currTableRowStr =
@@ -566,7 +566,7 @@ class MealListLang
         this.foodOutputStr += `${pattern.slice(0, 3) + outputKCal + pattern.slice(13)} ${Math.round(this.dayParts[this.currentDayPart].g)}g  \n`;
 
         // HTML separator
-        let foodKCalStr = printToFixedFloat(this.dayParts[this.currentDayPart].kcal, 1, true);
+        let foodKCalStr = printToFixedFloat(this.dayParts[this.currentDayPart].kcal, 1, '0');
         let foodKCalStrFormatted = foodKCalStr.replace(/(..)$/, '<span style="font-size:0.85em;">$1</span>');  // decimal characters are smaller
         let sHtmlSeparator =
             '<tr class="mealRow trSep">' +

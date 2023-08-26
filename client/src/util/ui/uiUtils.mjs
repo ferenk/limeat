@@ -3,20 +3,27 @@ export {
 };
 
 /**
- * @param {HTMLElement} htmlElem 
+ * @param {EventTarget} eventTarget 
  */
-function searchForId(htmlElem)
+function searchForId(eventTarget)
 {
-    /** @type { HTMLElement | null} */
-    var node = htmlElem;
-    for (node = htmlElem; node != null; node = node.parentNode)
+    if (eventTarget instanceof HTMLElement)
     {
-        if (node.id != null && node.id !== '')
+        /** @type { HTMLElement | ParentNode | null} */
+        var node = eventTarget;
+        for (node = eventTarget; node != null && node instanceof HTMLElement; node = node.parentNode)
         {
-            return node;
-		}
-	}
-	return null;
+            if (node.id != null && node.id !== '')
+            {
+                return node;
+            }
+        }
+    }
+    else
+        console.log('ERROR: evetTarget is not an HTMLElement!');
+
+    console.log('ERROR: searchForId() didn\'t find the element!');
+    return null;
 }
 
 var currentMessagePriority = 0;
@@ -26,10 +33,11 @@ var currentMessagePriority = 0;
  * @param {number} timeout in milliseconds
  * @param {number} priority higher number means higher priority
  */
-function showMessage(text, timeout = 2000, priority = 1)
+function showMessage(text, timeout = 2000, priority = 1, bgColor = 'hsla(78, 75%, 35%, 0.95)')
 {
     if (currentMessagePriority == 0 || priority >= currentMessagePriority)
     {
+        $('#quickMessageBar').css('background-color', bgColor);
         currentMessagePriority = priority;
         $('#quickMessageBar')
             .html(text)

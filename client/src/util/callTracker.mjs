@@ -201,5 +201,5 @@ function consoleLog(message = '', recalcTime = true)
 {
     if (recalcTime || lastMsgHeader.length === 0)
         lastMsgHeader = `${new Date().toISOString().slice(0, -2).replace('T', ' ')} TRACE: `;
-    //console.log(lastMsgHeader + message);
+    console.log(lastMsgHeader + message);
 }
