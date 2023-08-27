@@ -126,9 +126,17 @@ app.get('/node_api/search_meal_history', async function (req, res)
             let paramUserName = (req.query.user ?? '') as string;
             let paramFirstDay = (req.query.firstDay ?? '') as string;
             let paramKeyword = (req.query.keyword ?? '') as string;
+            let hitsLimit = (req.query.hitsLimit ?? '') as string;
 
             var queryObj = { user: paramUserName, date: { $gte: paramFirstDay }, food_data: { $regex: paramKeyword, $options: 'i' } };
-            var optionsObj = { sort: { date: -1 }  }; 
+            var optionsObj = { sort: { date: -1 } }; 
+            if (hitsLimit.length > 0)
+            {
+                let limit = parseInt(hitsLimit);
+                if (!isNaN(limit) && limit > 0)
+                    optionsObj.limit = limit;
+            }
+            console.log(`Mongo.findDocuments('food_records_raw', ${JSON.stringify(queryObj)}, ${JSON.stringify(optionsObj)}, true)`);
 
             let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, optionsObj, true);
             resStr = JSON.stringify(resultMeals);

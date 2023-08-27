@@ -97,7 +97,7 @@
         <textarea id="txtMealsDiary" spellcheck="false"></textarea>
         <div id="txtMealsUnderDock"></div>
 
-        <div id="txtMealsModes">
+        <div id="txtMealsModes" style="display: none">
             <div style="font-weight:700; text-decoration: underline; margin-left: auto;">Views: &nbsp; </div>
             <fieldset>
                 <input type="radio" id="txtMealsNormalMode" name="txtMealsModes">
@@ -113,23 +113,28 @@
 
         <div id="searchTools">
             <label style="display: inline" for="tSearch" name="tSearch">History:</label>
-            <input id="tSearch" type="text" size="6" maxlength="60" placeholder="food name">
-            <select title="Search time period" id="searchDays">
-                <option value="last10" selected>10d</option>
-                <option value="last31">mo</option>
-                <option value="lastyear">yr</option>
-            </select>
-            <select title="Search result format" id="searchResultFormat">
-                <option value="food" selected>f</option>
-                <option value="meal">m</option>
-            </select>
+            <input id="tSearch" type="text" size="12" maxlength="60" placeholder="food name">
             <button id="btSearch" class="btn">Search</button>
-            <div id="searchMealsResult"></div>
+            <br>
+            Time period:
+            <select title="Search time period" id="searchDays">
+                <option value="last10" selected>10 days</option>
+                <option value="last31">1 month</option>
+                <option value="lastyear">1 year</option>
+            </select>
+            Result:
+            <select title="Search result format" id="searchResultFormat">
+                <option value="food" selected>food</option>
+                <option value="meal">meal</option>
+            </select>
+            Hit count limit:
+            <input id="searchHitsLimit" type="text" onkeypress='return event.charCode >= 48 && event.charCode <= 57' size="4" maxlength="8" placeholder="Hit limit" value="50" />
             <div id="searchFooter" hidden>
                 <span id="searchFooterMessage"></span>
                 <button id="searchOpenClose">&nbsp; ^ &nbsp;</button>
                 <button id="searchClear">&nbsp; X &nbsp;</button>
             </div>
+            <div id="searchMealsResult"></div>
         </div>
 
 

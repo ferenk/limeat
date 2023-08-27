@@ -57,6 +57,46 @@ class SearchTools
     }
 
     /**
+     * Get the user name from the upper right textbox
+     * @returns {String} the current user's name
+     */
+    getUserName()
+    {
+        let userNameField = document.getElementById("tUser");
+        let userName = userNameField instanceof HTMLInputElement ? userNameField.value : null;
+
+        if (userName == null)
+        {
+            let errorMsg = 'User name problem, unable to start search!';
+            console.log('ERROR: ' + errorMsg);
+            alert(errorMsg);
+            throw errorMsg;
+        }
+
+        return userName;
+    }
+
+    /**
+     * Get the search limit setting (from the UI textedit widget)
+     * @returns {number} the maximum number of hits to return
+     */
+    getSearchHitsLimit()
+    {
+        /** @type { HTMLInputElement | null } */
+        // @ts-ignore:next-line (Type 'HTMLElement | null' is not assignable to type 'HTMLInputElement | null'.)
+        var elHitsLimit = document.getElementById("searchHitsLimit");
+        try
+        {
+            let hitsLimit = Number.parseInt((elHitsLimit?.value ?? '50'));
+            return hitsLimit;
+        } catch (e)
+        {
+            console.log('ERROR: ' + e);
+            return 0;
+        }
+    }
+
+    /**
      * @returns {String} the first day when the search begins
      */
     getSearchDaysRange()
@@ -73,22 +113,37 @@ class SearchTools
         return firstDay.toISOString().substring(0, 10);
     }
 
-    async onSearchStarted()
+    /**
+     * Start a new search (activated by pressing the "Search" button)
+     */
+    onSearchStarted()
     {
-        // the autocomplete function of a phone's virtual keyboard usually adds an extra, unneeded space
-        let searchStr = String($('#tSearch').val()).trim();
-
+        let searchStr = String($('#tSearch').val()).trim();    // trim: the autocomplete function of a phone's virtual keyboard usually adds an extra, unneeded space
         let firstDayStr = this.getSearchDaysRange();
+        let hitsLimit = this.getSearchHitsLimit();
+
         console.log(`mealSearch: starting search for '${searchStr}' (starting from day ${firstDayStr})...`);
+
         let self = this;
+        this.startMealSearchQuery({
+            user: this.getUserName(),
+            firstDay: firstDayStr,
+            keyword: searchStr,
+            hitsLimit: hitsLimit
+        }, (xhr) => { self.onSearchResultArrived(xhr, searchStr) });
+    }
+
+    /**
+     * Connects to the server and starts a search in the user's meal history
+     * @param {Object} params
+     * @param {import('../../data/comm.mjs').XHRCommCallback} callback
+     */
+    startMealSearchQuery(params, callback)
+    {
         nodeXHRComm(
             'node_api/search_meal_history',
-            {
-                user: $('#tUser').val(),
-                firstDay: firstDayStr,
-                keyword: searchStr
-            },
-            (xhr, ev) => { self.onSearchResultArrived(xhr, searchStr); }
+            params,
+            callback
         );
     }
 
@@ -103,74 +158,106 @@ class SearchTools
      */
     onSearchResultArrived(xhr, searchStr)
     {
+        let filteredMeals = this.processMealHistoryResult(xhr, searchStr);
+        let searchResult = '';
+
+        for (let iMeal = 0; iMeal < filteredMeals.length; iMeal++)
+        {
+            let mealObj = filteredMeals[iMeal];
+            let printedMeal = mealObj.date ?? '';
+
+            for (let iFoodPart = 0; iFoodPart < mealObj.foodParts.length; iFoodPart++)
+            {
+                let foodPart = mealObj.foodParts[iFoodPart];
+                let printedFoodPart = '';
+                let printedFoodPart1 = `${foodPart.name} ${foodPart?.kcal ? toFixedFloat(foodPart.kcal) + 'kc/ ' : ''}`;
+                let printedFoodPart2 = `${foodPart.quantity}${foodPart.quantityunit} ${toFixedFloat(foodPart.computedkcal)}kc`;
+                if (foodPart && foodPart.name && new RegExp(searchStr, 'i').test(foodPart.name))
+                    printedFoodPart = `<u><b>${printedFoodPart1}</b> ${printedFoodPart2}</u>`;
+                else
+                    printedFoodPart = `${printedFoodPart1} ${printedFoodPart2}`;
+                printedMeal += (iFoodPart > 0 ? ', ' : '') + printedFoodPart;
+            }
+            searchResult += `<div id="res_${this.lastFoundMeals.length}">${printedMeal}</div>`;
+            this.lastFoundMeals.push(mealObj);
+        }
+
+        // display results, update footer
+        let hits = filteredMeals.length;
+        let findResultMessage = (hits > 0 ? `${hits} row${hits > 1 ? 's' : ''} found` : 'No rows found');
+
+        let closeTimeout = 0;
+        if (this.searchOpened)
+        {
+            closeTimeout = 200;
+            this.onSearchOpenClose(false);
+        }
+        
+        setTimeout(() =>
+        {
+            $('#searchFooterMessage').text(findResultMessage);
+            $('#searchMealsResult').html(searchResult);
+            $('#searchTools').addClass('active');
+            this.onSearchOpenClose(true);
+        }, closeTimeout);
+    }
+
+    /**
+     * Communication handler: Incoming search result
+     * @param {XMLHttpRequest?} xhr 
+     * //@param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+     * @param {String} filterStr
+     * @returns {Meal[]} the filtered and processed meal objects
+     */
+    processMealHistoryResult(xhr, filterStr)
+    {
         if (xhr == null)
         {
             this.onSearchClear();
-            return;
+            throw `ERROR: Impossible, empty result arrived from the server! (xhr == null)`;
         }
 
+        /** @type Meal[] */
+        let resultMeals = [];
         if (xhr.status == 200)
         {
             let foundMealsObj = JSON.parse(xhr.responseText);
             console.log(`Result arrived. It contains data about ${foundMealsObj.length} days.`);
             this.lastFoundMeals = [];
-            this.lastSearchStr = searchStr;
-            let searchResult = '';
+            this.lastSearchStr = filterStr;
             for (let iDay = 0; iDay < foundMealsObj.length; iDay++)
             {
                 let dayText = foundMealsObj[iDay].food_data;
                 let dayTextArr = dayText.split('\\n');
                 /** @type {Map<string, [Number|undefined, number|undefined] ?>} */
                 let lastFoodMap = new Map();
-                for (let iDayRow = 0; iDayRow < dayTextArr.length; iDayRow++)
+                for (let iDayRow = dayTextArr.length - 1; iDayRow >= 0; iDayRow--)
                 {
                     let mealLine = dayTextArr[iDayRow];
-                    if (new RegExp(searchStr,'i').test(mealLine))
+                    if (new RegExp(filterStr,'i').test(mealLine))
                     {
                         let mealObj = this.g_controller.mealListLang.parseMeal(mealLine, lastFoodMap);
                         this.g_controller.mealListLang.calculateMeal(mealObj, false);
                         let isoDate = parseIsoDate(foundMealsObj[iDay].date);
-                        var printedMeal = `<b>${isoDate != null ? printMoment(isoDate) : '[date?]'}</b> ${mealObj.timeStampPrefix}: `;
-                        for(let iFoodPart = 0; iFoodPart < mealObj.foodParts.length; iFoodPart++)
+                        var printedMeal = '<b>????-??-??.?</b> ';
+                        try
                         {
-                            let foodPart = mealObj.foodParts[iFoodPart];
-                            let printedFoodPart = '';
-                            let printedFoodPart1 = `${foodPart.name} ${foodPart?.kcal ? toFixedFloat(foodPart.kcal)+'kc/ ' : ''}`;
-                            let printedFoodPart2 = `${foodPart.quantity}${foodPart.quantityunit} ${toFixedFloat(foodPart.computedkcal)}kc`;
-                            if (foodPart && foodPart.name && new RegExp(searchStr,'i').test(foodPart.name))
-                                printedFoodPart = `<u><b>${printedFoodPart1}</b> ${printedFoodPart2}</u>`;
-                            else
-                                printedFoodPart = `${printedFoodPart1} ${printedFoodPart2}`;
-                            printedMeal += (iFoodPart > 0 ? ', ' : '') + printedFoodPart;
+                            printedMeal = `<b>${isoDate != null ? printMoment(isoDate) : '[date?]'}</b> ${mealObj.timeStampPrefix}: `;
                         }
-                        searchResult += `<div id="res_${this.lastFoundMeals.length}">${printedMeal}</div>`;
-                        this.lastFoundMeals.push(mealObj);
+                        catch (e)
+                        {
+                            console.error(`Error while parsing date '${foundMealsObj[iDay].date}'`);
+                        }
+                        mealObj.date = printedMeal;
+                        resultMeals.push(mealObj);
                     }
                 }
             }
-
-            let hits = foundMealsObj.length;
-            let findResultMessage = (hits > 0 ? `${foundMealsObj.length} row${hits > 1 ? 's' : ''} found` : 'No rows found');
-
-            // update footer
-
-            let closeTimeout = 0;
-            if (this.searchOpened)
-            {
-                closeTimeout = 200;
-                this.onSearchOpenClose(false);
-            }
-            
-            setTimeout(() =>
-            {
-                $('#searchFooterMessage').text(findResultMessage);
-                $('#searchMealsResult').html(searchResult);
-                $('#searchTools').addClass('active');
-                this.onSearchOpenClose(true);
-            }, closeTimeout);
         }
         else
-            alert('Search ERROR!');
+            showMessage('ERROR: Network problem during search!', 5000, 2, 'hsla(15, 75%, 55%, 0.90)');
+
+        return resultMeals;
     }
 
     searchOpened = false;
@@ -195,7 +282,7 @@ class SearchTools
         {
             speed ??= 200;
             $('#searchMealsResult').slideUp(speed);
-            $('#searchFooter').slideUp(speed);
+            //$('#searchFooter').slideUp(speed);
             $('#searchOpenClose').html('&nbsp; ▼ &nbsp;');
         }
     }
@@ -219,7 +306,13 @@ class SearchTools
      */
     onSearchResultClicked(ev)
     {
-        let clickedDiv = searchForId(ev?.target);
+        if (ev.target == null)
+        {
+            console.error('onSearchResultClicked: ev.target is null!');
+            return;
+        }
+
+        let clickedDiv = searchForId(ev.target);
         if (clickedDiv)
         {
             let clickedItemIdx = Number.parseInt(clickedDiv.id.replace(/^res_/, ''));
