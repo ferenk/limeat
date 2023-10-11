@@ -6,6 +6,8 @@ class Meal
     foodParts = [];
     /** @type { Food } */
     foodSum = new Food();
+    /** @type { String? } */
+    date = null;
     /** @type {string} */
     timeStampPrefix = '';
     /** @type {string} the name of the meal */
@@ -47,4 +49,6 @@ class Food
     startTextCol;
     /** @type { Number } */
     computedkcal = 0;
+    /** @type { Number } */
+    rankingPoints = 0.0;
 }

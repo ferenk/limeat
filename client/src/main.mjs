@@ -317,7 +317,7 @@ async function onPageLoaded()
     // @ts-ignore:next-line (callback is not assignable)
     $('#tableOut').on('click', g_controller.onTableRowChange.bind(g_controller));
 
-    $('#searchOpenClose').on('click', () => { g_controller.searchTools.onSearchOpenClose(); });
+    $('#searchToggle').on('click', () => { g_controller.searchTools.onSearchToolsToggle(); });
     $('#searchClear').on('click', () => { g_controller.searchTools.onSearchClear(); });
 
     handleMobileMode();

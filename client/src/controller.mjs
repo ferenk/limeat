@@ -1,5 +1,6 @@
 export { Controller };
 
+import { traceMethodCalls } from './util/callTracker.mjs'
 import { nodeXHRComm } from './data/comm.mjs';
 import { printMoment, parseIsoDate, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
 import { showMessage } from './util/ui/uiUtils.mjs';
@@ -10,6 +11,7 @@ import { OutputTable } from './views/outputTable.mjs';
 import { Food } from './data/foodData.mjs';
 import { MealListLang } from './data/mealListLang.mjs';
 import { SearchTools } from './views/tools/search.mjs';
+import { AutoCompleteUi } from './views/tools/autoComplete.mjs';
 
 import { coolConfirm } from './views/uiHelper.mjs';
 
@@ -38,8 +40,17 @@ class Controller
         this.mealsDiaryTextHighlight = mealsDiaryTextHighlight;
         this.outputTable = outputTable;
         this.mealListLang = mealListLang;
-        this.searchTools = new SearchTools(this);
+        this.searchTools = traceMethodCalls(new SearchTools(this, this.onAutoCompleteActivated.bind(this)), false);
         this.mainHeaderIsOnTop = true;
+
+        // initialize autocomplete
+        let acCurrent = document.getElementById('autoCompleteCurrentWord');
+        let acProgress = document.getElementById('autoCompleteProgress');
+        let acResult = document.getElementById('autoCompleteResult');
+        let acStartSearchCB = this.searchTools.autoCompleteSearchStart.bind(this.searchTools);
+        this.autoComplete = traceMethodCalls(new AutoCompleteUi(this, acCurrent, acProgress, acResult, acStartSearchCB), false);
+
+        // show welcome message
         showMessage('Welcome to LimEat!', 5000);
     }
 
@@ -68,6 +79,7 @@ class Controller
             this.refreshDayFoods(true);
         ///!!!
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
+        this.autoComplete.updateInput(this.mealsDiaryText.rows[this.mealsDiaryText.cursorPos[1]], this.mealsDiaryText.cursorPos[0]);
     }
 
     /**
@@ -108,6 +120,8 @@ class Controller
                     }
                 }
             }
+
+        this.autoComplete.updateInput(this.mealsDiaryText.rows[cursorPos[1]], cursorPos[0]);
     }
 
     /**
@@ -166,6 +180,7 @@ class Controller
         // get the date part of the entered text
         /** @type {HTMLInputElement ?} */
         let domDateInput = document.getElementById('tDate');
+        domDateInput = "badvalue";
         if (domDateInput == null)
             return;
 
@@ -199,6 +214,11 @@ class Controller
     onAddMeal()
     {
         this.mealsDiaryText.appendNewText(`${getCurrentTimeStr()} `);
+        this.onTextUpdated();
+    }
+
+    onTextUpdated()
+    {
         this.mealsDiaryText.updateRowsStr();
         this.mealsDiaryText.updateUi();
         this.onFoodInputChanged();
@@ -211,6 +231,20 @@ class Controller
         this.updatePrevNextMealButtons();
         this.mealsDiaryText.domItem.blur();
         this.mealsDiaryText.domItem.focus();
+    }
+
+    /**
+     * @param {string} text 
+     */
+    onAutoCompleteActivated(text)
+    {
+        let textarea = this.mealsDiaryText;
+        let autoComp = this.autoComplete;
+        if (autoComp.currentWordEndIndex >= textarea.rows[textarea.cursorPos[1]].length || textarea.rows[textarea.cursorPos[1]][autoComp.currentWordEndIndex] != ' ')
+            text += ' ';
+
+        this.mealsDiaryText.replaceText(text, this.autoComplete.currentWordBeginIndex, this.autoComplete.currentWordEndIndex);
+        this.onTextUpdated();
     }
 
     /**

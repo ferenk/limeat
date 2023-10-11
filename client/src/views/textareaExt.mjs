@@ -1,6 +1,8 @@
 export { TextareaExt };
 
 import { TextSection, TextContainer } from '../util/text/textContainers.mjs';
+import { copyText2Clipboard, replaceTextInTextarea } from '../util/util.mjs';
+
 
 class TextareaExt extends TextContainer {
     /** @type {String} The whole text of the textarea, separated by '\n's (WARNING: not updated automatically, you need to call updateRowStr()!)  */
@@ -181,11 +183,10 @@ class TextareaExt extends TextContainer {
     onCursorMoved(eventName = 'unknown')
     {
         console.log(`textAreaExt.onCursorMoved(eventName='${eventName}')`);
-        let prevCursorPos = JSON.parse(JSON.stringify(this.cursorPos));
+        // WHY? Probably object copy // let prevCursorPos = JSON.parse(JSON.stringify(this.cursorPos));
+        let prevCursorPos = this.cursorPos;
         // @ts-ignore:next-line (selectionStart does not exist on HTMLElement)
-        let textBufferTillTheCursorStr = this.rowsStr.substr(0, this.domItem.selectionStart).split('\n');
-        this.cursorPos[1] = textBufferTillTheCursorStr.length - 1;
-        this.cursorPos[0] = textBufferTillTheCursorStr[this.cursorPos[1]].length;
+        this.cursorPos = this.selectionPosToCursorPos(this.domItem.selectionStart);
 
         if (this.onCursorRowMovedCB != null && prevCursorPos[1] != this.cursorPos[1])
             this.onCursorRowMovedCB(false, prevCursorPos);
@@ -195,25 +196,51 @@ class TextareaExt extends TextContainer {
     }
 
     /**
+     * @param { Number } selectionStart property of the textarea DOM
+     * @return { Number[] } cursor position array
+     */
+    selectionPosToCursorPos(selectionStart)
+    {
+        // @ts-ignore:next-line (selectionStart does not exist on HTMLElement)
+        let textBufferTillTheCursorStr = this.rowsStr.substr(0, selectionStart).split('\n');
+        let cursorPos = [0, 0];
+        //?this.moveCursorToPos(this.domItem, selectionStart);
+        cursorPos[1] = textBufferTillTheCursorStr.length - 1;
+        cursorPos[0] = textBufferTillTheCursorStr[cursorPos[1]].length;
+        return cursorPos;
+    }
+
+    /**
+     * @param { Number[] } cursorPos cursor position array
+     * @return { Number } selectionStart property of the textarea DOM
+     */
+    cursorPosToDomPos(cursorPos)
+    {
+        let aggregatedPosN = 0;
+        for (let yCurr = 0; yCurr < this.rows.length; yCurr++)
+        {
+            if (yCurr >= cursorPos[1])
+            {
+                aggregatedPosN += cursorPos[0];
+                break;
+            }
+            aggregatedPosN += this.rows[yCurr].length + 1;
+        }
+        return aggregatedPosN;
+    }
+
+    /**
      * Move the cursor to the given position
      * @param {Number} x
      * @param {Number} y
      */
     moveCursorTo(x, y)
     {
-        let aggregatedPosN = 0;
-        for (let yCurr = 0; yCurr < this.rows.length; yCurr++)
-        {
-            if (yCurr >= y)
-            {
-                aggregatedPosN += x;
-                break;
-            }
-            aggregatedPosN += this.rows[yCurr].length + 1;
-        }
-        this.moveCursorToPos(this.domItem, aggregatedPosN);
-        this.cursorPos[0] = x;
-        this.cursorPos[1] = y;
+        let newPos = [x, y];
+        let selectionStart = this.cursorPosToDomPos(newPos);
+        console.log(`TRACE:: moveCursorTo(x:${x}, y:${y}), selectionStart: ${selectionStart}`);
+        this.moveCursorToPos(this.domItem, selectionStart);
+        this.cursorPos = newPos;
     }
 
     /**
@@ -332,6 +359,66 @@ class TextareaExt extends TextContainer {
     }
 
     /**
+     * Insert text into the textarea at the current cursor position
+     * @param {String} text - the text to insert into the textarea
+     * @param {boolean} updateUi - update the UI (DOM) after adding the text (default: true)
+     */
+    // insertText(text, updateUi = false)
+    // {
+    //     let rowStr = this.cursorPos[1] < this.rows.length ? this.rows[this.cursorPos[1]] : null;
+    //     if (rowStr != null && this.cursorPos[0] <= rowStr.length)
+    //     {
+    //         rowStr;
+    //         let rowStrLeft = rowStr.substring(0, this.cursorPos[0]);
+    //         let rowStrRight = rowStr.substring(this.cursorPos[0]);
+    //         rowStr = rowStrLeft + text + rowStrRight;
+    //         this.rows[this.cursorPos[1]] = rowStr;
+    //         this.moveCursorTo(this.cursorPos[0] + text.length, this.cursorPos[1]);
+    //     }
+
+    //     // option: Update the UI
+    //     if (updateUi != false)
+    //         this.updateUi();
+    // }
+
+    /**
+     * Replace text with the given text
+     * @param {String} text
+     * @param {Number} startPos - the first character to remove (inclusive)
+     * @param {Number} endPos - the last character to remove (exclusive)
+     */
+    replaceText(text, startPos, endPos)
+    {
+        let lineStartPos = this.cursorPosToDomPos([0, this.cursorPos[1]]);
+        replaceTextInTextarea(this.domItem, text, lineStartPos + startPos, lineStartPos + endPos);
+    }
+
+    /**
+     * Very similar to insertText() but it removes the given range first (begin, end is inclusive) - the cursor moves to the place where the word was deleted
+     * @param {String} text - the text to insert into the textarea
+     * @param {Number} begin - the first character to remove (inclusive)
+     * @param {Number} end - the last character to remove (exclusive)
+     * @param {boolean} updateUi - update the UI (DOM) after adding the text (default: true)
+     */
+    // replaceText(text, begin, end, updateUi = false)
+    // {
+    //     let rowStr = this.cursorPos[1] < this.rows.length ? this.rows[this.cursorPos[1]] : null;
+    //     if (rowStr != null && begin < end && 0 <= begin && end <= rowStr.length)
+    //     {
+    //         // remove the unneeded part (given as a [begin, end] range)
+    //         rowStr = rowStr.replace(rowStr.substring(begin, end), '');
+    //         this.rows[this.cursorPos[1]] = rowStr;
+    //         this.moveCursorTo(begin, this.cursorPos[1]);
+
+    //         // unneeded part was removed, insert the new text
+    //         return this.replaceText(text, updateUi);
+    //     }
+
+    //     console.log('replaceText() failed');
+    // }
+
+
+    /**
      * Update the DOM textarea
      * @param {boolean} focusToTheEnd - Move the cursor to the end of the input
      */
@@ -344,7 +431,10 @@ class TextareaExt extends TextContainer {
         else
         {
             this.updateRowsStr();
+            //let cursorPosCpy = this.domItem.selectionStart;
+            //let insertedChars = this.rowsStr.length - this.domItem.value.length;
             this.domItem.value = this.rowsStr;
+            //this.domItem.selectionStart = this.domItem.selectionEnd = cursorPosCpy + insertedChars;
         }
 
         if (focusToTheEnd != false)

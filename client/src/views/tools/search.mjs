@@ -1,9 +1,9 @@
 export { SearchTools };
 
 import { nodeXHRComm } from '../../data/comm.mjs';
-import { printMoment, parseIsoDate, toFixedFloat, copyText2Clipboard } from '../../util/util.mjs';
+import { printMoment, parseIsoDate, toFixedFloat, copyText2Clipboard, replaceTextInTextarea } from '../../util/util.mjs';
 import { searchForId, showMessage } from '../../util/ui/uiUtils.mjs';
-import { Meal } from '../../data/foodData.mjs';
+import { Meal, Food } from '../../data/foodData.mjs';
 import { Controller } from '../../controller.mjs';
 
 
@@ -12,10 +12,12 @@ class SearchTools
     /**
      * @param {Controller} controller 
      */
-    constructor(controller)
+    constructor(controller, activatedCB)
     {
         this.g_controller = controller;
-        this.onSearchOpenClose(false);
+        this.autoCompleteActivatedCB = activatedCB;
+        this.onSearchToolsClose();
+        document.getElementById('autoCompleteResult')?.addEventListener('click', this.onAutoCompleteResultClicked.bind(this));
     }
 
     /**
@@ -150,6 +152,10 @@ class SearchTools
     /** @type {Meal[]} */
     lastFoundMeals = [];
     lastSearchStr = '';
+
+    /** @type {Food[]} */
+    autoCompleteFoods = [];
+    autoCompleteWord = '';
     /**
      * Communication handler: Incoming search result
      * @param {XMLHttpRequest?} xhr 
@@ -171,7 +177,7 @@ class SearchTools
                 let foodPart = mealObj.foodParts[iFoodPart];
                 let printedFoodPart = '';
                 let printedFoodPart1 = `${foodPart.name} ${foodPart?.kcal ? toFixedFloat(foodPart.kcal) + 'kc/ ' : ''}`;
-                let printedFoodPart2 = `${foodPart.quantity}${foodPart.quantityunit} ${toFixedFloat(foodPart.computedkcal)}kc`;
+                let printedFoodPart2 = `${toFixedFloat(foodPart.quantity)}${foodPart.quantityunit} ${toFixedFloat(foodPart.computedkcal)}kc`;
                 if (foodPart && foodPart.name && new RegExp(searchStr, 'i').test(foodPart.name))
                     printedFoodPart = `<u><b>${printedFoodPart1}</b> ${printedFoodPart2}</u>`;
                 else
@@ -190,7 +196,7 @@ class SearchTools
         if (this.searchOpened)
         {
             closeTimeout = 200;
-            this.onSearchOpenClose(false);
+            this.onSearchToolsClose();
         }
         
         setTimeout(() =>
@@ -198,7 +204,7 @@ class SearchTools
             $('#searchFooterMessage').text(findResultMessage);
             $('#searchMealsResult').html(searchResult);
             $('#searchTools').addClass('active');
-            this.onSearchOpenClose(true);
+            this.onSearchToolsOpen();
         }, closeTimeout);
     }
 
@@ -262,11 +268,29 @@ class SearchTools
 
     searchOpened = false;
     /**
-     * 
+     * Open the search tools
+     * @param {number | null} speed in ms
+     */
+    onSearchToolsOpen(speed = null)
+    {
+        this.onSearchToolsToggle(true, speed);
+    }
+
+    /**
+     * Close the search tools
+     * @param {number | null} speed in ms
+     */
+    onSearchToolsClose(speed = null)
+    {
+        this.onSearchToolsToggle(false, speed);
+    }
+
+    /**
+     * Open or close the search tools section in the UI
      * @param {boolean | null} open
      * @param {number | null} speed in ms
      */
-    onSearchOpenClose(open = null, speed = null)
+    onSearchToolsToggle(open = null, speed = null)
     {
         open ??= !this.searchOpened;
         this.searchOpened = open;
@@ -276,14 +300,14 @@ class SearchTools
             speed ??= 400;
             $('#searchMealsResult').slideDown(speed);
             $('#searchFooter').slideDown(speed);
-            $('#searchOpenClose').html('&nbsp; ▲ &nbsp;');
+            $('#searchToggle').html('&nbsp; ▲ &nbsp;');
         }
         else
         {
             speed ??= 200;
             $('#searchMealsResult').slideUp(speed);
             //$('#searchFooter').slideUp(speed);
-            $('#searchOpenClose').html('&nbsp; ▼ &nbsp;');
+            $('#searchToggle').html('&nbsp; ▼ &nbsp;');
         }
     }
 
@@ -328,7 +352,7 @@ class SearchTools
                             let foodPart = clickedMealObj.foodParts[i];
                             if (foodPart.name?.match(RegExp(this.lastSearchStr, 'i')))
                             {
-                                let kcalPer = foodPart?.kcal ? foodPart.kcal + 'kc/ ' : '';
+                                let kcalPer = foodPart?.kcal ? toFixedFloat(foodPart.kcal) + 'kc/ ' : '';
                                 copyText2Clipboard(`${foodPart.name} ${kcalPer}`);
                                 showMessage(`Selected food item copied: <b>${foodPart.name} ${kcalPer}</b>`, 3000)
                             }
@@ -340,6 +364,142 @@ class SearchTools
                         showMessage(`Whole meal copied: <b>${inputlineWithoutTimestamp.slice(0, 30)}...</b>`, 3000)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {string} currentWord 
+     * @param {import('../../data/basicTypes.mjs').StringReceiverCB} updatedCB
+     */
+    autoCompleteSearchStart(currentWord, updatedCB)
+    {
+        if (currentWord.length < 2)
+        {
+            console.log('Search skipped because the keyword is too short!');
+            return;
+        }
+
+        this.autoCompleteSearchResultCB = updatedCB;
+
+        let firstDayStr = this.getSearchDaysRange();
+        let hitsLimit = this.getSearchHitsLimit();
+
+        console.log(`mealSearch: starting autocomplete search for '${currentWord}' (starting from day ${firstDayStr})...`);
+
+        let self = this;
+        this.startMealSearchQuery({
+            user: this.getUserName(),
+            firstDay: firstDayStr,
+            keyword: currentWord,
+            hitsLimit: hitsLimit
+        }, (xhr) => { self.onAutoCompleteSearchFinished(xhr, currentWord); });
+   }
+
+    /**
+     * Communication handler: Incoming autocomplete search result
+     * @param {XMLHttpRequest?} xhr
+     * @param {String} currentWord
+     */
+    onAutoCompleteSearchFinished(xhr, currentWord)
+    {
+        let filteredMeals = this.processMealHistoryResult(xhr, currentWord);
+
+        // reset: clear previous search results
+        this.autoCompleteFoods = [];
+        this.autoCompleteWord = currentWord;
+
+        let matchingFoodParts = 0;
+        /** @type Map<string, Food> */
+        let filteredSortedMealsMap = new Map();
+
+        for (let iMeal = 0; iMeal < filteredMeals.length; iMeal++)
+        {
+            let mealObj = filteredMeals[iMeal];
+            //!let printedMeal = mealObj.date ?? '';
+
+            for (let iFoodPart = 0; iFoodPart < mealObj.foodParts.length; iFoodPart++)
+            {
+                let foodPart = mealObj.foodParts[iFoodPart];
+                let foodPartName = foodPart.name ?? '-';
+
+                // this food part is a match!
+                if (foodPartName && new RegExp(currentWord, 'i').test(foodPartName))
+                {
+                    let foodHitPoints = Math.pow(0.85, matchingFoodParts++);
+
+                    let storedFoodPart = filteredSortedMealsMap.get(foodPartName);
+                    if (storedFoodPart == null)
+                    {
+                        storedFoodPart = foodPart;
+                        foodPart.rankingPoints = foodHitPoints;
+                        filteredSortedMealsMap.set(foodPartName, foodPart);
+                        this.autoCompleteFoods.push(foodPart);
+                    } else
+                    {
+                        storedFoodPart.rankingPoints += foodHitPoints / 5;   // recurring hit, this food part was found previously
+                        storedFoodPart.kcal ??= toFixedFloat(foodPart.kcal);
+                    }
+                }
+            }
+        }
+
+        // sort hits by ranking points
+        this.autoCompleteFoods.sort((a, b) => { return b.rankingPoints - a.rankingPoints; });
+
+        if (this.autoCompleteSearchResultCB != null)
+        {
+            //this.autoCompleteSearchResultCB(`csoki+${currentWord} 450kc/`);
+            let resultStr = '';
+            for (let i = 0; i < this.autoCompleteFoods.length && i < 6; i++)
+            {
+                let kcalStr = this.serializeSearchResult(this.autoCompleteFoods[i]);
+                let nameStr = this.autoCompleteFoods[i].name?.replace(RegExp(`(${currentWord})`, "i"), `<span style="color:darkred;">$1</span>`);
+                resultStr += `<center id="ac_res_${i}"><div><b>${nameStr}</b></div><div>${kcalStr}</div></center>`;
+            }
+            this.autoCompleteSearchResultCB(`<div style="display:flex; flex-direction: row; gap: 16px;">${resultStr}</div>`);
+        }
+    }
+
+    /**
+     * @param {Food} foodObj 
+     * @param {string} format 
+     */
+    serializeSearchResult(foodObj, format="kcal")
+    {
+        if (format == "kcal")
+        {
+            // print: prefer kc/ value
+            let serializedResult = foodObj.kcal ? `${toFixedFloat(foodObj.kcal)}kc/` : null;
+            // print: prefer kc value will be also good
+            serializedResult ??= foodObj.computedkcal ? `${toFixedFloat(foodObj.computedkcal)}kc` : '';
+            return serializedResult;
+        }
+    }
+
+    /**
+     * @param {Event} ev 
+     */
+     onAutoCompleteResultClicked(ev)
+    {
+        if (ev.target == null)
+        {
+            console.error('onSearchResultClicked: ev.target is null!');
+            return;
+        }
+
+        let clickedDiv = searchForId(ev.target);
+        if (clickedDiv)
+        {
+            let clickedItemIdx = Number.parseInt(clickedDiv.id.replace(/^ac_res_/, ''));
+            if (clickedItemIdx < this.autoCompleteFoods.length)
+            {
+                let clickedFood = this.autoCompleteFoods[clickedItemIdx];
+                let foodStr = `${clickedFood.name} ${this.serializeSearchResult(clickedFood)}`;
+                copyText2Clipboard(`${foodStr}`);
+                if (this.autoCompleteActivatedCB != null)
+                    this.autoCompleteActivatedCB(foodStr);
             }
         }
     }

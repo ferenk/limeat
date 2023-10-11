@@ -1,7 +1,7 @@
 export {
     getCurrentMoment, getCurrentTimeStr, printMoment, parseIsoDate, isNumeric, isError,
     toNumericOrZero, toFixedFloat, printToFixedFloat, safeEval,
-    copyText2Clipboard
+    copyText2Clipboard, replaceTextInTextarea
 };
 
 /**
@@ -183,8 +183,41 @@ function copyText2Clipboard(text)
     $('#txtCopyHelper').show();
     // @ts-ignore:next-line (HTMLElement.select is not assignable)
     $('#txtCopyHelper')[0].select();
+    $('#txtCopyHelper')[0].focus();
     let retVal = document.execCommand('copy');
     $('#txtCopyHelper').hide();
     return retVal;
+}
+
+/**
+ * 
+ * @param {HTMLTextAreaElement} domWidget
+ * @param {String} text
+ * @param {Number} startPos
+ * @param {Number} endPos
+ */
+function replaceTextInTextarea(domWidget, text, startPos, endPos)
+{
+    $(domWidget).focus();
+    domWidget.selectionStart = startPos;
+    domWidget.selectionEnd = endPos;
+    document.execCommand('insertText', false, text);
+}
+
+/**
+ * 
+ * @param {HTMLElement?} textarea 
+ * @param {string} text 
+ */
+function insertText2TextArea(textarea, text) {
+    if (textarea != null && textarea instanceof HTMLTextAreaElement)
+    {
+        textarea?.setRangeText(
+            text,
+            textarea.selectionStart,
+            textarea.selectionEnd,
+            'end'
+        );
+    }
 }
 

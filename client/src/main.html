@@ -111,6 +111,13 @@
             </fieldset>
         </div>
 
+        <div style="overflow-y: auto">
+            <div id="autoCompleteResult"></div>
+        </div>
+        <div><span id="autoCompleteProgress"></span> <span id="autoCompleteCurrentWord"></span></div>
+
+        <button onclick="document.execCommand('undo', false, null);">&nbsp;Undo&nbsp;</button><button onclick="document.execCommand('redo', false, null);">&nbsp;Redo&nbsp;</button>
+
         <div id="searchTools">
             <label style="display: inline" for="tSearch" name="tSearch">History:</label>
             <input id="tSearch" type="text" size="12" maxlength="60" placeholder="food name">
@@ -131,7 +138,7 @@
             <input id="searchHitsLimit" type="text" onkeypress='return event.charCode >= 48 && event.charCode <= 57' size="4" maxlength="8" placeholder="Hit limit" value="50" />
             <div id="searchFooter" hidden>
                 <span id="searchFooterMessage"></span>
-                <button id="searchOpenClose">&nbsp; ^ &nbsp;</button>
+                <button id="searchToggle">&nbsp; ^ &nbsp;</button>
                 <button id="searchClear">&nbsp; X &nbsp;</button>
             </div>
             <div id="searchMealsResult"></div>
