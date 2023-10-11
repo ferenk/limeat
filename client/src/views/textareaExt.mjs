@@ -338,7 +338,7 @@ class TextareaExt extends TextContainer {
     /**
      * Add NEW text to the textarea.
      * @description Feature: If it is the same as the last line, the textarea will be unchanged.
-     * Note: Useful when using multiple events leading to redundant text additions.
+     * Note: Useful when using multiple events leading to redundant text additions. (e.g time stamps within the same minute)
      * @param {boolean} updateUi - update the UI (DOM) after adding the text (default: true)
      * @param {String} newText - the text to add to the textarea
      */

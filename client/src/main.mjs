@@ -327,7 +327,7 @@ async function onPageLoaded()
 }
 
 /**
- * @param {string | Object | null} errMsg
+ * @param {string | Object | PromiseRejectionEvent | ErrorEvent | null} errMsg
  * @param {string | null} url
  * @param {number | null} lineNumber
  */
@@ -335,13 +335,13 @@ function onUnhandledError(errMsg, url, lineNumber /*, colno, error*/)
 {
     console.error("ERROR:: onUnhandled() called");
 	// 1. errMsg is an Event
-	if (errMsg.reason != null && errMsg instanceof PromiseRejectionEvent) {
+	if (errMsg != null && errMsg instanceof PromiseRejectionEvent && errMsg.reason != null) {
 		console.error("ERROR: Unhandled Promise exception occured: " + errMsg.reason);
 		console.log(errMsg);
 		errMsg.preventDefault();
 	}
 	// 2. errMsg is an Error obj
-	else if (errMsg != null && typeof errMsg === 'object') {
+	else if (errMsg != null && errMsg instanceof ErrorEvent) {
 		console.error("ERROR:: Unhandled exception occured at file: " + errMsg.filename + ", line: " + errMsg.lineno + ", msg: " + errMsg.message); // log error obj
 	}
 	// 3. errMsg is a String

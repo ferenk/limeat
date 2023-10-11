@@ -1,7 +1,7 @@
 export { SearchTools };
 
 import { nodeXHRComm } from '../../data/comm.mjs';
-import { printMoment, parseIsoDate, toFixedFloat, copyText2Clipboard, replaceTextInTextarea } from '../../util/util.mjs';
+import { printMoment, parseIsoDate, toFixedFloat, copyText2Clipboard } from '../../util/util.mjs';
 import { searchForId, showMessage } from '../../util/ui/uiUtils.mjs';
 import { Meal, Food } from '../../data/foodData.mjs';
 import { Controller } from '../../controller.mjs';
@@ -11,6 +11,7 @@ class SearchTools
 {
     /**
      * @param {Controller} controller 
+     * @param {import('../../data/basicTypes.mjs').StringReceiverCB} activatedCB
      */
     constructor(controller, activatedCB)
     {
@@ -267,6 +268,7 @@ class SearchTools
     }
 
     searchOpened = false;
+
     /**
      * Open the search tools
      * @param {number | null} speed in ms

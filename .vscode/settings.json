@@ -10,5 +10,8 @@
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
         "**/node_modules/*/**": true
-    }
+    },
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+    "editor.fontSize": 15
+    // Easiest way to separate our source problems from the 3rdparties: add a filter in "Problems" view: !**/node_modules**,!**/3rdparty**
 }

@@ -31,10 +31,11 @@ function getFunction(target, name, receiver)
 let lastStack = [];
 
 /**
- * 
- * @param {object} obj 
+ * Register a class instance to track its method calls
+ * @template C
+ * @param {C} obj 
  * @param {boolean} printNullResults 
- * @returns 
+ * @returns {C}
  */
 function traceMethodCalls(obj, printNullResults = true) {
     /** @type {ProxyHandler<object>} */
@@ -97,6 +98,7 @@ function traceMethodCalls(obj, printNullResults = true) {
             else return Reflect.get(target, propKey, receiver);
         }
     };
+    // @ts-ignore:next-line (Argument of type 'C' is not assignable to parameter of type 'object'.ts(2345))
     return new Proxy(obj, handler);
 }
 

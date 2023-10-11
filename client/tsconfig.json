@@ -23,5 +23,5 @@
     "declaration": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*.mjs", "test/**/*.mjs"]
+  "filesGlob": ["!**/node_modules/**", "!**/3rdParty/**"]
 }

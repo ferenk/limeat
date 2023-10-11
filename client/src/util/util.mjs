@@ -4,18 +4,19 @@ export {
     copyText2Clipboard, replaceTextInTextarea
 };
 
+//import Duration from '../3rdparty/moment-with-locales.js';
+//!TMP import Moment from '../3rdparty/moment-with-locales.js';
+
 /**
  * 
  * @param {String} thresholdTime 
- * @returns {moment}
+ * @returns {typeof Moment.prototype }
  */
 function getCurrentMoment(thresholdTime)
 {
-    // @ts-ignore:next-line (moment undefined)
     moment.locale('hu');
 
     // Switch to yesterday if needed (based on thresholdTime)
-    // @ts-ignore:next-line (moment undefined)
     let currMoment = moment();
     if (currMoment.format('HH:mm') < thresholdTime)
         currMoment.milliseconds(currMoment.milliseconds() - 24 * 60*60 * 1000);
@@ -36,14 +37,13 @@ function getCurrentTimeStr()
 
 /**
  * 
- * @param {moment} currMoment 
+ * @param {typeof Moment.prototype} currMoment
  * @throws {TypeError} if the input moment is invalid
  * @returns 
  */
 function printMoment(currMoment)
 {
      // Field: WeekdaysMin
-    // @ts-ignore:next-line (moment undefined)
     let weekDayPrintedShort = moment.localeData().weekdaysMin(currMoment);
     weekDayPrintedShort = weekDayPrintedShort.charAt(0).toUpperCase() + weekDayPrintedShort.slice(1);
 
@@ -54,7 +54,7 @@ function printMoment(currMoment)
 /**
  * 
  * @param {String} isoDate 
- * @returns {moment?}
+ * @returns {typeof Moment.prototype?}
  */
 function parseIsoDate(isoDate)
 {
@@ -148,7 +148,7 @@ function printToFixedFloat(num, decimals = 1, paddingChar = null) {
 /**
  * 
  * @param {string} str 
- * @returns 
+ * @returns { Number }
  */
 function safeEval(str)
 {
