@@ -441,7 +441,8 @@ class SearchTools
                     } else
                     {
                         storedFoodPart.rankingPoints += foodHitPoints / 5;   // recurring hit, this food part was found previously
-                        storedFoodPart.kcal ??= toFixedFloat(foodPart.kcal);
+                        if (foodPart.kcal != null)
+                            storedFoodPart.kcal ??= toFixedFloat(foodPart.kcal);
                     }
                 }
             }

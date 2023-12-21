@@ -93,7 +93,10 @@ function toNumericOrZero(str)
 }
 
 /**
- * 
+ * Convert the num parameter to a fixed float number.
+ * If num is:
+ *      - a string: it will be parsed to a float number.
+ *      - null or undefined: it will be converted to 0.
  * @param {Number | String} num 
  * @param {Number} decimals 
  * @returns {Number}
