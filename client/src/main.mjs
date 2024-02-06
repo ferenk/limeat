@@ -187,11 +187,13 @@ function initSseClient()
 
 async function onPageLoaded()
 {
+    // reload the latest settings, state of the widgets (their scope is local, they can be different on the browsers the user uses)
     if (window.localStorage != null) {
         if (window.localStorage.optUserName != null) {
             $('#tUser').val(window.localStorage.optUserName);
         }
-        $('#optClientId').val(g_config.clientId);
+        if (window.localStorage.optTimePeriod != null) 
+            $('#searchDays').val(window.localStorage.optTimePeriod);
     }
 
     window.onerror = onUnhandledError;

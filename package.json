@@ -1,6 +1,6 @@
 {
   "name": "kcal",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "KCal calculation helper",
   "main": "server/index.js",
   "author": "Moricz, Ferenc",

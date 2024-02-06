@@ -30,18 +30,29 @@ class SearchTools
         //alert(`Option '${eventStr}' was used`);
         if (eventStr.startsWith('days'))
         {
-            let selectionStr = ''
-            switch ($('#searchDays').val())
+            let selectionHelpStr = ''
+            const optionValueStr = $('#searchDays').val();
+            console.log(`Search options, selected time range: ${optionValueStr}`);
+            switch (optionValueStr)
             {
-                case 'last10': selectionStr = 'last 10 days'; break;
-                case 'last31': selectionStr = 'last month'; break;
-                case 'lastyear': selectionStr = 'last year'; break;
-                default: selectionStr = 'unknown';
+                case 'last10': selectionHelpStr = 'for records from the <b><u>last 10 days</u></b>'; break;
+                case 'last31': selectionHelpStr = 'for records from the <b><u>last month</u></b>'; break;
+                case 'lastyear': selectionHelpStr = 'for records from the <b><u>last year</u></b>'; break;
+                case 'unlimited':
+                default: selectionHelpStr = 'for records <b><u>without time limitations</u></b>.'; break;
             }
             if (eventStr == 'daysChanged')
-                showMessage(`<b>Option changed:</b> search will look for records from the <b><u>${selectionStr}</u></b>`, 2000, 2);
+            {
+                showMessage(`<b>Option changed:</b> search will look ${selectionHelpStr}`, 2000, 2);
+                // save the latest time range setting
+                if (window.localStorage)
+                {
+                    window.localStorage.optTimePeriod = optionValueStr;
+                    console.log(`localStorage.optTimePeriod = '${optionValueStr}'`);
+                }
+            }
             else if (eventStr == 'daysClicked')
-                showMessage(`Search will look for records from the <b><u>${selectionStr}</u></b>`, 2000, 1);
+                showMessage(`Search looks ${selectionHelpStr}`, 2000, 1);
         }
         if (eventStr.startsWith('result'))
         {
@@ -53,7 +64,7 @@ class SearchTools
                 default: selectionStr = 'unknown';
             }
             if (eventStr == 'resultChanged')
-                showMessage(`<b>Option changed: </b> Search item selection will copy  <b><u>${selectionStr}</u></b>`, 2000, 2);
+                showMessage(`<b>Option changed: </b> Search item selection will copy <b><u>${selectionStr}</u></b>`, 2000, 2);
             else if (eventStr == 'resultClicked')
                 showMessage(`Search item selection will copy <b><u>${selectionStr}</u></b>`, 2000, 1);
         }
@@ -108,7 +119,17 @@ class SearchTools
         var daysSelection = 'last10';
         if (daysSelectionBox instanceof HTMLSelectElement)
             daysSelection = daysSelectionBox.value;
-        var daysMinus = (daysSelection == 'last10' ? 10 : (daysSelection == 'last31' ? 31 : 365));
+        var daysMinus = 7;
+        switch (daysSelection)
+        {
+            case 'last10': daysMinus = 10; break;
+            case 'last31': daysMinus = 31; break;
+            case 'lastyear': daysMinus = 365; break;
+            case 'unlimited': // 100 years must be enough for 'unlimited' :)
+            default: daysMinus = 100 * 365; 
+                if (daysSelection != 'unlimited')
+                    console.log(`daysSelection: unknown value '${daysSelection}'! Using the default, unlimited range.`);
+        }
 
         var lastDay = new Date(Date.now());
         let firstDay = new Date()
