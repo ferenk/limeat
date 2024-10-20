@@ -7,6 +7,6 @@
 </div>
 
 Simple but effective calculator to summarize your daily calories intake.
-More info about the usage is coming...
+More info about the usage is coming... 
 
 <a href="https://www.flaticon.com/free-icons/diet" title="diet icons">Diet icons created by Freepik - Flaticon</a>
