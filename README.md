@@ -1,7 +1,7 @@
 ﻿<div align="center" class="not_on_gh-pages">
   <br>
   <a href="https://github.com/ferenk/limeat">
-    <img alt="limeat poster" src="https://github.com/ferenk/limeat/releases/download/web/apple_diet_1200x.png" width="830">
+    <img alt="limeat poster" src="https://github.com/ferenk/limeat/releases/download/web/apple_diet_1200x.jpg" width="830">
   </a>
   <h1>LimEat!</h1>
 </div>
