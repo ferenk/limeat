@@ -2,18 +2,17 @@ import { Request, Response, Application } from 'express';
 const express = require('express');
 
 import { DbConnector } from './db/connectors/dbconnector';
-import { FoodDbItem, FoodDbItemStore, FoodObjBase, FoodObjList } from './data/requests';
+import { FoodDbItem, FoodDbItemStore, ClientQuery } from './data/requests';
 import { SSEService } from './net/sseService';
 import { initDb } from './db/db';
 import { initEnvVariables } from './startup';
+import { StringUtils } from './core/stringUtils';
 
-import { ClientQuery } from './data/requests';
-import { connect } from 'http2';
+const DEfAULT_WEB_PORT = 8089;
+const PORT = process.env.PORT || DEfAULT_WEB_PORT;
+const SEARCH_RESULTS_LOG_LIMIT = 320;
 
 const path = require('path');
-
-const PORT = process.env.PORT || 8089;
-
 var connectDb: DbConnector = DbConnector.null;
 var g_allFoodRows = new FoodDbItemStore();
 
@@ -36,7 +35,7 @@ function checkQuery(req: Request, params: string[]): boolean
 {
     if (g_allFoodRows.foods_raw == null)
     {
-        console.log("DB not found!");
+        console.error("DB not found!");
         return false;
     }
 
@@ -51,26 +50,34 @@ function checkQuery(req: Request, params: string[]): boolean
     return true;
 }
 
-app.get('/node_api/read_calcdb', async function (_req: Request, res: Response): Promise<void>
+function errorHandler(req: Request, res: Response, e: unknown)
 {
+    console.error(`\r\nGET: ${req.originalUrl}, ERROR: ${e}`);
+    res.send('');
+}
+
+app.get('/node_api/read_calcdb', async function (req: Request, res: Response): Promise<void>
+{
+    const PATH = `\r\nGET: ${req.originalUrl}`;
     try
     {
-        console.log(`Query: /node_api/read_calcdb`);
+        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
 
         let kcalDb = await connectDb.readKCalDb();
         res.send(kcalDb);
     }
     catch (e)
     {
-        console.error(`Error: ${e}`);
+        errorHandler(req, res, e);
     }
 });
 
 app.get('/node_api/read_foodrowdb', async function (req, res)
 {
+    const PATH = `\r\nGET: ${req.originalUrl}`;
     try
     {
-        console.log(`Query: /node_api/read_calcdb (params: ${JSON.stringify(req.query)}`);
+        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
 
         if (checkQuery(req, ['user', 'date']))
         {
@@ -78,79 +85,93 @@ app.get('/node_api/read_foodrowdb', async function (req, res)
             let dayDataObjs = await connectDb.findDocuments('food_records_raw', { user: reqQuery.user, date: reqQuery.date }, {}, false) as FoodDbItem[];
             if (dayDataObjs != null && dayDataObjs.length > 0)
             {
-                console.log(`Read data: ${JSON.stringify(dayDataObjs)}`);
+                console.log(`${PATH}, Read data: ${StringUtils.JSON_stringify_circular(dayDataObjs)}`);
                 res.send(dayDataObjs[0].food_data);
                 return;
             }
         }
-
-        res.send('');
+        else
+        {
+            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.JSON_stringify_circular(req.query)})`);
+            res.send('');
+        }
     }
     catch (e)
     {
-        console.error(`Error: ${e}`);
+        errorHandler(req, res, e);
     }
 });
 
 app.get('/node_api/save_foodrowdb', async function (req, res)
 {
+    const PATH = `\r\nGET: ${req.originalUrl}`;
     try
     {
-        console.log(`Query: /node_api/save_calcdb (params: ${JSON.stringify(req.query)})`);
+        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
+
         let resStr = '';
 
         if (checkQuery(req, ['user', 'date', 'food_data']))
         {
             let reqQuery: ClientQuery = req.query as unknown as ClientQuery;
             sseService.notifyOtherClients(reqQuery.clientId, 'updated_db');
-            console.log(`SAVED DATA: ${req.query.food_data}`);
+            console.log(`${PATH}, SAVED DATA: ${req.query.food_data}`);
             resStr = await connectDb.updateRow('food_records_raw', reqQuery.user, reqQuery.date, reqQuery.food_data);
+            res.send(resStr);
         }
-
-        res.send(resStr);
+        else
+        {
+            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.JSON_stringify_circular(req.query)})`);
+            res.send('');
+        }
     }
     catch (e)
     {
-        console.error(`Error: ${e}`);
+        errorHandler(req, res, e);
     }
 });
 
 app.get('/node_api/search_meal_history', async function (req, res)
 {
+    const PATH = `\r\nGET: ${req.originalUrl}`;
+
     try
     {
+        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
+
         let resStr = '';
         if (checkQuery(req, ['user', 'firstDay', 'keyword']))
         {
-            console.log(`Query: /node_api/search_meals (params: query: ${JSON.stringify(req.query)})`);
             let paramUserName = (req.query.user ?? '') as string;
             let paramFirstDay = (req.query.firstDay ?? '') as string;
             let paramKeyword = (req.query.keyword ?? '') as string;
             let hitsLimit = (req.query.hitsLimit ?? '') as string;
 
             var queryObj = { user: paramUserName, date: { $gte: paramFirstDay }, food_data: { $regex: paramKeyword, $options: 'i' } };
-            var optionsObj = { sort: { date: -1 } }; 
+            let optionsObj = { sort: { date: -1 } }; 
             if (hitsLimit.length > 0)
             {
                 let limit = parseInt(hitsLimit);
+                
                 if (!isNaN(limit) && limit > 0)
-                    optionsObj.limit = limit;
+                    (optionsObj as any).limit = limit;
             }
-            console.log(`Mongo.findDocuments('food_records_raw', ${JSON.stringify(queryObj)}, ${JSON.stringify(optionsObj)}, true)`);
+            console.log(`${PATH}, Mongo.findDocuments('food_records_raw', ${StringUtils.JSON_stringify_circular(queryObj)}, ${StringUtils.JSON_stringify_circular(optionsObj)}, true)`);
 
             let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, optionsObj, true);
-            resStr = JSON.stringify(resultMeals);
-            console.log(`Result arrived:\r\n${resStr}`);
+            resStr = StringUtils.JSON_stringify_circular(resultMeals);
+            //! TODO log levels + more compact logs!!
+            console.log(`${PATH}, DB result arrived! Length: ${resStr.length}\r\n${resStr.substring(0, SEARCH_RESULTS_LOG_LIMIT) + (resStr.length > SEARCH_RESULTS_LOG_LIMIT ? "\r\n..." : "")}`);
             res.send(resStr);
         } else
         {
-            console.log(`ERROR: Query param error! (Query: /node_api/search_meals (params: ${JSON.stringify(req.query)}))`);
+            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.JSON_stringify_circular(req.query)})`);
+            res.send('');
         }
-        res.send('');
     }
     catch (e)
     {
-        console.error(`ERROR: ${e}`);
+        errorHandler(req, res, e);
     }
 });
     
