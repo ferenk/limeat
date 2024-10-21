@@ -178,12 +178,12 @@ class Controller
     onDateEntered()
     {
         // get the date part of the entered text
-        /** @type {HTMLInputElement ?} */
-        let domDateInput = document.getElementById('tDate');
-        domDateInput = "badvalue";
+        const domEl = document.getElementById('tDate');
+        const domDateInput = (domEl instanceof  HTMLInputElement ? domEl : null);
         if (domDateInput == null)
             return;
 
+        // process the date: convert to moment and complete it
         let enteredDateStr = (domDateInput ? domDateInput.value || '' : '');
         enteredDateStr = enteredDateStr.trim().substring(0, 10);
         /// TODO Format error handling
