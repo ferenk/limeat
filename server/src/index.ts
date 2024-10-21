@@ -89,6 +89,11 @@ app.get('/node_api/read_foodrowdb', async function (req, res)
                 res.send(dayDataObjs[0].food_data);
                 return;
             }
+            else
+            {
+                console.log(`${PATH}, No data found!`);
+                res.send('');
+            }
         }
         else
         {

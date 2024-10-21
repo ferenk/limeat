@@ -109,6 +109,10 @@ class AutoCompleteUi
     {
         let wordBegins = cursor;
         let wordEnds = cursor;
+
+        if (line == null)
+            return;
+
         // go back until a whitespace is found
         while(wordBegins > 0 && this.WORD_CHARS_REGEXP.test(line[wordBegins - 1]))
             wordBegins--;

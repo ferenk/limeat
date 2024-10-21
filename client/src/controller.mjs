@@ -179,8 +179,9 @@ class Controller
     {
         // get the date part of the entered text
         const domEl = document.getElementById('tDate');
-        const domDateInput = (domEl instanceof  HTMLInputElement ? domEl : null);
-        if (domDateInput == null)
+        const domDateInput = (domEl instanceof HTMLInputElement ? domEl : null);
+        // date input field has to contain an ISO based date field at least (e.g 2024-12-31)
+        if (domDateInput?.value?.length ?? 0 < 10)
             return;
 
         // process the date: convert to moment and complete it

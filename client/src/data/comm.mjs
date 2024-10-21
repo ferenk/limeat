@@ -43,6 +43,10 @@ function nodeXHRComm(path = '', params, cb)
             console.log(`XHR result: ERROR!, URL: ${xhr.responseURL} - Response length: ${xhr.responseText.length}`);
             cb(xhr, e);
         });
+        xhr.addEventListener('abort', (e) => {
+            console.log(`XHR result: ERROR (abort)!, URL: ${xhr.responseURL} - Response length: ${xhr.responseText.length}`);
+            cb(xhr, e);
+        });
 
         xhr.open("GET", path);
         xhr.send();

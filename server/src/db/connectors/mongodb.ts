@@ -119,13 +119,14 @@ export class MongoDb extends DbConnector
         if (findMany)
         {
             //let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
-            console.log(`findDocuments(): mongo options: ${JSON.stringify(options)}`);
+            console.log(`findDocuments() [findMany]: mongo options: ${JSON.stringify(options)}`);
             let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
             await cursor.forEach((item) => { resultArray.push(item); });
         }
         else
         {
             let oneResult = await foodRecordCollection.findOne(query, options);
+            //console.log(`findDocuments() [findOne], result: ${JSON.stringify(oneResult)}`);
             if (oneResult)
                 resultArray.push(oneResult);
         }
