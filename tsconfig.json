@@ -1,5 +1,4 @@
 {
-  "include": ["**/client/*.mjs", "**/server/*.ts", "!**/node_modules/*.*", "!**/3rdParty/*.*" ],
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["es2021", "DOM"],
@@ -23,5 +22,6 @@
     "noUnusedLocals": true,
     "declaration": true,
     "esModuleInterop": true
-  }
+  },
+  "exclude": ["**/node_modules", "**/node_modules/**", "client/src/3rdparty/**"]
 }

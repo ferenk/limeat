@@ -19,7 +19,7 @@ function nodeXHRComm(path = '', params, cb)
 {
     if (params != null)
     {
-        var paramNames = Object.keys(params);
+        const paramNames = Object.keys(params);
         if (paramNames.length > 0)
         {
             let paramStr = '';
