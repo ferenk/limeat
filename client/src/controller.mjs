@@ -114,7 +114,7 @@ class Controller
                         let foodPart = thisRowSections[i].metadata?.foodPart;
                         let allKCalLabel = document.querySelector('#lbCurrentFoodPartKCal')
                         if (allKCalLabel)
-                            allKCalLabel.textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`; 
+                            allKCalLabel.textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`;
 
                         break;
                     }
@@ -125,8 +125,8 @@ class Controller
     }
 
     /**
-     * 
-     * @param {String} newSelector 
+     *
+     * @param {String} newSelector
      */
     changeHighlightedFoodPart(newSelector)
     {
@@ -136,10 +136,10 @@ class Controller
     }
 
     /**
-     * 
-     * @param {String} query 
-     * @param {String | null} color 
-     * @param {boolean} add 
+     *
+     * @param {String} query
+     * @param {String | null} color
+     * @param {boolean} add
      */
     modifySelectorsBgColor(query, color, add)
     {
@@ -235,7 +235,7 @@ class Controller
     }
 
     /**
-     * @param {string} text 
+     * @param {string} text
      */
     onAutoCompleteActivated(text)
     {
@@ -250,7 +250,7 @@ class Controller
 
     /**
      * Switch to the next or previous DAY
-     * @param {boolean} nextDay true - next day, false - previous day 
+     * @param {boolean} nextDay true - next day, false - previous day
      */
     onPrevNextDay(nextDay)
     {
@@ -270,7 +270,7 @@ class Controller
 
     /**
      * Switch to the specified day
-     * @param {number} dayMoment 
+     * @param {number} dayMoment
      */
     onSpecificDay(dayMoment)
     {
@@ -300,8 +300,8 @@ class Controller
 
     /**
      * Communication handler: Incoming whole daily food record
-     * @param {XMLHttpRequest} xhr 
-     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+     * @param {XMLHttpRequest} xhr
+     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
      */
     onDailyFoodRecordArrived(xhr, ev)
     {
@@ -323,8 +323,8 @@ class Controller
 
     /**
      * Communication handler: Incoming whole daily food record
-     * @param {XMLHttpRequest} xhr 
-     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+     * @param {XMLHttpRequest} xhr
+     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
      */
     async onDailyFoodRecordArrived2(xhr, ev)
     {
@@ -396,7 +396,7 @@ class Controller
 
     /**
      * Event: User changes the active row of the output table
-     * @param {Event} event 
+     * @param {Event} event
      */
     onTableRowChange(event)
     {
@@ -466,7 +466,7 @@ class Controller
     /**
      * Select the current row of the output table
      * @param {boolean} isUserEvent true if the event comes directly from the user
-     * @param {Number} iRow 
+     * @param {Number} iRow
      */
     selectRow(iRow, isUserEvent)
     {
@@ -481,8 +481,8 @@ class Controller
     }
 
     /**
-     * 
-     * @param {Number} iRow 
+     *
+     * @param {Number} iRow
      */
     focusRow(iRow)
     {

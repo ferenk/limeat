@@ -4,10 +4,10 @@ import { isNumeric } from '../util/util.mjs';
 import { FoodsDbItem } from './foodsDb.mjs';
 
 /**
- * 
- * @param {String} quantityStr 
- * @param {FoodsDbItem} foodObj 
- * @returns 
+ *
+ * @param {String} quantityStr
+ * @param {FoodsDbItem} foodObj
+ * @returns
  */
 function processQuantity(quantityStr, foodObj)
 {

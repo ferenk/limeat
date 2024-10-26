@@ -14,7 +14,7 @@ export class StringUtils
             }
             return value;
         }, 4);
-        cache = null; 
+        cache = null;
         return stringified;
     }
 }

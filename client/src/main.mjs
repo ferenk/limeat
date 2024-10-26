@@ -56,8 +56,8 @@ let g_sseClient = new SSEClient(g_config);
 
 /**
  * Communication
- * @param {XMLHttpRequest} xhr 
- * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+ * @param {XMLHttpRequest} xhr
+ * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
  */
 function onCalcDbArrived(xhr, ev)
 {
@@ -92,8 +92,8 @@ function onSaveButtonPressed()
 
 /**
  * Countdown functionality for a button (currently specific to the save button)
- * @param {XMLHttpRequest} xhr 
- * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+ * @param {XMLHttpRequest} xhr
+ * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
  */
 function onSaveFinished(xhr, ev)
 {
@@ -192,7 +192,7 @@ async function onPageLoaded()
         if (window.localStorage.optUserName != null) {
             $('#tUser').val(window.localStorage.optUserName);
         }
-        if (window.localStorage.optTimePeriod != null) 
+        if (window.localStorage.optTimePeriod != null)
             $('#searchDays').val(window.localStorage.optTimePeriod);
     }
 
@@ -303,7 +303,7 @@ async function onPageLoaded()
     }
 
     /** Button, feature: Export MD output to the clipboard */
-    $('#btCopyMD').on('click', () => { 
+    $('#btCopyMD').on('click', () => {
         copyText2Clipboard(g_mealListLang.foodOutputStr);
     });
 

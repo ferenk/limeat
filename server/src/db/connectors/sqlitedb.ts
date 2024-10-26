@@ -169,7 +169,7 @@ export class SQLiteDb extends DbConnector
         console.log(`DB rows read: ${dbData.foods_raw}`);
     }
 
-    // Just for debugging purposes:    
+    // Just for debugging purposes:
     override async updateRow(tableName: string, user: string, date: string, food_data: string): Promise<string>
     {
         await this.knex(tableName).insert({ user: user, date: date, food_data: food_data })

@@ -3,7 +3,7 @@ export { SSEClient };
 import { coolConfirm } from '../views/uiHelper.mjs';
 import { Config } from '../app/config.mjs';
 
-    
+
 /**
  * @callback ProcessInputCallBack
  */

@@ -8,7 +8,7 @@ class Config
     scaleType = 'barista';
     clientId = 'myPC/Phone';
     finalClientId = 'myPC/Phone';
-    
+
     /**
      * @param {Config | null} values
      */

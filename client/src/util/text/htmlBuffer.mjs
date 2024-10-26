@@ -6,7 +6,7 @@ class HtmlBuffer extends TextContainer
 {
     /**
      * Creates a new temporary HTML buffer
-     * @param {TextContainer | null} inBuffer 
+     * @param {TextContainer | null} inBuffer
      * @param { { autoCloseLines: boolean }? } options
      */
     constructor(inBuffer, options = { autoCloseLines: true })
@@ -41,7 +41,7 @@ class HtmlBuffer extends TextContainer
         {
             if (this.inBuffer == null)
                 throw new Error(`ERROR: 'autoCloseLines' option is enabled but no input buffer was provided in the constructor!`);
-            
+
             if (0 <= row && row <= this.inBuffer.getRowCount())
                 this.appendToLine(row, -1, null, null, false);
         }
@@ -67,7 +67,7 @@ class HtmlBuffer extends TextContainer
 
     /**
      * Remove markup from a HTML text
-     * @param {string?} htmlText 
+     * @param {string?} htmlText
      */
     static stripHtml(htmlText = '')
     {
@@ -138,7 +138,7 @@ class HtmlBuffer extends TextContainer
 
     /**
      * @param {number} row
-     * @param {TextSection} section 
+     * @param {TextSection} section
      * @param {boolean} addSection
      */
     appendToLine2(row, section, addSection)

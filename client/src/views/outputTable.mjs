@@ -17,7 +17,7 @@ class OutputTable
 
     /**
      * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} jqSelector selector for a textarea HTML widget 
+     * @param {String} jqSelector selector for a textarea HTML widget
      */
     initialize(jqSelector)
     {
@@ -44,7 +44,7 @@ class OutputTable
      */
     selectRow(rowIdx)
     {
-        if (rowIdx != -1) 
+        if (rowIdx != -1)
         {
             let jqRow = this.jqItem.find(`#tr${rowIdx}`);
             // only check the table's current row if it is not empty
@@ -86,7 +86,7 @@ class OutputTable
         let result = new OutputTableRowInfo();
         result.mealTime = this.jqItem.find(`#tr${rowIdx} td:nth-child(2)`).html() ?? '';
         result.kCal = parseFloat(this.jqItem.find(`#tr${rowIdx} td:nth-child(1)`).attr('value') ?? '0');
-        
+
         return result;
     }
 
@@ -125,7 +125,7 @@ class OutputTable
     }
 
     /**
-     * 
+     *
      * @param {String} mode The mode selected by the user (possible values: 'normal', 'scrolled', 'focused')
      */
     onModeChange(mode)

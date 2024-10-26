@@ -13,7 +13,7 @@
     /* Both elements need the same text and space styling so they are directly on top of each other */
     border: 0;
     padding: 6px;
-    margin: 0; 
+    margin: 0;
     box-sizing: border-box;
 
     overflow: auto;
@@ -47,7 +47,7 @@
 
 .textarea_highlighter .textCurrentRow {
     display: inline-block;
-    width: 150%; 
+    width: 150%;
     margin-left: -6px;
     padding-left: 6px;
     z-index: 2;

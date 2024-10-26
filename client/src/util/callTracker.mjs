@@ -33,8 +33,8 @@ let lastStack = [];
 /**
  * Register a class instance to track its method calls
  * @template C
- * @param {C} obj 
- * @param {boolean} printNullResults 
+ * @param {C} obj
+ * @param {boolean} printNullResults
  * @returns {C}
  */
 function traceMethodCalls(obj, printNullResults = true) {
@@ -58,7 +58,7 @@ function traceMethodCalls(obj, printNullResults = true) {
                     console.log(`ERROR: Only function properties are handled here. typeof target[propKey] is: ${typeof origMethod}`);
                     return null;
                 }
-                
+
                 let proxyGetFuncName = `${PROXY_METHOD_NAME}${PROXY_METHOD_SEPARATOR}${target.constructor.name}${PROXY_METHOD_SEPARATOR}${propKey}`;
                 return {
                     // @ts-ignore:next-line (rest parameter 'args' implicity has an 'any[]' type)
@@ -94,7 +94,7 @@ function traceMethodCalls(obj, printNullResults = true) {
                 //return new Function(`return function ${proxyGetFuncName}(...args) { return proxyGetFunc(args); }`)();
                 //Object.defineProperty(proxyGetFunc, 'name', { value: `proxy___${target.constructor.name}___${propKey}`, configurable: true, writable: false });
                 //return proxyGetFunc;
-            } 
+            }
             else return Reflect.get(target, propKey, receiver);
         }
     };
@@ -104,7 +104,7 @@ function traceMethodCalls(obj, printNullResults = true) {
 
 /**
  * Filter the stack trace and revert the stack call mappings
- * @param {import('../3rdparty/stack-trace-parser').StackFrame[]} stackParsed 
+ * @param {import('../3rdparty/stack-trace-parser').StackFrame[]} stackParsed
  * @returns { import('../3rdparty/stack-trace-parser').StackFrame[] }
  */
 function processStack(stackParsed)
@@ -147,8 +147,8 @@ function processStack(stackParsed)
 }
 
 /**
- * 
- * @param { import('../3rdparty/stack-trace-parser').StackFrame[] } currentStack 
+ *
+ * @param { import('../3rdparty/stack-trace-parser').StackFrame[] } currentStack
  */
 function printHiddenCalls(currentStack)
 {
@@ -186,8 +186,8 @@ function printHiddenCalls(currentStack)
 
 /**
  * If the parameter is a string then shorten it if it's too long
- * @param { Object | string} paramObjOrString 
- * @param { number } maxLen 
+ * @param { Object | string} paramObjOrString
+ * @param { number } maxLen
  * @returns { Object | string}
  */
 function shortenStringParam(paramObjOrString, maxLen = 32)

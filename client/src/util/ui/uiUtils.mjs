@@ -3,7 +3,7 @@ export {
 };
 
 /**
- * @param {EventTarget} eventTarget 
+ * @param {EventTarget} eventTarget
  */
 function searchForId(eventTarget)
 {
@@ -28,7 +28,7 @@ function searchForId(eventTarget)
 
 var currentMessagePriority = 0;
 /**
- * 
+ *
  * @param {String} text the message to display
  * @param {number} timeout in milliseconds
  * @param {number} priority higher number means higher priority

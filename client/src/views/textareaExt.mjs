@@ -47,7 +47,7 @@ class TextareaExt extends TextContainer {
 
     /**
      * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} htmlSelector selector for a textarea HTML widget 
+     * @param {String} htmlSelector selector for a textarea HTML widget
      */
     initialize(htmlSelector)
     {
@@ -72,8 +72,8 @@ class TextareaExt extends TextContainer {
 
     /**
      * Register a callback
-     * @param {String} eventName 
-     * @param {OnUserInputCB} callback 
+     * @param {String} eventName
+     * @param {OnUserInputCB} callback
      */
     on(eventName, callback) {
         if (eventName == 'input') {
@@ -88,7 +88,7 @@ class TextareaExt extends TextContainer {
     }
 
     /**
-     * 
+     *
      * @param {String} mode The mode selected by the user (possible values: 'normal', 'scrolled', 'focused')
      */
     onDisplayModeChanged(mode)
@@ -124,8 +124,8 @@ class TextareaExt extends TextContainer {
 
     /**
      * Updates the parsed internal representation of the textarea with or without changing its value
-     * @param {String} newText 
-     * @param {boolean?} updateHtmlItem 
+     * @param {String} newText
+     * @param {boolean?} updateHtmlItem
      */
     changeText(newText, updateHtmlItem)
     {
@@ -245,8 +245,8 @@ class TextareaExt extends TextContainer {
 
     /**
      * Move the cursor to the given character-based position (inside the textarea)
-     * @param {HTMLTextAreaElement} element 
-     * @param {Number} pos 
+     * @param {HTMLTextAreaElement} element
+     * @param {Number} pos
      */
     moveCursorToPos(element, pos)
     {
@@ -254,10 +254,10 @@ class TextareaExt extends TextContainer {
     }
 
     /**
-     * 
-     * @param {HTMLTextAreaElement} element 
-     * @param {Number} selectionStart 
-     * @param {Number} selectionEnd 
+     *
+     * @param {HTMLTextAreaElement} element
+     * @param {Number} selectionStart
+     * @param {Number} selectionEnd
      */
     setInputSelectionRange(element, selectionStart, selectionEnd)
     {
@@ -278,9 +278,9 @@ class TextareaExt extends TextContainer {
 
     /**
      * Switch to focused mode or back to normal mode
-     * @param {boolean} focusedMode 
-     * @param {Number?} selectedLine 
-     * @returns 
+     * @param {boolean} focusedMode
+     * @param {Number?} selectedLine
+     * @returns
      */
     switchMode(focusedMode, selectedLine = null) {
         if (selectedLine == null || isNaN(selectedLine))
@@ -312,7 +312,7 @@ class TextareaExt extends TextContainer {
         // remove the last empty lines
         let lastRow = '';
         while (this.rows.length >= 1) {
-            lastRow = this.rows[this.rows.length - 1];          
+            lastRow = this.rows[this.rows.length - 1];
             if (lastRow.length == 0)
                 this.rows.pop();
             else

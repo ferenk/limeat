@@ -32,8 +32,8 @@ class MealListLang
 
     /**
      * @param {Config} config
-     * @param {TextareaExt | null} mealLogText 
-     * @param {TextareaHighlight} mealLogHighlight 
+     * @param {TextareaExt | null} mealLogText
+     * @param {TextareaHighlight} mealLogHighlight
      */
     constructor(config, mealLogText, mealLogHighlight)
     {
@@ -65,14 +65,14 @@ class MealListLang
         {
             el?.parentNode?.removeChild(el);
         });
-        
+
     }
 
     currentSummaryStr = '';
     currentSummaryKCal = 0;
 
     /**
-     * @param { TextContainer ?} logText 
+     * @param { TextContainer ?} logText
      */
     processInput(logText)
     {
@@ -83,11 +83,11 @@ class MealListLang
         let lastFoodAmounts = new Map();
         this.currentSummaryStr = '';
         this.currentSummaryKCal = 0;
-    
+
         this.mealLogHighlight.htmlBuffer.clear();
 
         /** @type { Meal[] } */
-        let dailyMealLog = []; 
+        let dailyMealLog = [];
 
         for (let iCurrentRow = 0; iCurrentRow < (logText?.getRowCount() || 0); iCurrentRow++)
         {
@@ -107,11 +107,11 @@ class MealListLang
         this.addTableTrailer();
     }
 
-     // * @param {number} iCurrentRow 
+     // * @param {number} iCurrentRow
     /**
      * @param {string} foodLine
      * @param {Map<string, [Number|undefined, number|undefined] ?>} lastFoodAmounts
-     * @returns {Meal} the processed line 
+     * @returns {Meal} the processed line
      */
     parseMeal(foodLine, lastFoodAmounts = new Map())
     {
@@ -288,7 +288,7 @@ class MealListLang
     }
 
     /**
-     * @param {Meal} meal 
+     * @param {Meal} meal
      */
     calculateMeal(meal, calculateSummary = true)
     {
@@ -326,9 +326,9 @@ class MealListLang
     }
 
     /**
-     * 
-     * @param {number} iCurrentRow 
-     * @param {Meal} meal 
+     *
+     * @param {number} iCurrentRow
+     * @param {Meal} meal
      */
     displayMealInTable(iCurrentRow, meal)
     {
@@ -420,7 +420,7 @@ class MealListLang
             displayedFoodNamePrefixStr = `<u><b>${displayedFoodNamePrefixStr}</b></u>`;
             displayedFoodNamePrefixStr += ` (${printToFixedFloat(meal.foodSum.quantity, 1, '0')}g, ${printToFixedFloat(meal.foodSum.computedkcal/(meal.foodSum.quantity/100), 1, '0')}kc/)\n`
         }
-        displayedFoodNamePrefixStr = !displayedFoodNamePrefixStr ? '' : displayedFoodNamePrefixStr.replaceAll('___', ''); 
+        displayedFoodNamePrefixStr = !displayedFoodNamePrefixStr ? '' : displayedFoodNamePrefixStr.replaceAll('___', '');
         let currTableRowStr =
             `<tr id="tr${iCurrentRow}" class="mealRow">` +
             `<td style="text-align:right;" class="preBold kcalBg effectSmallerLast" value="${toFixedFloat(meal.foodSum.computedkcal, 1)}">${foodKCalStrFormatted}</td>` +
@@ -476,7 +476,7 @@ class MealListLang
     }
 
     /**
-     * @param {string} queryStr 
+     * @param {string} queryStr
      * @param {string} htmlStr
      * @param {boolean} htmlStr
      */
@@ -493,11 +493,11 @@ class MealListLang
     }
 
     /**
-     * 
-     * @param {Number} iRow 
-     * @param {Number} _iPart 
+     *
+     * @param {Number} iRow
+     * @param {Number} _iPart
      * @param {Number} iCol
-     * @param {String} currPartHtmlText 
+     * @param {String} currPartHtmlText
      * @param {String?} color
      * @param {{ foodPart: Object }? } metadata
      * @param {String?} _timeStamp
@@ -523,11 +523,11 @@ class MealListLang
     }
 
     /**
-     * 
-     * @param {Number} quant 
-     * @param {Number} dbFoodQuant 
-     * @param {Number} dbFoodKcal 
-     * @returns 
+     *
+     * @param {Number} quant
+     * @param {Number} dbFoodQuant
+     * @param {Number} dbFoodKcal
+     * @returns
      */
     roundKCalMeasurement(quant = 0, dbFoodQuant = 1, dbFoodKcal = 0)
     {
@@ -548,8 +548,8 @@ class MealListLang
                 let minWeightStr = document.querySelector('#minimalWeight')?.nodeValue;
                 /** @type {any} */
                 let corrWeightStr = document.querySelector('#minimalWeightCorrection')?.nodeValue;
-                let minWeight = (isNaN(Number(minWeightStr)) ? 3 : parseFloat(minWeightStr)), 
-                    corrWeight = (isNaN(Number(corrWeightStr)) ? 0 : parseFloat(corrWeightStr)); 
+                let minWeight = (isNaN(Number(minWeightStr)) ? 3 : parseFloat(minWeightStr)),
+                    corrWeight = (isNaN(Number(corrWeightStr)) ? 0 : parseFloat(corrWeightStr));
                 quant = (quant < minWeight ? corrWeight : quant);
 
                 quant = Math.round(quant);
@@ -607,11 +607,11 @@ class MealListLang
     }
 
     /**
-     * 
-     * @param {String} kcalStr 
-     * @param {String?} timestampStr 
-     * @param {String} foodDetails 
-     * @returns 
+     *
+     * @param {String} kcalStr
+     * @param {String?} timestampStr
+     * @param {String} foodDetails
+     * @returns
      */
     formatFoodData(kcalStr, timestampStr, foodDetails)
     {

@@ -14,8 +14,8 @@ class TextColor
 class TextareaHighlight
 {
     /**
-     * 
-     * @param { TextareaExt | null } textareaExt 
+     *
+     * @param { TextareaExt | null } textareaExt
      * @param { { withoutUI: boolean }? } options
      */
     constructor(textareaExt = null, options = { withoutUI: false })
@@ -29,7 +29,7 @@ class TextareaHighlight
 
     /**
      * Sets the JQuery selector and initializes event subscriptions
-     * @param {String} selector selector for a textarea HTML widget 
+     * @param {String} selector selector for a textarea HTML widget
      */
     initialize(selector)
     {
@@ -90,7 +90,7 @@ class TextareaHighlight
     }
 
     /**
-     * @param {String[]?} textLines 
+     * @param {String[]?} textLines
      */
     updateLines(textLines = null)
     {
@@ -107,8 +107,8 @@ class TextareaHighlight
     }
 
     /**
-     * 
-     * @param {Number} cursorRow 
+     *
+     * @param {Number} cursorRow
      */
     render(cursorRow)
     {

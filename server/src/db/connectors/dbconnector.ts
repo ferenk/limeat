@@ -16,7 +16,7 @@ export class DbConnector
 
     /**
      * Read ALL food data from the file
-     * @param {Object} _dbData 
+     * @param {Object} _dbData
      */
     async readFoodDbRows(_dbData: FoodDbItemStore)
     {
@@ -24,7 +24,7 @@ export class DbConnector
     }
 
     /**
-     * 
+     *
      * @returns {string} KCal DB file's content
      */
     async readKCalDb()

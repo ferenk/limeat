@@ -68,7 +68,7 @@ class AutoCompleteUi
                 // reset current timer display
                 this.timeTextChanged = -1;
                 this.timeSessionStarted = -1;
-    
+
                 // reset progress display and start the loading process if possible
                 if (this.progressElement != null)
                     this.progressElement.innerHTML = '<tt>&nbsp;</tt>';

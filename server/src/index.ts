@@ -153,11 +153,11 @@ app.get('/node_api/search_meal_history', async function (req, res)
             let hitsLimit = (req.query.hitsLimit ?? '') as string;
 
             var queryObj = { user: paramUserName, date: { $gte: paramFirstDay }, food_data: { $regex: paramKeyword, $options: 'i' } };
-            let optionsObj = { sort: { date: -1 } }; 
+            let optionsObj = { sort: { date: -1 } };
             if (hitsLimit.length > 0)
             {
                 let limit = parseInt(hitsLimit);
-                
+
                 if (!isNaN(limit) && limit > 0)
                     (optionsObj as any).limit = limit;
             }
@@ -179,7 +179,7 @@ app.get('/node_api/search_meal_history', async function (req, res)
         errorHandler(req, res, e);
     }
 });
-    
+
 async function initApp()
 {
     try

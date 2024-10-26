@@ -20,7 +20,7 @@ global.document = jsdomInst.window.document;
 class TestLogText extends TextContainer
 {
     /**
-     * @param {string[]} inputLines 
+     * @param {string[]} inputLines
      */
     constructor(inputLines)
     {
@@ -49,8 +49,8 @@ class TestLogText extends TextContainer
 class TestResult
 {
     /**
-     * @param {HtmlBuffer} highlightedText 
-     * @param {String} mdOutput 
+     * @param {HtmlBuffer} highlightedText
+     * @param {String} mdOutput
      */
     constructor(highlightedText, mdOutput)
     {
@@ -60,7 +60,7 @@ class TestResult
 }
 
 /**
- * @param { string[] } inputLines 
+ * @param { string[] } inputLines
  * @returns { TestResult }
  */
 function doTest(inputLines)

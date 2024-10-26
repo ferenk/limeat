@@ -8,8 +8,8 @@ export {
 //!TMP import Moment from '../3rdparty/moment-with-locales.js';
 
 /**
- * 
- * @param {String} thresholdTime 
+ *
+ * @param {String} thresholdTime
  * @returns {typeof Moment.prototype }
  */
 function getCurrentMoment(thresholdTime)
@@ -36,10 +36,10 @@ function getCurrentTimeStr()
 }
 
 /**
- * 
+ *
  * @param {typeof Moment.prototype} currMoment
  * @throws {TypeError} if the input moment is invalid
- * @returns 
+ * @returns
  */
 function printMoment(currMoment)
 {
@@ -52,8 +52,8 @@ function printMoment(currMoment)
 }
 
 /**
- * 
- * @param {String} isoDate 
+ *
+ * @param {String} isoDate
  * @returns {typeof Moment.prototype?}
  */
 function parseIsoDate(isoDate)
@@ -65,7 +65,7 @@ function parseIsoDate(isoDate)
 
 /**
  * Check a string if it contains only numbers
- * @param {String} str 
+ * @param {String} str
  * @returns boolean
  */
 function isNumeric(str) {
@@ -75,8 +75,8 @@ function isNumeric(str) {
 }
 
 /**
- * 
- * @param {String | Number} str 
+ *
+ * @param {String | Number} str
  * @returns {Number}
  */
 function toNumericOrZero(str)
@@ -97,8 +97,8 @@ function toNumericOrZero(str)
  * If num is:
  *      - a string: it will be parsed to a float number.
  *      - null or undefined: it will be converted to 0.
- * @param {Number | String} num 
- * @param {Number} decimals 
+ * @param {Number | String} num
+ * @param {Number} decimals
  * @returns {Number}
  */
 function toFixedFloat(num = 0, decimals = 1) {
@@ -121,8 +121,8 @@ function toFixedFloat(num = 0, decimals = 1) {
 }
 
 /**
- * 
- * @param {Number} num 
+ *
+ * @param {Number} num
  * @param {Number} decimals
  * @param {string?} paddingChar
  * @returns the number as a string
@@ -149,8 +149,8 @@ function printToFixedFloat(num, decimals = 1, paddingChar = null) {
 }
 
 /**
- * 
- * @param {string} str 
+ *
+ * @param {string} str
  * @returns { Number }
  */
 function safeEval(str)
@@ -166,7 +166,7 @@ function safeEval(str)
 
 /**
  * Detect if the given object is an error
- * @param {Object | Error} e 
+ * @param {Object | Error} e
  * @returns true if the object is an Error
  */
 let isError = function (e)
@@ -193,7 +193,7 @@ function copyText2Clipboard(text)
 }
 
 /**
- * 
+ *
  * @param {HTMLTextAreaElement} domWidget
  * @param {String} text
  * @param {Number} startPos
@@ -208,9 +208,9 @@ function replaceTextInTextarea(domWidget, text, startPos, endPos)
 }
 
 /**
- * 
- * @param {HTMLElement?} textarea 
- * @param {string} text 
+ *
+ * @param {HTMLElement?} textarea
+ * @param {string} text
  */
 function insertText2TextArea(textarea, text) {
     if (textarea != null && textarea instanceof HTMLTextAreaElement)

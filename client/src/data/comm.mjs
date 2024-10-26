@@ -10,9 +10,9 @@ export { nodeXHRComm, nodeXHRPost };
 
 /**
  * Do XML HTTP request communication
- * @param {string} path 
- * @param {Object?} params 
- * @param {XHRCommCallback} cb 
+ * @param {string} path
+ * @param {Object?} params
+ * @param {XHRCommCallback} cb
  */
 
 function nodeXHRComm(path = '', params, cb)
@@ -58,9 +58,9 @@ function nodeXHRComm(path = '', params, cb)
 
 /**
  * Server/Client communication
- * @param {string} path 
- * @param {XMLHttpRequest} reqObj 
- * @param {function} cb 
+ * @param {string} path
+ * @param {XMLHttpRequest} reqObj
+ * @param {function} cb
  */
 function nodeXHRPost(path, reqObj, cb) {
     let xhr = new XMLHttpRequest();

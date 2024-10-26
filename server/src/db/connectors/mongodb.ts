@@ -10,8 +10,8 @@ export class MongoDb extends DbConnector
     mongoDbClient: mongoDB.MongoClient;
 
     /**
-     * 
-     * @param {String} uri 
+     *
+     * @param {String} uri
      */
     constructor()
     {
@@ -29,7 +29,7 @@ export class MongoDb extends DbConnector
 
     static prepareConnectURI(): string | undefined
     {
-        let connectUri = process.env.DB_MONGO_URI; 
+        let connectUri = process.env.DB_MONGO_URI;
         if (connectUri && process.env.DB_MONGO_AUTH == 'X.509')
         {
             if (!connectUri.includes('authMechanism='))
@@ -67,7 +67,7 @@ export class MongoDb extends DbConnector
 
     /**
      * For testing purposes. Simple DB command execution
-     * @param {String} command 
+     * @param {String} command
      */
     async dbCommand(command: string)
     {

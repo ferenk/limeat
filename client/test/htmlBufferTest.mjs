@@ -32,7 +32,7 @@ class TextProcessor
     inputHtml = [new TextSection(0, 4, '<b>apple</b>', 'section_1', { foodPart: {} })];
 
     /**
-     * @param {HtmlBuffer} buffer 
+     * @param {HtmlBuffer} buffer
      */
     process(buffer)
     {

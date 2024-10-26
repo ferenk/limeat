@@ -10,7 +10,7 @@ import { Controller } from '../../controller.mjs';
 class SearchTools
 {
     /**
-     * @param {Controller} controller 
+     * @param {Controller} controller
      * @param {import('../../data/basicTypes.mjs').StringReceiverCB} activatedCB
      */
     constructor(controller, activatedCB)
@@ -22,8 +22,8 @@ class SearchTools
     }
 
     /**
-     * 
-     * @param {String} eventStr 
+     *
+     * @param {String} eventStr
      */
     onSearchOptionsChanged(eventStr)
     {
@@ -126,7 +126,7 @@ class SearchTools
             case 'last31': daysMinus = 31; break;
             case 'lastyear': daysMinus = 365; break;
             case 'unlimited': // 100 years must be enough for 'unlimited' :)
-            default: daysMinus = 100 * 365; 
+            default: daysMinus = 100 * 365;
                 if (daysSelection != 'unlimited')
                     console.log(`daysSelection: unknown value '${daysSelection}'! Using the default, unlimited range.`);
         }
@@ -180,9 +180,9 @@ class SearchTools
     autoCompleteWord = '';
     /**
      * Communication handler: Incoming search result
-     * @param {XMLHttpRequest?} xhr 
-     * //@param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
-     * @param {String} searchStr 
+     * @param {XMLHttpRequest?} xhr
+     * //@param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
+     * @param {String} searchStr
      */
     onSearchResultArrived(xhr, searchStr)
     {
@@ -220,7 +220,7 @@ class SearchTools
             closeTimeout = 200;
             this.onSearchToolsClose();
         }
-        
+
         setTimeout(() =>
         {
             $('#searchFooterMessage').text(findResultMessage);
@@ -232,8 +232,8 @@ class SearchTools
 
     /**
      * Communication handler: Incoming search result
-     * @param {XMLHttpRequest?} xhr 
-     * //@param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev 
+     * @param {XMLHttpRequest?} xhr
+     * //@param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
      * @param {String} filterStr
      * @returns {Meal[]} the filtered and processed meal objects
      */
@@ -339,7 +339,7 @@ class SearchTools
         this.lastFoundMeals = [];
         this.lastSearchStr = '';
         $('#searchMealsResult').slideUp(100);
-        setTimeout(() => 
+        setTimeout(() =>
         {
             $('#searchMealsResult').html('');
             $('#searchFooter').slideUp('fast');
@@ -348,8 +348,8 @@ class SearchTools
     }
 
     /**
-     * 
-     * @param {Event} ev 
+     *
+     * @param {Event} ev
      */
     onSearchResultClicked(ev)
     {
@@ -392,8 +392,8 @@ class SearchTools
     }
 
     /**
-     * 
-     * @param {string} currentWord 
+     *
+     * @param {string} currentWord
      * @param {import('../../data/basicTypes.mjs').StringReceiverCB} updatedCB
      */
     autoCompleteSearchStart(currentWord, updatedCB)
@@ -487,8 +487,8 @@ class SearchTools
     }
 
     /**
-     * @param {Food} foodObj 
-     * @param {string} format 
+     * @param {Food} foodObj
+     * @param {string} format
      */
     serializeSearchResult(foodObj, format="kcal")
     {
@@ -503,7 +503,7 @@ class SearchTools
     }
 
     /**
-     * @param {Event} ev 
+     * @param {Event} ev
      */
      onAutoCompleteResultClicked(ev)
     {

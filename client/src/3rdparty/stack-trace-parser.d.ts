@@ -10,7 +10,7 @@ export interface StackFrame {
 
 /**
  * This parser parses a stack trace from any browser or Node.js and returns an array of hashes representing a line.
- * 
+ *
  * @param stackString - The stack to parse, usually from `error.stack` property.
  * @returns The parsed stack frames.
  */
