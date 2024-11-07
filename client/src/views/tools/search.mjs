@@ -98,7 +98,7 @@ class SearchTools
     {
         /** @type { HTMLInputElement | null } */
         // @ts-ignore:next-line (Type 'HTMLElement | null' is not assignable to type 'HTMLInputElement | null'.)
-        var elHitsLimit = document.getElementById("searchHitsLimit");
+        const elHitsLimit = document.getElementById("searchHitsLimit");
         try
         {
             let hitsLimit = Number.parseInt((elHitsLimit?.value ?? '50'));
@@ -115,11 +115,10 @@ class SearchTools
      */
     getSearchDaysRange()
     {
-        var daysSelectionBox = document.getElementById("searchDays");
-        var daysSelection = 'last10';
-        if (daysSelectionBox instanceof HTMLSelectElement)
-            daysSelection = daysSelectionBox.value;
-        var daysMinus = 7;
+        const daysSelectionBox = document.getElementById("searchDays");
+        let daysSelection = daysSelectionBox instanceof HTMLSelectElement ? daysSelectionBox.value : 'last10';
+        /** @type {number} */
+        let daysMinus;
         switch (daysSelection)
         {
             case 'last10': daysMinus = 10; break;
@@ -242,7 +241,7 @@ class SearchTools
         if (xhr == null)
         {
             this.onSearchClear();
-            throw `ERROR: Impossible, empty result arrived from the server! (xhr == null)`;
+            throw new Error(`ERROR: Impossible, empty result arrived from the server! (xhr == null)`);
         }
 
         /** @type Meal[] */
@@ -253,9 +252,9 @@ class SearchTools
             console.log(`Result arrived. It contains data about ${foundMealsObj.length} days.`);
             this.lastFoundMeals = [];
             this.lastSearchStr = filterStr;
-            for (let iDay = 0; iDay < foundMealsObj.length; iDay++)
+            for (let foundMealsObjIter of foundMealsObj)
             {
-                let dayText = foundMealsObj[iDay].food_data;
+                let dayText = foundMealsObjIter.food_data;
                 let dayTextArr = dayText.split('\\n');
                 /** @type {Map<string, [Number|undefined, number|undefined] ?>} */
                 let lastFoodMap = new Map();
@@ -266,17 +265,16 @@ class SearchTools
                     {
                         let mealObj = this.g_controller.mealListLang.parseMeal(mealLine, lastFoodMap);
                         this.g_controller.mealListLang.calculateMeal(mealObj, false);
-                        let isoDate = parseIsoDate(foundMealsObj[iDay].date);
-                        var printedMeal = '<b>????-??-??.?</b> ';
+                        const isoDate = parseIsoDate(foundMealsObjIter.date);
                         try
                         {
-                            printedMeal = `<b>${isoDate != null ? printMoment(isoDate) : '[date?]'}</b> ${mealObj.timeStampPrefix}: `;
+                            mealObj.date =  `<b>${isoDate != null ? printMoment(isoDate) : '[date?]'}</b> ${mealObj.timeStampPrefix}: `;
                         }
                         catch (e)
                         {
-                            console.error(`Error while parsing date '${foundMealsObj[iDay].date}'`);
+                            mealObj.date = '<b>????-??-??.?</b> ';
+                            console.error(`Error while parsing date '${foundMealsObjIter.date}'`);
                         }
-                        mealObj.date = printedMeal;
                         resultMeals.push(mealObj);
                     }
                 }
@@ -370,9 +368,8 @@ class SearchTools
                 {
                     if ($('#searchResultFormat').val() == 'food')
                     {
-                        for (let i = 0; i < clickedMealObj.foodParts.length; i++)
+                        for (let foodPart of clickedMealObj.foodParts)
                         {
-                            let foodPart = clickedMealObj.foodParts[i];
                             if (foodPart.name?.match(RegExp(this.lastSearchStr, 'i')))
                             {
                                 let kcalPer = foodPart?.kcal ? toFixedFloat(foodPart.kcal) + 'kc/ ' : '';
@@ -437,14 +434,12 @@ class SearchTools
         /** @type Map<string, Food> */
         let filteredSortedMealsMap = new Map();
 
-        for (let iMeal = 0; iMeal < filteredMeals.length; iMeal++)
+        for (let mealObj of filteredMeals)
         {
-            let mealObj = filteredMeals[iMeal];
             //!let printedMeal = mealObj.date ?? '';
 
-            for (let iFoodPart = 0; iFoodPart < mealObj.foodParts.length; iFoodPart++)
+            for (let foodPart of mealObj.foodParts)
             {
-                let foodPart = mealObj.foodParts[iFoodPart];
                 let foodPartName = foodPart.name ?? '-';
 
                 // this food part is a match!
@@ -500,12 +495,13 @@ class SearchTools
             serializedResult ??= foodObj.computedkcal ? `${toFixedFloat(foodObj.computedkcal)}kc` : '';
             return serializedResult;
         }
+        return "";
     }
 
     /**
      * @param {Event} ev
      */
-     onAutoCompleteResultClicked(ev)
+    onAutoCompleteResultClicked(ev)
     {
         if (ev.target == null)
         {

@@ -1,7 +1,7 @@
 export { TextareaExt };
 
-import { TextSection, TextContainer } from '../util/text/textContainers.mjs';
-import { copyText2Clipboard, replaceTextInTextarea } from '../util/util.mjs';
+import { TextContainer } from '../util/text/textContainers.mjs';
+import { replaceTextInTextarea } from '../util/util.mjs';
 
 
 class TextareaExt extends TextContainer {
@@ -290,8 +290,9 @@ class TextareaExt extends TextContainer {
             return;
 
         // add empty rows if needed
-        while (focusedMode && !(selectedLine < this.rows.length))
-            this.rows.push('');
+        if (focusedMode)
+            while (selectedLine >= this.rows.length)
+                this.rows.push('');
 
         this.focusedMode = focusedMode;
         if (selectedLine != -1)

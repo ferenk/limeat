@@ -34,7 +34,6 @@ class CountdownButton
 
         /** @type { Number } */
         this.countDownCounter = 0;
-        /** @type { Number } */
         this.countDownTimer = 0;
 
         let self = this;
@@ -59,12 +58,14 @@ class CountdownButton
             this.countdownText = altCountdownText;
         if (altCountdownCount)
             this.countDownCounter = altCountdownCount;
-        clearInterval(this.countDownTimer);
+        if (this.countDownTimer)
+            clearInterval(this.countDownTimer);
         // first countdown state (setting initial text)
         this.countDownCounter = this.count;
         if (this.onCountdownTimerEventCB)
             this.onCountdownTimerEventCB();
         let self = this;
+        /// @ts-ignore (it's not a node.js call, but it's a browser method)
         this.countDownTimer = setInterval(self.onCountdownTimerEventCB.bind(self), 1000);
     }
 

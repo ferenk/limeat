@@ -54,13 +54,6 @@ class Controller
         showMessage('Welcome to LimEat!', 5000);
     }
 
-    /**
-     * Sets the JQuery selector and initializes event subscriptions
-     */
-    initialize()
-    {
-    }
-
     /* ------------------------
        HIGH LEVEL logic
     */
@@ -92,7 +85,7 @@ class Controller
 
         if (prevCursorPos == null || prevCursorPos[1] != cursorPos[1])
         {
-            this.selectRow(cursorPos[1], isUserEvent == true);
+            this.selectRow(cursorPos[1], isUserEvent ?? false);
             this.mealsDiaryTextHighlight.render(cursorPos[1]);
             //? this.updateUi_FocusedMode();
             this.updatePrevNextMealButtons();
@@ -101,13 +94,13 @@ class Controller
         // add extra dark background color to the current food
         let thisRowSections = this.mealsDiaryTextHighlight.htmlBuffer.outBufferSectionsByRow.get(cursorPos[1]);
         if (thisRowSections)
-            for (let i = 0; i < thisRowSections.length; i++)
+            for (let thisRowSectionIter of thisRowSections)
             {
-                if (thisRowSections[i].startPos <= cursorPos[0] && cursorPos[0] <= thisRowSections[i].endPos + 1)
+                if (thisRowSectionIter.startPos <= cursorPos[0] && cursorPos[0] <= thisRowSectionIter.endPos + 1)
                 {
-                    if (thisRowSections[i].sectionName)
+                    if (thisRowSectionIter.sectionName)
                     {
-                        this.changeHighlightedFoodPart(`.${thisRowSections[i].sectionName}`);
+                        this.changeHighlightedFoodPart(`.${thisRowSectionIter.sectionName}`);
 
                         /** @type { Food | undefined } */
                         // @ts-ignore:next-line ('Object' is not assignable to type 'Food')
@@ -181,7 +174,7 @@ class Controller
         const domEl = document.getElementById('tDate');
         const domDateInput = (domEl instanceof HTMLInputElement ? domEl : null);
         // date input field has to contain an ISO based date field at least (e.g 2024-12-31)
-        if (domDateInput?.value?.length ?? 0 < 10)
+        if ((domDateInput?.value?.length ?? 0) < 10)
             return;
 
         // process the date: convert to moment and complete it

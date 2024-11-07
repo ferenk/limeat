@@ -31,7 +31,7 @@ class SSEClient
 
         /** @type SSEClient */
         let self = this;
-        if (!!window.EventSource)
+        if (window.EventSource != null)
         {
             self.eventSource?.close();
 

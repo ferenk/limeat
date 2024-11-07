@@ -1,6 +1,6 @@
 import { traceMethodCalls } from './callTracker.mjs'
 
-class firstClass
+class FirstClass
 {
     init() {
         this.func();
@@ -10,12 +10,14 @@ class firstClass
         this.value = obj2.func(4);
     }
 }
-class secondClass
+class SecondClass
 {
     init(i = 5) {
-        this.val = 3;
+        this.val = 3 + i;
         return false;
     }
+
+    /** @param {number} num */
     func(num) {
         let i = this.funcHelper(num) + 2;
         return i+ this.funcHelper(num) + 2;
@@ -25,8 +27,8 @@ class secondClass
         return (num * num);
     }
 }
-let obj1 = new firstClass();
-let obj2 = traceMethodCalls(new secondClass());
+let obj1 = new FirstClass();
+let obj2 = traceMethodCalls(new SecondClass());
 
 
 window.addEventListener("load", onPageLoaded);

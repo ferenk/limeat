@@ -6,9 +6,10 @@ import { MealListLang } from '../src/data/mealListLang.mjs';
 import { HtmlBuffer } from '../src/util/text/htmlBuffer.mjs';
 import { TextareaHighlight } from '../src/views/textareaHighlight.mjs';
 
-import moment from '../src/3rdparty/moment-with-locales.js';
+//! import moment from '../src/3rdparty/moment-with-locales.js';
 // /** @type { Moment } */
-global.moment = moment;
+/** @ts-ignore */ /* warning: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature. */
+//! global.moment = moment;
 
 import jsdom from 'jsdom';
 import { Config } from '../src/app/config.mjs';
@@ -48,6 +49,11 @@ class TestLogText extends TextContainer
 
 class TestResult
 {
+    /** @type {HtmlBuffer} */
+    highlightedText;
+    /** @type String */
+    mdOutput;
+
     /**
      * @param {HtmlBuffer} highlightedText
      * @param {String} mdOutput
@@ -76,7 +82,7 @@ function doTest(inputLines)
 
 test('Process input: Known food with some additional text', () =>
 {
-    var inputText =
+    const inputText =
     [
         'apple 35kc/ 100g additional_text'
     ];
@@ -89,7 +95,7 @@ test('Process input: Known food with some additional text', () =>
 
 test('Process input: Known/unknown food differences', () =>
 {
-    var inputText =
+    const inputText =
     [
         'apple         35kc/ 100g additional_text',
         'special_fruit       100g additional_text'
@@ -106,7 +112,7 @@ test('Process input: Known/unknown food differences', () =>
 
 test('Process input: Processing bug in line 4: replaceAll Regexp problem', () =>
 {
-    var inputText =
+    const inputText =
     [
         '10:16 soup 83kc/ 54g [it_was_good!]'
     ];
@@ -119,7 +125,7 @@ test('Process input: Processing bug in line 4: replaceAll Regexp problem', () =>
 
 test('Process input: Wrong (incomplete) timestamp at the beginning of the line', () =>
 {
-    var inputText =
+    const inputText =
     [
         '10:0 Coffee'
     ];
@@ -132,7 +138,7 @@ test('Process input: Wrong (incomplete) timestamp at the beginning of the line',
 
 test('Process input: Meal continuation', () =>
 {
-    var inputText =
+    const inputText =
     [
         '10:00 special_fruit 35kc/ 100-70g',
         '10:30 special_fruit -10g',

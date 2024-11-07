@@ -61,7 +61,7 @@ app.get('/node_api/read_calcdb', async function (req: Request, res: Response): P
     const PATH = `\r\nGET: ${req.originalUrl}`;
     try
     {
-        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
+        console.log(`${PATH} called (params: ${StringUtils.jsonStringifyCircular(req.query)}`);
 
         let kcalDb = await connectDb.readKCalDb();
         res.send(kcalDb);
@@ -77,7 +77,7 @@ app.get('/node_api/read_foodrowdb', async function (req, res)
     const PATH = `\r\nGET: ${req.originalUrl}`;
     try
     {
-        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
+        console.log(`${PATH} called (params: ${StringUtils.jsonStringifyCircular(req.query)}`);
 
         if (checkQuery(req, ['user', 'date']))
         {
@@ -85,7 +85,7 @@ app.get('/node_api/read_foodrowdb', async function (req, res)
             let dayDataObjs = await connectDb.findDocuments('food_records_raw', { user: reqQuery.user, date: reqQuery.date }, {}, false) as FoodDbItem[];
             if (dayDataObjs != null && dayDataObjs.length > 0)
             {
-                console.log(`${PATH}, Read data: ${StringUtils.JSON_stringify_circular(dayDataObjs)}`);
+                console.log(`${PATH}, Read data: ${StringUtils.jsonStringifyCircular(dayDataObjs)}`);
                 res.send(dayDataObjs[0].food_data);
                 return;
             }
@@ -97,7 +97,7 @@ app.get('/node_api/read_foodrowdb', async function (req, res)
         }
         else
         {
-            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.JSON_stringify_circular(req.query)})`);
+            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.jsonStringifyCircular(req.query)})`);
             res.send('');
         }
     }
@@ -112,7 +112,7 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
     const PATH = `\r\nGET: ${req.originalUrl}`;
     try
     {
-        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
+        console.log(`${PATH} called (params: ${StringUtils.jsonStringifyCircular(req.query)}`);
 
         let resStr = '';
 
@@ -126,7 +126,7 @@ app.get('/node_api/save_foodrowdb', async function (req, res)
         }
         else
         {
-            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.JSON_stringify_circular(req.query)})`);
+            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.jsonStringifyCircular(req.query)})`);
             res.send('');
         }
     }
@@ -142,7 +142,7 @@ app.get('/node_api/search_meal_history', async function (req, res)
 
     try
     {
-        console.log(`${PATH} called (params: ${StringUtils.JSON_stringify_circular(req.query)}`);
+        console.log(`${PATH} called (params: ${StringUtils.jsonStringifyCircular(req.query)}`);
 
         let resStr = '';
         if (checkQuery(req, ['user', 'firstDay', 'keyword']))
@@ -161,16 +161,16 @@ app.get('/node_api/search_meal_history', async function (req, res)
                 if (!isNaN(limit) && limit > 0)
                     (optionsObj as any).limit = limit;
             }
-            console.log(`${PATH}, Mongo.findDocuments('food_records_raw', ${StringUtils.JSON_stringify_circular(queryObj)}, ${StringUtils.JSON_stringify_circular(optionsObj)}, true)`);
+            console.log(`${PATH}, Mongo.findDocuments('food_records_raw', ${StringUtils.jsonStringifyCircular(queryObj)}, ${StringUtils.jsonStringifyCircular(optionsObj)}, true)`);
 
             let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, optionsObj, true);
-            resStr = StringUtils.JSON_stringify_circular(resultMeals);
+            resStr = StringUtils.jsonStringifyCircular(resultMeals);
             //! TODO log levels + more compact logs!!
             console.log(`${PATH}, DB result arrived! Length: ${resStr.length}\r\n${resStr.substring(0, SEARCH_RESULTS_LOG_LIMIT) + (resStr.length > SEARCH_RESULTS_LOG_LIMIT ? "\r\n..." : "")}`);
             res.send(resStr);
         } else
         {
-            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.JSON_stringify_circular(req.query)})`);
+            console.error(`${PATH}, ERROR: Query param error! (params: ${StringUtils.jsonStringifyCircular(req.query)})`);
             res.send('');
         }
     }

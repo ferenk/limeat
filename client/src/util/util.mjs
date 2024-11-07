@@ -169,7 +169,7 @@ function safeEval(str)
  * @param {Object | Error} e
  * @returns true if the object is an Error
  */
-let isError = function (e)
+const isError = function (e)
 {
     return e && e instanceof Error && e.stack != null && e.message != null &&
         typeof e.stack === 'string' && typeof e.message === 'string';

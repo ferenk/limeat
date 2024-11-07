@@ -18,7 +18,7 @@ import { coolMessage } from './views/uiHelper.mjs';
 
 const HEROKU_CLOUD_URL = 'limeat.herokuapp.com';
 
-var g_config = Config.getInstance(
+const g_config = Config.getInstance(
     {
         scaleType: 'barista',
         clientId: window.localStorage.optClientId,
@@ -29,26 +29,26 @@ var g_config = Config.getInstance(
 /** @type { TextareaExt } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareExt'... (Proxy type problem))
 //var g_mealsDiaryText = new TextareaExt();
-var g_mealsDiaryText = traceMethodCalls(new TextareaExt(), false);
+const g_mealsDiaryText = traceMethodCalls(new TextareaExt(), false);
 
 /** @type { TextareaHighlight } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareaHighlight'... (Proxy type problem))
-var g_mealsDiaryTextHighlight = traceMethodCalls(new TextareaHighlight(g_mealsDiaryText), false);
+const g_mealsDiaryTextHighlight = traceMethodCalls(new TextareaHighlight(g_mealsDiaryText), false);
 
 /** @type { OutputTable } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'OutputTable'... (Proxy type problem))
-var g_outputTable = traceMethodCalls(new OutputTable(), false);
+const g_outputTable = traceMethodCalls(new OutputTable(), false);
 
 /** @type { MealListLang } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'MealListLang'... (Proxy type problem))
-var g_mealListLang = traceMethodCalls(new MealListLang(g_config, g_mealsDiaryText, g_mealsDiaryTextHighlight), false);
+const g_mealListLang = traceMethodCalls(new MealListLang(g_config, g_mealsDiaryText, g_mealsDiaryTextHighlight), false);
 
 /** @type { Controller } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'Controller'... (Proxy type problem))
 //var g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang), false);
-var g_controller = new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang);
+const g_controller = new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang);
 
-var g_mobileMode = null;
+let g_mobileMode = null;
 
 let g_saveButton = new CountdownButton('#btSave', 'SAVED!', 'SAVE', 3, onSaveButtonPressed, null);
 
@@ -196,9 +196,12 @@ async function onPageLoaded()
             $('#searchDays').val(window.localStorage.optTimePeriod);
     }
 
-    window.onerror = onUnhandledError;
+    window.onerror = onUnhandledError.bind('window.onerror');
+    /// @ts-ignore
 	window.addEventListener('abort', onUnhandledError);
+    /// @ts-ignore
 	window.addEventListener('error', onUnhandledError);
+    /// @ts-ignore
 	window.addEventListener('unhandledrejection', onUnhandledError);
 
     g_mealsDiaryText.initialize('#txtMealsDiary');
@@ -330,8 +333,8 @@ async function onPageLoaded()
 
 /**
  * @param {string | Object | PromiseRejectionEvent | ErrorEvent | null} errMsg
- * @param {string | null} url
- * @param {number | null} lineNumber
+ * @param {string | undefined} url
+ * @param {number | undefined} lineNumber
  */
 function onUnhandledError(errMsg, url, lineNumber /*, colno, error*/)
 {

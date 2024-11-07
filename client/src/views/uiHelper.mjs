@@ -1,6 +1,18 @@
 export { coolConfirm, coolMessage };
 
-async function coolConfirm(type, title, question, cb, yesAnswer, noAnswer, confirmByDefault)
+/** @ts-ignore */ /* warning: Property 'Swal' does not exist on type 'Window & typeof globalThis'. */
+const Swal /** @type { import('../3rdparty/sweetalert2.min.js').Swal } Swal */ = window.Swal;
+
+/**
+ * @param {string} type
+ * @param {string} title
+ * @param {string} question
+ * @param {Function | null} _cb
+ * @param {string} yesAnswer
+ * @param {string} noAnswer
+ * @param {boolean} confirmByDefault
+*/
+async function coolConfirm(type, title, question, _cb, yesAnswer, noAnswer, confirmByDefault)
 {
     yesAnswer = yesAnswer || "Yes";
     noAnswer = noAnswer || "No";
@@ -27,9 +39,19 @@ async function coolConfirm(type, title, question, cb, yesAnswer, noAnswer, confi
     return result;
 }
 
-async function coolMessage(type, title, message, opts, timeout, cb)
+/**
+ * @param {string} type
+ * @param {string} title
+ * @param {string} message
+ * @param {Object | null} opts
+ * @param {number} timeout
+ * @param {Function | null} cb
+ */
+async function coolMessage(type, title, message, opts = null, timeout = 10, cb = null)
 {
-    if (timeout) {
+    if (timeout)
+    {
+        /** @type NodeJS.Timer | null */
         let timerInterval = null;
         Swal.fire(
             Object.assign(
@@ -45,8 +67,10 @@ async function coolMessage(type, title, message, opts, timeout, cb)
                             Swal.getContent().querySelector('strong').textContent = (Math.floor(Swal.getTimerLeft() / 1000));
                         }, 100);
                     },
-                    onClose: () => {
-                        clearInterval(timerInterval);
+                    onClose: () =>
+                    {
+                        if (timerInterval)
+                            clearInterval(timerInterval);
                         if (cb)
                             cb();
                     }

@@ -17,20 +17,20 @@ export class MongoDb extends DbConnector
     {
         super();
 
-        let connectUri = MongoDb.prepareConnectURI();
+        const connectUri = MongoDb.prepareConnectURI();
         if (connectUri)
         {
             this.connectUri = connectUri;
             this.mongoDbClient = new mongoDB.MongoClient(this.connectUri, { });
         }
         else
-            throw('No MongoDB URI has been specified!');
+            throw(new Error('No MongoDB URI has been specified!'));
     }
 
     static prepareConnectURI(): string | undefined
     {
         let connectUri = process.env.DB_MONGO_URI;
-        if (connectUri && process.env.DB_MONGO_AUTH == 'X.509')
+        if (connectUri && process.env.DB_MONGO_AUTH === 'X.509')
         {
             if (!connectUri.includes('authMechanism='))
                 connectUri += `&authMechanism=MONGODB-X509`;
@@ -40,14 +40,14 @@ export class MongoDb extends DbConnector
                 // certificate path is relative to the project root folder
                 if (process.env.DB_MONGO_AUTH_X_509_CERTFILE)
                 {
-                    let certfilePath = path.join(__dirname, '..', '..', '..', process.env.DB_MONGO_AUTH_X_509_CERTFILE);
+                    const certfilePath = path.join(__dirname, '..', '..', '..', process.env.DB_MONGO_AUTH_X_509_CERTFILE);
                     connectUri += `&tlsCertificateKeyFile=${encodeURIComponent(certfilePath)}`;
                 }
                 else
                     console.error(`ERROR: X.509 certificate file is not set! Please use the DB_MONGO_AUTH_X_509_CERTFILE env variable!`);
             }
         }
-        let connectUriStripped = connectUri ? connectUri.replace(/\/\/(...).*:(...).*@/, '\/\/<User>\($1...\):<PW>\($2...\)@') : '<null>';
+        const connectUriStripped = connectUri ? connectUri.replace(/\/\/(...).*:(...).*@/, '//<User>($1...):<PW>($2...)@') : '<null>';
         console.log(`MongoDb connect URI: ${connectUriStripped}`);
 
         return connectUri;
@@ -88,7 +88,7 @@ export class MongoDb extends DbConnector
 
     override async readKCalDb()
     {
-        var foodFileRecord = await this.findDocuments('foods', { 'version': 'kcaldb 0.0' }, undefined, false) as KCalTextDbItem[];
+        const foodFileRecord = await this.findDocuments('foods', { 'version': 'kcaldb 0.0' }, undefined, false) as KCalTextDbItem[];
 
         return foodFileRecord[0].kcaldbfile;
     }
@@ -114,18 +114,18 @@ export class MongoDb extends DbConnector
         const dbo = this.mongoDbClient.db(process.env.DB_MONGO_DBNAME);
         const foodRecordCollection = dbo.collection(tableName);
 
-        let resultArray: Object[] = [];
+        const resultArray: Object[] = [];
 
         if (findMany)
         {
             //let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
             console.log(`findDocuments() [findMany]: mongo options: ${JSON.stringify(options)}`);
-            let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
+            const cursor: mongoDB.FindCursor = foodRecordCollection.find(query, options);
             await cursor.forEach((item) => { resultArray.push(item); });
         }
         else
         {
-            let oneResult = await foodRecordCollection.findOne(query, options);
+            const oneResult = await foodRecordCollection.findOne(query, options);
             //console.log(`findDocuments() [findOne], result: ${JSON.stringify(oneResult)}`);
             if (oneResult)
                 resultArray.push(oneResult);
@@ -136,12 +136,12 @@ export class MongoDb extends DbConnector
 
     override async updateRow(tableName: string, user: string, date: string, food_data: string): Promise<string>
     {
-        let objKeys = new Map([ [ 'user', user], ['date', date], ]);
-        let fullObj = { user: user, date: date, food_data: food_data };
+        const objKeys = new Map([ [ 'user', user], ['date', date], ]);
+        const fullObj = { user: user, date: date, food_data: food_data };
         return this.updateDocument(tableName, objKeys, fullObj);
     }
 
-    override async updateDocument(tableName: string, keys: Map<String, String>, obj: Object): Promise<string>
+    override async updateDocument(tableName: string, keys: Map<string, string>, obj: Object): Promise<string>
     {
         try
         {
