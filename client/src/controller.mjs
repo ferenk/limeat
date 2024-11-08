@@ -104,7 +104,7 @@ class Controller
 
                         /** @type { Food | undefined } */
                         // @ts-ignore:next-line ('Object' is not assignable to type 'Food')
-                        let foodPart = thisRowSections[i].metadata?.foodPart;
+                        let foodPart = thisRowSectionIter.metadata?.foodPart;
                         let allKCalLabel = document.querySelector('#lbCurrentFoodPartKCal')
                         if (allKCalLabel)
                             allKCalLabel.textContent = `${ toFixedFloat(foodPart?.computedkcal) || 0} kc`;

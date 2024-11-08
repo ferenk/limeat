@@ -28,6 +28,6 @@
     "noUnusedLocals": true,
     "declaration": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/*.ts"],
   "exclude": ["node_modules", "**/*.d.ts", "./disabled/*"]
 }
