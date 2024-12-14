@@ -268,6 +268,21 @@ async function onPageLoaded()
         else
             $('#optsDevSection').slideUp(100);
     });
+    // support for emergency disablement of highlighting (for the case of layering problems, when it's hard to read the text)
+    $('#syntaxHighlight').change(function ()
+    {
+        // @ts-ignore:next-line (Property name 'checked' does not exist on type 'HTMLInputElement')
+        if (this.checked) {
+            $('.textarea_editor').css('color', 'rgba(93, 96, 109, 0.692)');
+            $('.textarea_editor').css('background', 'transparent');
+            $('.textarea_highlighter').css('opacity', 1);
+        }
+        else {
+            $('.textarea_editor').css('color', 'rgb(0, 0, 0)');
+            $('.textarea_editor').css('background', 'white');
+            $('.textarea_highlighter').css('opacity', 0);
+        }
+    });
 
     $('#optScaleType,.scaleOpts').change(() => {
         // @ts-ignore:next-line (<multiple types> cannot set to 'string')
