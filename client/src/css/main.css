@@ -338,7 +338,7 @@ th {
 }
 
 #lbCurrentAllKCal,
-#lbCurrentLineKCal
+#lbCurrentLineKCal,
 #lbCurrentFoodPartKCal
 {
     white-space: nowrap;

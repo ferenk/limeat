@@ -1,5 +1,3 @@
-export { TextSection, TextContainer}
-
 class TextSection
 {
     /**
@@ -26,7 +24,7 @@ class TextContainer
      * @param { number } _row
      * @returns {string}
      */
-    getRow(_row)
+    getRow(_row)    // jshint ignore:line
     {
         throw Error('This is an abstract class. You should not call this method.');
     }
@@ -40,3 +38,5 @@ class TextContainer
         throw Error('This is an abstract class. You should not call this method.');
     }
 }
+
+export { TextSection, TextContainer };

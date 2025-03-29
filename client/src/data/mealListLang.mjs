@@ -1,16 +1,16 @@
 import { getCurrentMoment, printMoment, toNumericOrZero, toFixedFloat, printToFixedFloat, safeEval } from '../util/util.mjs';
-import { TextContainer } from '../util/text/textContainers.mjs';
+import { TextContainer } from '../util/text/textContainers.mjs';    // jshint ignore:line
 
-import { Config } from '../app/config.mjs'
+import { Config } from '../app/config.mjs';
 
 import { Meal, Food } from './foodData.mjs';
 import { FoodsDb } from './foodsDb.mjs';
 import { processQuantity } from './foodsLang.mjs';
 
+/* jshint ignore:start */ /* Classes are used as a class property */
 import { TextareaExt } from '../views/textareaExt.mjs';
 import { TextareaHighlight } from '../views/textareaHighlight.mjs';
-
-export { MealListLang };
+/* jshint ignore:end */
 
 class MealListLang
 {
@@ -21,6 +21,11 @@ class MealListLang
      { pattern: '  |          |', kcal: 0, g: 0 }];
     mdHeader = '  | kCal     |  Idő    | Kaja típusa  \n  | -------- | ------- | -----------  \n';
 
+    /* Input text processor */
+    /* jshint ignore:start */
+    /** @type {TextareaExt | null} */
+    mealLogText = null;
+
     /* Output text generation */
     /** @type { Number } */
     currentDayPart = 0;
@@ -28,9 +33,10 @@ class MealListLang
     foodOutputStr = '';
     /** @type { String[] } */
     foodSourceModifiedOutput = [];
-
+    /* jshint ignore:end */
 
     /**
+     * Create a food diary processor
      * @param {Config} config
      * @param {TextareaExt | null} mealLogText
      * @param {TextareaHighlight} mealLogHighlight
@@ -68,18 +74,18 @@ class MealListLang
 
     }
 
-    currentSummaryStr = '';
-    currentSummaryKCal = 0;
+    currentSummaryStr = '';              // jshint ignore:line
+    currentSummaryKCal = 0              // jshint ignore:line
 
     /**
-     * @param { TextContainer ?} logText
+     * @param { TextContainer | null } logText
      */
     processInput(logText)
     {
         if (!logText)
             logText = this.mealLogText;
 
-        /** @type Map<string, [Number|undefined, number|undefined]> */
+        /** @type { Map<string, [Number|undefined, number|undefined]> } */
         let lastFoodAmounts = new Map();
         this.currentSummaryStr = '';
         this.currentSummaryKCal = 0;
@@ -110,7 +116,7 @@ class MealListLang
      // * @param {number} iCurrentRow
     /**
      * @param {string} foodLine
-     * @param {Map<string, [Number|undefined, number|undefined] ?>} lastFoodAmounts
+     * @param {Map<string, [Number|undefined, number|undefined]>} lastFoodAmounts
      * @returns {Meal} the processed line
      */
     parseMeal(foodLine, lastFoodAmounts = new Map())
@@ -130,8 +136,8 @@ class MealListLang
         }
 
         // parse time stamp (@ beginning of the string)
-        let timeSepCol = 0;
-        if (foodLine.length > 5 && ((foodLine[1] == ':' && foodLine[timeSepCol = 4] == ' ') || (foodLine[2] == ':' && foodLine[timeSepCol = 5] == ' ')))
+        let timeSepCol;
+        if (foodLine.length > 5 && ((foodLine[1] === ':' && foodLine[timeSepCol = 4] === ' ') || (foodLine[2] === ':' && foodLine[timeSepCol = 5] === ' ')))
         {
             meal.timeStampPrefix = foodLine.substring(0, timeSepCol);
             foodLine = foodLine.substring(timeSepCol + 1);
@@ -183,11 +189,13 @@ class MealListLang
                 }
 
                 // test if this part is a quantity
-                let unit = '', units = [ 'g', 'db', 'kc', 'kcal', 'kc/', 'kcal/' ], quantity = NaN;
+                /** @type { string | number } */
+                let unit = '', units = [ 'g', 'db', 'kc', 'kcal', 'kc/', 'kcal/', ], quantity = NaN;
                 for (let unitsIdx = 0; unitsIdx < units.length; unitsIdx++)
                 {
                     if (foodPartNameStr.endsWith(units[unitsIdx]))
                     {
+                        unit = 5;
                         unit = units[unitsIdx];
                         let foodPartNameWOUnitStr = foodPartNameStr.replaceAll(unit, '');
                         //!TODO log console.log(`foodPartNameWOUnitStr: "${foodPartNameWOUnitStr}"`);
@@ -209,21 +217,21 @@ class MealListLang
                 }
                 if (!isNaN(quantity))
                 {
-                    if (unit == 'g' || unit == 'db')
+                    if (unit === 'g' || unit === 'db')
                     {
                         newFoodPart.quantity = quantity;
-                        if (unit == 'g')
+                        if (unit === 'g')
                             newFoodPart.quantityunit = 'g';
                         //? without quantityunit the default is now always 'db' (unit)
-                        else if (unit == 'db')
+                        else if (unit === 'db')
                             newFoodPart.quantityunit = 'db';
                     }
-                    else if (unit == 'kc' || unit == 'kcal')
+                    else if (unit === 'kc' || unit === 'kcal')
                     {
                         newFoodPart.kcalunit = 'kcal';
                         newFoodPart.kcal = quantity;
                     }
-                    else if (unit == 'kc/' || unit == 'kcal/')
+                    else if (unit === 'kc/' || unit === 'kcal/')
                     {
                         newFoodPart.kcalunit = 'kcal/100g';
                         newFoodPart.kcal = quantity;
@@ -276,10 +284,10 @@ class MealListLang
                 }
 
                 // store current food part
-                let kcalPerGrams = undefined;
-                if (newFoodPart.kcalunit == 'kcal/100g')
+                let kcalPerGrams;
+                if (newFoodPart.kcalunit === 'kcal/100g')
                     kcalPerGrams = newFoodPart.kcal;
-                lastFoodAmounts.set(newFoodPart.name, [newFoodPart.leftoverQuantity, kcalPerGrams]);
+                lastFoodAmounts.set(newFoodPart.name, [newFoodPart.leftoverQuantity, kcalPerGrams, ]);
             }
 
             meal.foodParts.push(newFoodPart);
@@ -289,6 +297,7 @@ class MealListLang
 
     /**
      * @param {Meal} meal
+     * @param {boolean} calculateSummary calculate summary, too
      */
     calculateMeal(meal, calculateSummary = true)
     {
@@ -371,7 +380,7 @@ class MealListLang
                 }
 
                 // update textbox to have syntax highlighted output
-                let sectionName = this.recordHighlightedInput(iCurrentRow, iPart, foodPart.startTextCol || 0, foodPart.origText, partOrigTextColor, { foodPart: foodPart }, meal.timeStampPrefix);
+                let sectionName = this.recordHighlightedInput(iCurrentRow, iPart, foodPart.startTextCol || 0, foodPart.origText, partOrigTextColor, { foodPart: foodPart, }, meal.timeStampPrefix);
                 foodPart.highlighterClass = (sectionName ? `class=${sectionName}` : '');
 
                 if (foodPart && foodPart.name)
@@ -418,7 +427,9 @@ class MealListLang
         {
             displayedFoodNamePrefixStr = displayedFoodNamePrefixStr.replaceAll('___', '').replaceAll(/ $/g, '');
             displayedFoodNamePrefixStr = `<u><b>${displayedFoodNamePrefixStr}</b></u>`;
-            displayedFoodNamePrefixStr += ` (${printToFixedFloat(meal.foodSum.quantity, 1, '0')}g, ${printToFixedFloat(meal.foodSum.computedkcal/(meal.foodSum.quantity/100), 1, '0')}kc/)\n`
+            const foodSumGrams = printToFixedFloat(meal.foodSum.quantity, 1, '0');
+            const foodSumKCals = printToFixedFloat(meal.foodSum.computedkcal/(meal.foodSum.quantity/100), 1, '0');
+            displayedFoodNamePrefixStr += ` (${foodSumGrams}g, ${foodSumKCals}kc/)\n`;
         }
         displayedFoodNamePrefixStr = !displayedFoodNamePrefixStr ? '' : displayedFoodNamePrefixStr.replaceAll('___', '');
         let currTableRowStr =
@@ -433,7 +444,7 @@ class MealListLang
             this.mealLogText.mealLineLast = iCurrentRow;
         }
 
-        /** @type { HTMLTableElement? } */
+        /** @type { HTMLTableElement | null } */
         let domTableOutBody = document.querySelector('#tableOut>tbody');
         if (domTableOutBody)
         {
@@ -493,16 +504,15 @@ class MealListLang
     }
 
     /**
-     *
      * @param {Number} iRow
      * @param {Number} _iPart
      * @param {Number} iCol
      * @param {String} currPartHtmlText
-     * @param {String?} color
-     * @param {{ foodPart: Object }? } metadata
-     * @param {String?} _timeStamp
+     * @param {String | null} color
+     * @param {{ foodPart: Object } | null } metadata
+     * @param {String | null} _timeStamp
      */
-    recordHighlightedInput(iRow, _iPart, iCol, currPartHtmlText, color = null, metadata = null, _timeStamp = null)
+    recordHighlightedInput(iRow, _iPart, iCol, currPartHtmlText, color = null, metadata = null, _timeStamp = null) // jshint ignore:line
     {
         // add prefix
         //let currPartBeginStr = ''
@@ -597,12 +607,13 @@ class MealListLang
             let dbFood = foodItems[i];
             if (dbFood.name == foodPartNameLower && dbFood.quantityunit == foodPart.quantityunit) {
                 let quant = foodPart.quantity;
-                if (foodPart.quantityunit == 'g') {
+                if (foodPart.quantityunit === 'g') {
                     quant = this.simulateScaleMeasurement(quant);
                 }
                 return this.roundKCalMeasurement(quant, dbFood.quantity, dbFood.kcal);
             }
         }
+
         return 0;
     }
 
@@ -616,7 +627,7 @@ class MealListLang
     formatFoodData(kcalStr, timestampStr, foodDetails)
     {
         let COL_KCAL_END = 10, COL_TIMESTAMP_END = 19;
-        let resultStr = "  |"
+        let resultStr = "  |";
         timestampStr = (timestampStr == null) ? "" : timestampStr;
         // Column: kCal
         resultStr += " ".repeat(COL_KCAL_END - kcalStr.length - resultStr.length);
@@ -630,3 +641,4 @@ class MealListLang
     }
 }
 
+export { MealListLang };

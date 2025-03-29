@@ -1,9 +1,7 @@
-export { OutputTable };
-
 class OutputTable
 {
-    /** @type {JQuery} jQuery object of our textarea's widget */
-    jqItem = $('html');
+    /** @type {JQuery} jQuery object of our text area's widget */
+    jqItem = $('html');     // jshint ignore:line
 
     /**
      * Creates a new output table widget
@@ -11,8 +9,9 @@ class OutputTable
      */
     constructor(jqSelector = '')
     {
-        if (jqSelector.length > 0)
+        if (jqSelector.length > 0) {
             this.initialize(jqSelector);
+        }
     }
 
     /**
@@ -44,7 +43,7 @@ class OutputTable
      */
     selectRow(rowIdx)
     {
-        if (rowIdx != -1)
+        if (rowIdx !== -1)
         {
             let jqRow = this.jqItem.find(`#tr${rowIdx}`);
             // only check the table's current row if it is not empty
@@ -100,7 +99,7 @@ class OutputTable
      */
     checkPrevNextMeal(nextMeal, currIdx, minIdx, maxIdx)
     {
-        // check the range first: are we the OUTSIDE of it? (e.g after changing the current day) => return to the range for the first step
+        // check the range first: are we the OUTSIDE of it? (e.g. after changing the current day) => return to the range for the first step
         if (currIdx < minIdx)
             return minIdx;
         if (currIdx > maxIdx)
@@ -108,13 +107,13 @@ class OutputTable
 
         // caller don't want to move the selected line - so we're returning with the current index
         if (nextMeal == null)
-            currIdx;
+            return currIdx;
 
         // start to search from the INSIDE of the range
         let mealIdx_toCheck = currIdx + (nextMeal ? 1 : -1);
         while (mealIdx_toCheck >= minIdx && mealIdx_toCheck <= maxIdx)
         {
-            if ($(`#tableOut #tr${mealIdx_toCheck}`).length > 0)
+            if ($(`#tableOut #tr${ mealIdx_toCheck }`).length > 0)
             {
                 return mealIdx_toCheck;
             }
@@ -133,7 +132,7 @@ class OutputTable
         // only handle user triggered events! (to prevent infinite loops)
             // @ts-ignore:next-line (Property name 'checked' does not exist on type 'HTMLInputElement')
             // g_mealsDiaryText.switchMode(this.checked);
-        let setToFocused = (mode != 'normal');
+        let setToFocused = (mode !== 'normal');
         $(this.jqItem).toggleClass('focusedMode', setToFocused);
             //? g_controller.updateUi_FocusedMode();
     }
@@ -143,14 +142,15 @@ class OutputTable
      */
     test()
     {
-
     }
 }
 
 class OutputTableRowInfo
 {
-    /** @type {Number} the overall calculated kcal for that row*/
-    kCal = 0;
+    /** @type {Number} the overall calculated kcal for that row */
+    kCal = 0;       // jshint ignore:line
     /** @type {String} in the format of 'HH:mm' */
-    mealTime = '';
+    mealTime = '';  // jshint ignore:line
 }
+
+export { OutputTable, OutputTableRowInfo };

@@ -212,7 +212,7 @@ function replaceTextInTextarea(domWidget, text, startPos, endPos)
  * @param {HTMLElement?} textarea
  * @param {string} text
  */
-function insertText2TextArea(textarea, text) {
+function insertText2TextArea(textarea, text) {      // @ts-ignore
     if (textarea != null && textarea instanceof HTMLTextAreaElement)
     {
         textarea?.setRangeText(

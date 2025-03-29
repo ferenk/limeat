@@ -1,11 +1,38 @@
+# Hint: List ignored files: git status --ignored
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# Application files
 node_modules*
 **/*.log
 package-lock.json
 tmp/
 
-# Configuration files
-app.env
+# IDE(A) configuration
+.idea/draw-graph-settings
+.idea/git_toolbox_blame.xml
+.vscode/
 
-# Temporal files
+# Configuration files, secrets
+app.env
+**/*.dis[a-z]*
+*.key.*
+
+# Temporal/generated files
 *.tmp
 *.tmp.*
+*.d.*ts
+*.js.map
+/server/**/*.js
+*.tsbuildinfo
+*log
+*out
+dist/
+.scannerwork/

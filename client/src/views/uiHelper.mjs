@@ -1,7 +1,6 @@
 export { coolConfirm, coolMessage };
 
-/** @ts-ignore */ /* warning: Property 'Swal' does not exist on type 'Window & typeof globalThis'. */
-const Swal /** @type { import('../3rdparty/sweetalert2.min.js').Swal } Swal */ = window.Swal;
+import Swal from '../3rdparty/sweetalert2.min.js';  // jshint ignore:line
 
 /**
  * @param {string} type
@@ -14,8 +13,10 @@ const Swal /** @type { import('../3rdparty/sweetalert2.min.js').Swal } Swal */ =
 */
 async function coolConfirm(type, title, question, _cb, yesAnswer, noAnswer, confirmByDefault)
 {
-    yesAnswer = yesAnswer || "Yes";
-    noAnswer = noAnswer || "No";
+    'use strict';
+
+    yesAnswer = yesAnswer ?? "Yes";
+    noAnswer = noAnswer ?? "No";
     confirmByDefault = (confirmByDefault == null ? true : confirmByDefault);
 
     const { value: result }  = await Swal.fire(
@@ -32,7 +33,7 @@ async function coolConfirm(type, title, question, _cb, yesAnswer, noAnswer, conf
             cancelButtonText: noAnswer,
             focusConfirm: confirmByDefault,
             reverseButtons: !confirmByDefault,
-            allowOutsideClick: false  // modal
+            allowOutsideClick: false,  // modal
         }
     );
 
@@ -43,13 +44,17 @@ async function coolConfirm(type, title, question, _cb, yesAnswer, noAnswer, conf
  * @param {string} type
  * @param {string} title
  * @param {string} message
- * @param {Object | null} opts
- * @param {number} timeout
+ * @param {Object | null } opts
+ * @param {number | null } timeout
  * @param {Function | null} cb
  */
-async function coolMessage(type, title, message, opts = null, timeout = 10, cb = null)
+async function coolMessage(type, title, message, opts, timeout, cb)
 {
-    if (timeout)
+    'use strict';
+
+    timeout = timeout ?? 10;
+
+    if (timeout === 0 && timeout > 0)
     {
         /** @type NodeJS.Timer | null */
         let timerInterval = null;
@@ -61,7 +66,7 @@ async function coolMessage(type, title, message, opts = null, timeout = 10, cb =
                     icon: type,
                     timer: timeout,
                     allowOutsideClick: false,  // modal window
-                    onBeforeOpen: () => {
+                    onBeforeOpen: () => {       // jshint ignore:line
                         Swal.showLoading();
                         timerInterval = setInterval(() => {
                             Swal.getContent().querySelector('strong').textContent = (Math.floor(Swal.getTimerLeft() / 1000));
@@ -73,7 +78,7 @@ async function coolMessage(type, title, message, opts = null, timeout = 10, cb =
                             clearInterval(timerInterval);
                         if (cb)
                             cb();
-                    }
+                    },
                 },
                 opts
             )
@@ -94,7 +99,7 @@ async function coolMessage(type, title, message, opts = null, timeout = 10, cb =
                 onClose: () => {
                     if (cb)
                         cb();
-                }
+                },
             },
             opts)
         );

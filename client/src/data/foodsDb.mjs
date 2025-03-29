@@ -1,9 +1,9 @@
-export { FoodsDb, FoodsDbItem }
-
 import { processQuantity } from './foodsLang.mjs';
 
 class FoodsDbItem
 {
+    /* jshint ignore:start */
+
     /** @type { Number | undefined } */
     quantity;
     /** @type { Number | undefined } */
@@ -13,13 +13,17 @@ class FoodsDbItem
     /** @type { String | undefined } */
     name;
     /** @type { boolean | undefined } */
+
+    /* jshint ignore:end */
 }
 
 
 class FoodsDb
 {
-    /** @type {FoodsDb?} */
+    /* jshint ignore:start */
+    /** @type { FoodsDb | null } */
     static instance = null;
+    /* jshint ignore:end */
 
     constructor()
     {
@@ -43,7 +47,7 @@ class FoodsDb
     {
         let str = '';
         let dbLines = content.split('\r\n');
-        if (dbLines.length == 1)
+        if (dbLines.length === 1)
             dbLines = content.split('<NL/>');
         dbLines.forEach(element => {
             let dbLineParts = element.split('|');
@@ -59,8 +63,8 @@ class FoodsDb
                     foodDbEntry.quantity = 100;
                     foodDbEntry.quantityunit = 'g';
                 }
-                if (foodInfoParts[1].startsWith('kcal')) {
-                    if (foodInfoParts[1][4] == '/') {
+                if (foodInfoParts[1]?.startsWith('kcal')) {
+                    if (foodInfoParts[1][4] === '/') {
                         processQuantity(foodInfoParts[1].slice(5), foodDbEntry);
                     }
                 }
@@ -68,7 +72,7 @@ class FoodsDb
             }
         });
         this.items.forEach((dbItem) => {
-            let kcal2ndPart = (dbItem.quantity == 100 && dbItem.quantityunit == 'g' ? '' : `${dbItem.quantity}${dbItem.quantityunit}`);
+            let kcal2ndPart = (dbItem.quantity === 100 && dbItem.quantityunit === 'g' ? '' : `${dbItem.quantity}${dbItem.quantityunit}`);
             str += `${dbItem.name}: ${dbItem.kcal} kCal/${kcal2ndPart}\n`;
         } );
 
@@ -76,4 +80,4 @@ class FoodsDb
     }
 }
 
-//export { FoodsDb };
+export { FoodsDb, FoodsDbItem };

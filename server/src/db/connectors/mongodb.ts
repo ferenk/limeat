@@ -69,7 +69,7 @@ export class MongoDb extends DbConnector
      * For testing purposes. Simple DB command execution
      * @param {String} command
      */
-    async dbCommand(command: string)
+    async dbCommand(_command: string)
     {
         try
         {
@@ -148,7 +148,7 @@ export class MongoDb extends DbConnector
             const dbo = this.mongoDbClient.db(process.env.DB_MONGO_DBNAME);
             const foodRecordCollection = dbo.collection(tableName);
 
-            foodRecordCollection.updateOne(
+            await foodRecordCollection.updateOne(
                 keys,
                 { $set: obj },
                 { upsert: true }

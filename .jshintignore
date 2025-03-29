@@ -1,0 +1,4 @@
+node_modules/**/*
+client/src/3rdparty/*
+server/**/*
+dist/**/*

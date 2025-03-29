@@ -133,7 +133,7 @@ test('Process input: Wrong (incomplete) timestamp at the beginning of the line',
     let testResult = doTest(inputText);
 
     // secondLine is longer, about 8-10 chars added because of the unknown food (no kcal/ value for the 2nd 'apple') is highlighted
-    expect(inputText[0]).toBe(HtmlBuffer.stripHtml( testResult.highlightedText.getRow(0)));
+    expect(inputText[0]).toBe(HtmlBuffer.stripHtml( testResult.highlightedText.getRow(0)));     // jshint ignore:line
 });
 
 test('Process input: Meal continuation', () =>
@@ -147,5 +147,5 @@ test('Process input: Meal continuation', () =>
     let testResult = doTest(inputText);
 
     // The second meal has to start from +50g (-20g == 30g), and its kcal has to be 35kc/ (as the firest meal).
-    expect(testResult.mdOutput.indexOf('special fruit (60g, 35kc/, =21kc)')).toBeGreaterThan(-1);
+    expect(testResult.mdOutput.indexOf('special fruit (60g, 35kc/, =21kc)')).toBeGreaterThan(-1);       // jshint ignore:line
 });

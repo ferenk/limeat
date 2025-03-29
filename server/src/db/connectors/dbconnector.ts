@@ -44,7 +44,7 @@ export class DbConnector
      * @param keys the query JSON object
      * @returns read result message
      */
-    async findDocuments(tableName: string, query: Object, options: Object | undefined, findMany: boolean): Promise<Object>
+    async findDocuments(_tableName: string, _query: Object, _options: Object | undefined, _findMany: boolean): Promise<Object>
     {
         console.error('Abstract class - Methods are not implemented!');
         return '';
@@ -56,7 +56,7 @@ export class DbConnector
      * @param keys map which contains all keys in <key>:<value> format
      * @returns update result message
      */
-    async updateDocument(tableName: string, keys: Map<String, String>, object: Object): Promise<string>
+    async updateDocument(_tableName: string, _keys: Map<String, String>, _object: Object): Promise<string>
     {
         console.error('Abstract class - Methods are not implemented!');
         return '';

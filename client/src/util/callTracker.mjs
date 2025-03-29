@@ -37,7 +37,10 @@ let lastStack = [];
  * @param {boolean} printNullResults
  * @returns {C}
  */
-function traceMethodCalls(obj, printNullResults = true) {
+function traceMethodCalls(obj, printNullResults) {
+    "use strict";
+    printNullResults ??= true;
+
     /** @type {ProxyHandler<object>} */
     let handler = {
         get(target, propKey, receiver) {
@@ -131,6 +134,7 @@ function processStack(stackParsed)
             {
                 stackParsedFiltered[0].methodName = replacedMethodName;
                 // @ts-ignore:next-line (Property 'remapped' does not exist on type 'StackFrame'.)
+                // noinspection JSUndefinedPropertyAssignment
                 stackParsedFiltered[0].remapped = true;
                 prevMethodWasReplaced = true;
             }

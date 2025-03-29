@@ -1,5 +1,3 @@
-export { HtmlBuffer };
-
 import { TextSection, TextContainer } from './textContainers.mjs';
 
 class HtmlBuffer extends TextContainer
@@ -50,7 +48,7 @@ class HtmlBuffer extends TextContainer
         if (row < 0 || row >= this.outBuffer.length)
         {
             let maxIndex = (this.inBuffer == null ? this.outBuffer.length-1 : this.inBuffer.getRowCount()-1);
-            throw new RangeError(`ERROR: index ${row} is out of range [0, ${this.outBuffer.length}]`);
+            throw new RangeError(`ERROR: index ${row} is out of range [0, ${maxIndex}]`);
         }
 
         return this.outBuffer[row];
@@ -146,3 +144,5 @@ class HtmlBuffer extends TextContainer
         this.appendToLine(row, section.startPos, section.htmlText, section.metadata, addSection);
     }
 }
+
+export { HtmlBuffer };
