@@ -9,7 +9,8 @@ import { TextareaHighlight } from './views/textareaHighlight.mjs';
 import { OutputTable } from './views/outputTable.mjs';
 import { MealListLang } from './data/mealListLang.mjs';
 
-import { traceMethodCalls } from './util/callTracker.mjs'
+import { traceMethodCalls, enableCallTracker } from './util/callTracker.mjs'
+
 import { CountdownButton } from './util/ui/countdownButton.mjs';
 
 import { SSEClient } from './net/sseClient.mjs';
@@ -195,6 +196,8 @@ async function onPageLoaded()
         if (window.localStorage.optTimePeriod != null)
             $('#searchDays').val(window.localStorage.optTimePeriod);
     }
+
+    enableCallTracker(false);
 
     window.onerror = onUnhandledError.bind('window.onerror');
     /// @ts-ignore

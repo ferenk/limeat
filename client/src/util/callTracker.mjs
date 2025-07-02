@@ -1,5 +1,3 @@
-export { traceMethodCalls };
-
 import * as stackTraceParser from '../3rdparty/stack-trace-parser.esm.js';
 
 let PROXY_METHOD_NAME = 'PrOxY';
@@ -26,6 +24,8 @@ function getFunction(target, name, receiver)
     return Reflect.get(target, name, receiver);
 }
 */
+
+var opt_enableCallTracker = true;
 
 /**@type { import('../3rdparty/stack-trace-parser').StackFrame[] } */
 let lastStack = [];
@@ -202,10 +202,22 @@ function shortenStringParam(paramObjOrString, maxLen = 32)
         return paramObjOrString;
 }
 
+/**
+ * Enable/disable call tracker's extra logs about method calls
+ * @param boolean enable Whether to enable (or disable it)
+ */
+function enableCallTracker(val)
+{
+    opt_enableCallTracker = val;
+}
+
 let lastMsgHeader = '';
 function consoleLog(message = '', recalcTime = true)
 {
     if (recalcTime || lastMsgHeader.length === 0)
         lastMsgHeader = `${new Date().toISOString().slice(0, -2).replace('T', ' ')} TRACE: `;
-    console.log(lastMsgHeader + message);
+    if (opt_enableCallTracker)
+        console.log(lastMsgHeader + message);
 }
+
+export { traceMethodCalls, enableCallTracker };
