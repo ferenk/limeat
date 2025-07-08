@@ -14,6 +14,7 @@ node_modules*
 **/*.log
 package-lock.json
 tmp/
+client_versions*
 
 # IDE(A) configuration
 .idea/draw-graph-settings

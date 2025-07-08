@@ -12,6 +12,7 @@ const DEfAULT_WEB_PORT = 8089;
 const PORT = process.env.PORT || DEfAULT_WEB_PORT;
 const SEARCH_RESULTS_LOG_LIMIT = 320;
 
+const fs = require('fs');
 const path = require('path');
 var connectDb: DbConnector = DbConnector.null;
 var g_allFoodRows = new FoodDbItemStore();
@@ -55,6 +56,30 @@ function errorHandler(req: Request, res: Response, e: unknown)
     console.error(`\r\nGET: ${req.originalUrl}, ERROR: ${e}`);
     res.send('');
 }
+
+// API endpoint for client folder's version listing
+app.get('/node_api/client_versions', async function (_req: Request, res: Response): Promise<void> {
+    const clientVersionsPath = path.join(__dirname, '..', '..', 'client_versions');
+
+    try {
+        const files: string[] = fs.readdirSync(clientVersionsPath);
+        const fileList = files.map(file => {
+            const filePath = path.join(clientVersionsPath, file);
+            const stats = fs.statSync(filePath);
+
+            return {
+                name: file,
+                type: stats.isDirectory() ? 'directory' : 'file',
+                size: stats.size,
+                modified: stats.mtime
+            };
+        });
+
+        res.json(fileList);
+    } catch (error) {
+        res.status(500).json({error: 'Unable to read directory'});
+    }
+});
 
 app.get('/node_api/read_calcdb', async function (req: Request, res: Response): Promise<void>
 {

@@ -1,0 +1,39 @@
+# .github/workflows/gh-release-recent-client_versions.yml
+# warning: Needs "Read & write permissions" (Project settings / Actions / General)
+#          Otherwise it will fail at "Upload the collected ..."
+
+name: Collect and upload recently released 'client' folders
+
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+    branches: [main]
+    types: [closed]
+  workflow_dispatch:
+
+jobs:
+  create_and_release_client_archive:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all tags
+
+    - name: Collect recently tagged "client" versions
+      run: |
+        chmod +x ./scripts/github-collect-recent-client_versions.sh
+        ./scripts/github-collect-recent-client_versions.sh
+
+    - name: Upload the collected client versions as a released tar.bz2
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: internal-release
+        name: Latest Client Versions
+        body: Automated build with recent client versions
+        files: client_versions.tar.bz2
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

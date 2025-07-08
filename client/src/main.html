@@ -182,6 +182,10 @@
             <div id="optsDev">
                 <label style="display: inline" for="tClientName" name="tClientName">Name of this device:</label>
                 <input id="optClientId" type="text" size="8" maxlength="50">
+                <br>
+                <span>App version:</span>
+                <select name="optClientVersion" id="optClientVersion">
+                </select>
 
                 <div>
                     <label id="optScaleTypeLabel" for="optScaleType">Scale type:</label>
@@ -189,10 +193,11 @@
                         <option value="barista">Barista</option>
                         <option value="kitchen">Kitchen scale</option>
                     </select>
-                        <label class="scaleOpts" id="minimalWeightLabel">Min. grams:</label>
-                        <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3">
-                        <label class="scaleOpts" id="minimalWeightCorrectionLabel">Corrected:</label>
-                        <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0">
+                    <br>
+                    <label class="scaleOpts" id="minimalWeightLabel">Min. grams:</label>
+                    <input class="scaleOpts" id="minimalWeight" size="1" maxlength="1" style="max-width: 2em;" type="text" value="3">
+                    <label class="scaleOpts" id="minimalWeightCorrectionLabel">Corrected:</label>
+                    <input class="scaleOpts" id="minimalWeightCorrection" size="3" maxlength="3" style="max-width: 3em;" type="text" value="0">
                 </div>
 
                 <input type="checkbox" id="devModeOutputs" name="devModeOutputs">

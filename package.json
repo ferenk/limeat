@@ -13,7 +13,8 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "checkdis": "tsc --noEmit && jshint --extra-ext .mjs client",
     "check": "jshint --extra-ext .mjs client",
-    "checkDisabled": "tsc --noEmit && tsc --noEmit -p client && tsc --noEmit -p server"
+    "checkDisabled": "tsc --noEmit && tsc --noEmit -p client && tsc --noEmit -p server",
+    "heroku-postbuild": "bash scripts/heroku-fetch-latest-frontend-versions.sh"
   },
   "jest": {
     "globals": {

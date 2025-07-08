@@ -54,6 +54,8 @@ let g_mobileMode = null;
 let g_saveButton = new CountdownButton('#btSave', 'SAVED!', 'SAVE', 3, onSaveButtonPressed, null);
 
 let g_sseClient = new SSEClient(g_config);
+// assemble local backend URL (for fetch() calls)
+const gServerUrl = `${window.location.protocol}//${window.location.host}`;
 
 /**
  * Communication
@@ -261,8 +263,9 @@ async function onPageLoaded()
     });
 
 
-    /** Developer options: Section, controls, experimental features */
+    /** Developer options section for experimental features: Controls init (hide section by default, fill options) */
     $('#optsDevSection').hide();
+    await setupFrontendVersions();
     $('#devMode').change( function(){
         //? $('#devMode').detach().appendTo('#optsDev');
         // @ts-ignore:next-line (Property name 'checked' does not exist on type 'HTMLInputElement')
@@ -347,6 +350,31 @@ async function onPageLoaded()
     placementCorrections();
 
     initSseClient();
+}
+
+// Developer feature: fetch local frontend's accessible versions (and fill the option list!)
+async function setupFrontendVersions() {
+    const response = await fetch(`${gServerUrl}/node_api/client_versions`);
+    if (!response.ok) {
+        return;
+    }
+    const clientFolderVersions = await response.json();
+
+    // enumerate all versions and fill option list
+    clientFolderVersions.forEach(folder => {
+        const optionEl = document.createElement('option');
+        optionEl.value = folder.name;
+        optionEl.innerText = folder.name;
+        document.getElementById('optClientVersion').appendChild(optionEl);
+    })
+
+    // another version selected => redirect browser to that client
+    document.getElementById('optClientVersion').addEventListener('change', (event) => {
+        const clientVersion = event.target.value;
+        const newClientUrl = `${gServerUrl}/client_versions/${clientVersion}/main.html`;
+        // redirect to the new URL
+        window.location.href = newClientUrl;
+    });
 }
 
 /**
