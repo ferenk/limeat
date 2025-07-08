@@ -1,0 +1,35 @@
+#####################
+# Site metadata
+title: LimEat!
+description: Simple but effective kcal/-culator
+email: fmoricz@gmail.com
+author: ferenk
+copyright: "Ferenc Móricz, 2024"
+url: https://github.com/ferenk/limeat
+# baseurl: https://github.com/ferenk/limeat
+keywords: "diet, calories, simple, food, calculator, kcal"
+google_analytics: GTM-T47R9MX8
+#####################
+# Jekyll theme config
+remote_theme: jeffreytse/jekyll-theme-yat@gh-pages
+show_downloads: true
+favicon: https://github.com/ferenk/limeat/releases/download/web/diet_ico.png
+banner:
+  image: https://github.com/ferenk/limeat/releases/download/web/apple_diet_1200x.png
+header_transparent: true
+night_mode: "auto"
+yat:
+  date_format: "%Y-%m-%d %H:%M"
+lang: "en"
+sitemap: true
+theme_color: greenblue
+brand_color: orangered
+selection:
+  color: "#ff00ff"
+  background_color: "yellow"
+code_badge:
+  enabled: true
+defaults:
+  home:
+    heading: "LimEat!"
+    subheading: "Keep your daily calorie intake within limits!"
