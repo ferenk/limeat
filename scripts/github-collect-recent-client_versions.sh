@@ -3,7 +3,8 @@ set -e
 
 export TAGS_COUNT=5
 export TARGET_FOLDER=client_versions
-export TARGET_SUBFOLDER=client
+export TARGET_SUBFOLDER=client/src
+export TARGET_SUBFOLDER_TO_CLEAN=client
 
 #get the list of the recent tags (only the ones beginning with a letter and a number, e.g v0.5)
 export recent_tags=`git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n $TAGS_COUNT | grep -e '[a-zA-Z][0-9].*'`
@@ -22,6 +23,8 @@ for tag in $recent_tags; do \
   git --work-tree=$TARGET_FOLDER checkout $tag -- $TARGET_SUBFOLDER;
   mv $TARGET_FOLDER/$TARGET_SUBFOLDER $TARGET_FOLDER/$tag;
 done
+
+rm -rf $TARGET_FOLDER/$TARGET_SUBFOLDER_TO_CLEAN
 
 echo; echo -n "Creating tar.bz2 archive..."
 tar -cjf "$TARGET_FOLDER".tar.bz2 $TARGET_FOLDER

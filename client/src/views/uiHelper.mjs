@@ -52,56 +52,41 @@ async function coolMessage(type, title, message, opts, timeout, cb)
 {
     'use strict';
 
-    timeout = timeout ?? 10;
+    /** @type NodeJS.Timer | null */
+    let timerInterval = null;
+    // core parameters
+    let msgBoxArgs = {
+        title: title,
+        html: message,
+        icon: type,
+        confirmButtonColor: 'hsl(96deg 52% 34%)',
+        background: 'hsl(78, 21%, 40%)',
+        backdrop: 'hsl(78, 21%, 35%)',
+        allowOutsideClick: false,  // modal
+        timerProgressBar: false,
+        willClose: () =>
+        {
+            clearInterval(timerInterval);
+            if (cb)
+                cb();
+        },
+    }
 
-    if (timeout === 0 && timeout > 0)
-    {
-        /** @type NodeJS.Timer | null */
-        let timerInterval = null;
-        Swal.fire(
-            Object.assign(
-                {
-                    title: title,
-                    html: message + "<br>Close in <strong></strong> seconds...",
-                    icon: type,
-                    timer: timeout,
-                    allowOutsideClick: false,  // modal window
-                    onBeforeOpen: () => {       // jshint ignore:line
-                        Swal.showLoading();
-                        timerInterval = setInterval(() => {
-                            Swal.getContent().querySelector('strong').textContent = (Math.floor(Swal.getTimerLeft() / 1000));
-                        }, 100);
-                    },
-                    onClose: () =>
-                    {
-                        if (timerInterval)
-                            clearInterval(timerInterval);
-                        if (cb)
-                            cb();
-                    },
-                },
-                opts
-            )
-        );
+    // timout settings
+    if (timeout != null) {
+        Object.assign(msgBoxArgs, {
+            timer: timeout,
+            timerProgressBar: true,
+            allowOutsideClick: true,  // not modal
+            didOpen: () => {
+                Swal.showLoading();
+                Swal.enableButtons();
+                const timer = Swal.getPopup().querySelector("strong");
+                timerInterval = setInterval(() => {
+                    timer.textContent = `${Math.floor(Swal.getTimerLeft() / 1000)}s`;
+                }, 100);
+            }
+        });
     }
-    else
-    {
-        Swal.fire(
-            Object.assign({
-                title: title,
-                html: message,
-                type: type,
-                icon: type,
-                confirmButtonColor: 'hsl(96deg 52% 34%)',
-                background: 'hsl(78, 21%, 39%)',
-                backdrop: 'hsl(78, 21%, 39%)',
-                allowOutsideClick: false,  // modal
-                onClose: () => {
-                    if (cb)
-                        cb();
-                },
-            },
-            opts)
-        );
-    }
+    Swal.fire(msgBoxArgs);
 }

@@ -22,8 +22,8 @@ const HEROKU_CLOUD_URL = 'limeat.herokuapp.com';
 const g_config = Config.getInstance(
     {
         scaleType: 'barista',
-        clientId: window.localStorage.optClientId,
-        finalClientId: window.localStorage.optClientId
+        clientId: localStorage.optClientId,
+        finalClientId: localStorage.optClientId
     }
 );
 
@@ -55,7 +55,8 @@ let g_saveButton = new CountdownButton('#btSave', 'SAVED!', 'SAVE', 3, onSaveBut
 
 let g_sseClient = new SSEClient(g_config);
 // assemble local backend URL (for fetch() calls)
-const gServerUrl = `${window.location.protocol}//${window.location.host}`;
+const g_serverUrl = `${window.location.protocol}//${window.location.host}`;
+let g_currentVersion = '';
 
 /**
  * Communication
@@ -84,7 +85,7 @@ function onSaveButtonPressed()
     // pre-process the current kcal data to be saved (all edit buffer)
     g_mealsDiaryText.updateRowsStr();
     let preprocessedFoodInputText = g_mealsDiaryText.rowsStr.replaceAll('\n', '\\n')
-    nodeXHRComm('node_api/save_foodrowdb',
+    nodeXHRComm('/node_api/save_foodrowdb',
         {
             user: $('#tUser').val(),
             date: currentDayStr,
@@ -237,7 +238,7 @@ async function onPageLoaded()
     });
 
     // initiate DB reload
-    nodeXHRComm("node_api/read_calcdb", null, onCalcDbArrived);
+    nodeXHRComm('/node_api/read_calcdb', null, onCalcDbArrived)
     $('#tUser').on('input', () => g_controller.onUserOrDateChanged());
     //$('#tDate').on('input', onUserOrDateChanged);
     $('#btDateUp').on('click', () => g_controller.onPrevNextDay(false));
@@ -298,14 +299,30 @@ async function onPageLoaded()
     });
     $('.scaleOpts').hide();
 
-    $('#btApplySettings').on('click', () =>
-    {
+    // Apply button action
+    $('#btApplySettings').on('click', async () => {
         /** @type {string} */
         let clientId = $('#optClientId').val()?.toString() || '';
-        if (clientId != null && clientId != '')
-        {
+        if (clientId != null && clientId != '') {
             localStorage.optClientId = g_config.finalClientId = g_config.clientId = clientId;
             g_sseClient.init(g_controller.refreshDayFoods.bind(g_controller), sseStateUpdateCB, console.log);
+        }
+        // another version selected? => redirect browser to that client
+        const optVersion = document.getElementById('optClientVersion');
+        var targetVersion = optVersion.options[optVersion.selectedIndex].value;
+        const strSavedMsg = 'Changes have been applied and saved!';
+        if (targetVersion != g_currentVersion) {
+            console.log(`Client version change requested: ${g_currentVersion} => ${targetVersion}`);
+            let targetVersionUrl = '';
+            if (targetVersion != 'latest') {
+                targetVersionUrl = `/client_versions/${targetVersion}/main.html`;
+            }
+            // redirect to the new URL
+            await coolMessage('success', 'Changes applied', strSavedMsg + `<br>UI version <b>${targetVersion}</b> will be loaded in <strong/>`, null, 5000, () => {
+                console.log(`TRACE: Redirecting browser to ${g_serverUrl + targetVersionUrl}...`);
+                window.location.href = g_serverUrl + targetVersionUrl;
+            });
+        } else {
             coolMessage('success', 'Changes applied', 'Changes have been applied and saved!');
         }
     });
@@ -354,27 +371,30 @@ async function onPageLoaded()
 
 // Developer feature: fetch local frontend's accessible versions (and fill the option list!)
 async function setupFrontendVersions() {
-    const response = await fetch(`${gServerUrl}/node_api/client_versions`);
+    const response = await fetch(`${g_serverUrl}/node_api/client_versions`);
     if (!response.ok) {
         return;
     }
     const clientFolderVersions = await response.json();
+    const sortedFolderVersionNames = [ 'latest' ];
+    clientFolderVersions.sort((a, b) => b.name.localeCompare(a.name));
+    clientFolderVersions.forEach(folder => { sortedFolderVersionNames.push(folder.name); })
 
-    // enumerate all versions and fill option list
-    clientFolderVersions.forEach(folder => {
+    // enumerate all versions and fill options list
+    let currentVersionEl = null;
+    sortedFolderVersionNames.forEach(folderName => {
         const optionEl = document.createElement('option');
-        optionEl.value = folder.name;
-        optionEl.innerText = folder.name;
+        optionEl.value = folderName;
+        optionEl.innerText = folderName;
+
+        // select the currently active version
+        if (window.location.href.includes(`/${folderName}/`) || folderName.localeCompare('latest') == 0) {
+            currentVersionEl = optionEl;
+        }
         document.getElementById('optClientVersion').appendChild(optionEl);
     })
-
-    // another version selected => redirect browser to that client
-    document.getElementById('optClientVersion').addEventListener('change', (event) => {
-        const clientVersion = event.target.value;
-        const newClientUrl = `${gServerUrl}/client_versions/${clientVersion}/main.html`;
-        // redirect to the new URL
-        window.location.href = newClientUrl;
-    });
+    currentVersionEl.setAttribute("selected", "selected");
+    g_currentVersion = currentVersionEl.value;
 }
 
 /**

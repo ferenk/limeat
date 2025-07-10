@@ -164,7 +164,7 @@ class SearchTools
     startMealSearchQuery(params, callback)
     {
         nodeXHRComm(
-            'node_api/search_meal_history',
+            '/node_api/search_meal_history',
             params,
             callback
         );

@@ -195,7 +195,7 @@ class Controller
         let currentDayStr = this.mealListLang.currentDayMoment.format('YYYY-MM-DD');
         let self = this;
         nodeXHRComm(
-            'node_api/read_foodrowdb',
+            '/node_api/read_foodrowdb',
             {
                 user: $('#tUser').val(),
                 date: currentDayStr
