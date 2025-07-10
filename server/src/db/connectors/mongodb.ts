@@ -1,6 +1,8 @@
 import { DbConnector } from './dbconnector';
 import { FoodDbItemStore, FoodDbItem, KCalTextDbItem } from '../../data/requests';
 
+import { log, error } from '../../core/log';
+
 import * as mongoDB from "mongodb";
 const path = require('path');
 
@@ -44,11 +46,11 @@ export class MongoDb extends DbConnector
                     connectUri += `&tlsCertificateKeyFile=${encodeURIComponent(certfilePath)}`;
                 }
                 else
-                    console.error(`ERROR: X.509 certificate file is not set! Please use the DB_MONGO_AUTH_X_509_CERTFILE env variable!`);
+                    error(`ERROR: X.509 certificate file is not set! Please use the DB_MONGO_AUTH_X_509_CERTFILE env variable!`);
             }
         }
         const connectUriStripped = connectUri ? connectUri.replace(/\/\/(...).*:(...).*@/, '//<User>($1...):<PW>($2...)@') : '<null>';
-        console.log(`MongoDb connect URI: ${connectUriStripped}`);
+        log(`MongoDb connect URI: ${connectUriStripped}`);
 
         return connectUri;
     }
@@ -61,7 +63,7 @@ export class MongoDb extends DbConnector
         }
         catch (e)
         {
-            console.error(`ERROR: While connecting to MongoDB: ${e}`);
+            error(`ERROR: While connecting to MongoDB: ${e}`);
         }
     }
 
@@ -74,7 +76,7 @@ export class MongoDb extends DbConnector
         try
         {
             await this.mongoDbClient.db("admin").command({ ping: 1 });
-            console.log("Connected successfully to server!");
+            log("Connected successfully to server!");
         } finally
         {
             await this.mongoDbClient.close();
@@ -83,7 +85,7 @@ export class MongoDb extends DbConnector
 
     async createDbs()
     {
-        console.log('Creating MongoDB databases... are NOT necessary. Skipped.');
+        log('Creating MongoDB databases... are NOT necessary. Skipped.');
     }
 
     override async readKCalDb()
@@ -101,11 +103,11 @@ export class MongoDb extends DbConnector
         {
             dbData.foods_raw = await this.findDocuments('food_records_raw', {}, undefined, true) as FoodDbItem[];
 
-            //console.log(`Cursor: ${ JSON.stringify(foodRecord)}`);
+            //log(`Cursor: ${ JSON.stringify(foodRecord)}`);
         }
         catch (e)
         {
-            console.error(`ERROR: While reading food data from MongoDB: ${e}`);
+            error(`ERROR: While reading food data from MongoDB: ${e}`);
         }
     }
 
@@ -119,14 +121,14 @@ export class MongoDb extends DbConnector
         if (findMany)
         {
             //let cursor: mongoDB.FindCursor = await foodRecordCollection.find(query, options);
-            console.log(`findDocuments() [findMany]: mongo options: ${JSON.stringify(options)}`);
+            log(`findDocuments() [findMany]: mongo options: ${JSON.stringify(options)}`);
             const cursor: mongoDB.FindCursor = foodRecordCollection.find(query, options);
             await cursor.forEach((item) => { resultArray.push(item); });
         }
         else
         {
             const oneResult = await foodRecordCollection.findOne(query, options);
-            //console.log(`findDocuments() [findOne], result: ${JSON.stringify(oneResult)}`);
+            //log(`findDocuments() [findOne], result: ${JSON.stringify(oneResult)}`);
             if (oneResult)
                 resultArray.push(oneResult);
         }
@@ -156,7 +158,7 @@ export class MongoDb extends DbConnector
         }
         catch (e)
         {
-            console.error(`ERROR: While updating food data in MongoDB: ${e}`);
+            error(`ERROR: While updating food data in MongoDB: ${e}`);
         }
         return 'OK';
     }

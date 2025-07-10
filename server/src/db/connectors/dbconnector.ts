@@ -1,5 +1,7 @@
 import { FoodDbItemStore } from '../../data/requests';
 
+import { error } from '../../core/log';
+
 export class DbConnector
 {
     static null: DbConnector;
@@ -11,7 +13,7 @@ export class DbConnector
 
     connect()
     {
-        console.error('Abstract class - Methods are not implemented!');
+        error('Abstract class - Methods are not implemented!');
     }
 
     /**
@@ -20,7 +22,7 @@ export class DbConnector
      */
     async readFoodDbRows(_dbData: FoodDbItemStore)
     {
-        console.error('Abstract class - Methods are not implemented!');
+        error('Abstract class - Methods are not implemented!');
     }
 
     /**
@@ -34,7 +36,7 @@ export class DbConnector
 
     async updateRow(_tableName: string, _user: string, _date: string, _food_data: string): Promise<string>
     {
-        console.error('Abstract class - Methods are not implemented!');
+        error('Abstract class - Methods are not implemented!');
         return '';
     }
 
@@ -46,7 +48,7 @@ export class DbConnector
      */
     async findDocuments(_tableName: string, _query: Object, _options: Object | undefined, _findMany: boolean): Promise<Object>
     {
-        console.error('Abstract class - Methods are not implemented!');
+        error('Abstract class - Methods are not implemented!');
         return '';
     }
 
@@ -58,7 +60,7 @@ export class DbConnector
      */
     async updateDocument(_tableName: string, _keys: Map<String, String>, _object: Object): Promise<string>
     {
-        console.error('Abstract class - Methods are not implemented!');
+        error('Abstract class - Methods are not implemented!');
         return '';
     }
 }

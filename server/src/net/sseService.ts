@@ -2,6 +2,8 @@ import { Request, Response, Application } from 'express';
 
 import { ClientQuery } from '../data/requests';
 
+import { log, error } from '../core/log';
+
 export class SSEService
 {
     static clients = new Map();
@@ -11,7 +13,7 @@ export class SSEService
         app.get('/sse', SSEService.serviceHandler);
         // Setup keep-alive timer (needed for Heroku!)
         setInterval(SSEService.sendKeepAlive, 30000);
-        console.log('SSE is initialized!')
+        log('SSE is initialized!')
     }
 
     static sendKeepAlive()
@@ -27,7 +29,7 @@ export class SSEService
     static serviceHandler(req: Request, responseStream: Response)
     {
         let reqQuery = req.query as unknown as ClientQuery;
-        console.log(`Query: /sse (params: ${JSON.stringify(reqQuery)})`);
+        log(`Query: /sse (params: ${JSON.stringify(reqQuery)})`);
         responseStream.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
@@ -44,7 +46,7 @@ export class SSEService
             if (SSEService.clients.get(req.query.clientId))
                 clientId += `_${new Date().toISOString().toString().replace(/-/g, '').replace(/:/g, '').replace('T', '_').replace(/\..*$/, '')}`;
             SSEService.clients.set(clientId, { responseStream: responseStream, originalClientId: req.query.clientId });
-            console.log (`Client connected: "${clientId}" (query's ID: "${req.query.clientId}")`)
+            log (`Client connected: "${clientId}" (query's ID: "${req.query.clientId}")`)
 
             // notify client about its new ID
             let eventObj = { clientId: clientId, eventName: "clientid_changed" };
@@ -54,7 +56,7 @@ export class SSEService
         req.on('close',
             function onClientClose()
             {
-                console.log(`Client disconnected: "${clientId}"`);
+                log(`Client disconnected: "${clientId}"`);
                 SSEService.clients.delete(clientId);
             }
         );
@@ -72,9 +74,9 @@ export class SSEService
                 {
                     originalClientId = clientRegObj.originalClientId;
                 }
-                else console.error('Error: Unable to find client registration! An old client is connected?!');
+                else error('Error: Unable to find client registration! An old client is connected?!');
             }
-            else console.error('Error: Unable to find current client (currentClientId == null)!');
+            else error('Error: Unable to find current client (currentClientId == null)!');
 
             let currTime = new Date();
             let modificationTimeStr = `${currTime.getHours().toString().padStart(2, '0')}:${currTime.getMinutes().toString().padStart(2, '0')}:${currTime.getSeconds().toString().padStart(2, '0')}`;
@@ -91,7 +93,7 @@ export class SSEService
         }
         catch (e)
         {
-            console.error(`Error: ${e}`);
+            error(`Error: ${e}`);
         }
     }
 }

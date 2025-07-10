@@ -3,6 +3,8 @@ import { Knex } from 'knex';
 import { DbConnector } from './dbconnector';
 import { FoodDbItemStore } from '../../data/requests';
 
+import { log } from '../../core/log';
+
 const fs = require('fs');
 const path = require('path');
 
@@ -43,7 +45,7 @@ export class SQLiteDb extends DbConnector
 
     override async connect()
     {
-        console.log('Connecting is not needed in case of SQLite DBs. Skipped.');
+        log('Connecting is not needed in case of SQLite DBs. Skipped.');
     }
 
     findFoodDbFile(dbRootFolder: string)
@@ -59,7 +61,7 @@ export class SQLiteDb extends DbConnector
         fileNames.some(fileName => {
             if (fileName.startsWith('foods-') && fileName.endsWith('.sqlite')) {
                 foodDbPath = path.join(dbRootFolder, fileName);
-                console.log(`Found food DB file: ${foodDbPath}`);
+                log(`Found food DB file: ${foodDbPath}`);
                 found = true;
                 return true;
             }
@@ -67,7 +69,7 @@ export class SQLiteDb extends DbConnector
         });
 
         if (!found)
-            console.log('DB file NOT found!');
+            log('DB file NOT found!');
         return foodDbPath;
     }
 
@@ -89,7 +91,7 @@ export class SQLiteDb extends DbConnector
                     })
                         .then(() => {
                             // Log success message
-                            console.log(`Table \'${tableName}\' created`);
+                            log(`Table \'${tableName}\' created`);
                         })
                         .catch((error: Error) => {
                             console.error(`There was an error creating table: ${error}`);
@@ -117,7 +119,7 @@ export class SQLiteDb extends DbConnector
                     })
                         .then(() => {
                             // Log success message
-                            console.log(`Table \'${tableName}\' created`);
+                            log(`Table \'${tableName}\' created`);
                         })
                         .catch((error) => {
                             console.error(`There was an error creating table: ${error}`);
@@ -135,10 +137,10 @@ export class SQLiteDb extends DbConnector
     async selectAllRows(tableName: string): Promise<string[] | any /** TODO */> {
         return await this.knex.select('*').from(tableName)
             .then(data => {
-                console.log('data:', data);
+                log(`data: ${data}`);
                 return data;
             })
-            .catch(err => console.log(`ERROR (.catch() handler): ${err}`));
+            .catch(err => console.error(`ERROR (.catch() handler): ${err}`));
     }
 
     override async readKCalDb()
@@ -166,7 +168,7 @@ export class SQLiteDb extends DbConnector
     override async readFoodDbRows(dbData: FoodDbItemStore)
     {
         dbData.foods_raw = await this.selectAllRows('food_records_raw');
-        console.log(`DB rows read: ${dbData.foods_raw}`);
+        log(`DB rows read: ${dbData.foods_raw}`);
     }
 
     // Just for debugging purposes:
@@ -176,7 +178,7 @@ export class SQLiteDb extends DbConnector
             .onConflict(['user', 'date'])
             .merge({ food_data: food_data })
             .catch(err => {
-                console.log(`ERROR (.catch() handler): ${err}`);
+                log(`ERROR (.catch() handler): ${err}`);
                 return `ERROR: ${err}`;
             });
         return 'OK';
