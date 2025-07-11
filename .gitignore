@@ -17,8 +17,7 @@ tmp/
 client_versions*
 
 # IDE(A) configuration
-.idea/draw-graph-settings
-.idea/git_toolbox_blame.xml
+.idea/
 .vscode/
 
 # Configuration files, secrets
@@ -31,9 +30,9 @@ app.env
 *.tmp.*
 *.d.*ts
 *.js.map
-/server/**/*.js
 *.tsbuildinfo
 *log
 *out
 dist/
 .scannerwork/
+/server/**/*.js
