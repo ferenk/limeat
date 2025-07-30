@@ -119,7 +119,7 @@ app.get(['/node_api/read_foodrowdb', '/client_versions/:version/node_api/read_fo
             if (dayDataObjs != null && dayDataObjs.length > 0)
             {
                 log(`${PATH}, Read data: ${StringUtils.jsonStringifyCircular(dayDataObjs)}`);
-                res.send(dayDataObjs[0].food_data);
+                res.send(JSON.stringify(dayDataObjs[0]));
                 return;
             }
             else
@@ -149,12 +149,12 @@ app.get(['/node_api/save_foodrowdb', '/client_versions/:version/node_api/save_fo
 
         let resStr = '';
 
-        if (checkQuery(req, ['user', 'date', 'food_data']))
+        if (checkQuery(req, ['user', 'date', 'saveDate', 'food_data']))
         {
             let reqQuery: ClientQuery = req.query as unknown as ClientQuery;
             sseService.notifyOtherClients(reqQuery.clientId, 'updated_db');
+            resStr = await connectDb.updateRow('food_records_raw', reqQuery.user, reqQuery.date, reqQuery.saveDate, reqQuery.food_data);
             log(`${PATH}, SAVED DATA: ${req.query.food_data}`);
-            resStr = await connectDb.updateRow('food_records_raw', reqQuery.user, reqQuery.date, reqQuery.food_data);
             res.send(resStr);
         }
         else
@@ -199,6 +199,7 @@ app.get(['/node_api/search_meal_history', '/client_versions/:version/node_api/se
             let resultMeals = await connectDb.findDocuments('food_records_raw', queryObj, optionsObj, true);
             resStr = StringUtils.jsonStringifyCircular(resultMeals);
             //! TODO log levels + more compact logs!!
+
             log(`${PATH}, DB result arrived! Length: ${resStr.length}\r\n${resStr.substring(0, SEARCH_RESULTS_LOG_LIMIT) + (resStr.length > SEARCH_RESULTS_LOG_LIMIT ? "\r\n..." : "")}`);
             res.send(resStr);
         } else
@@ -234,7 +235,7 @@ async function initApp()
         await connectDb.readFoodDbRows(g_allFoodRows);
 
         // start to listen
-        app.listen(PORT, () => log(`KCal web page has been started on port ${PORT} !`));
+        app.listen(PORT, () => log(`KCal web page has been started on port ${PORT} ! (DB type: ${connectDb.constructor.name})`));
     }
     catch (e)
     {

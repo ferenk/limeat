@@ -1,16 +1,15 @@
-export { Config }
-
 class Config
 {
-    /** @type {Config} */
+    /** @type {Config | null} */
     static instance;
 
     scaleType = 'barista';
     clientId = 'myPC/Phone';
     finalClientId = 'myPC/Phone';
+    static TEXTAREA_ID = 'txtMealsDiary';
 
     /**
-     * @param {Config | null} values
+     * @param {any | null} values
      */
     static getInstance(values = null)
     {
@@ -25,7 +24,7 @@ class Config
      */
     constructor(pw = '', values = null)
     {
-        if (pw != CONFIG_PW)
+        if (pw !== CONFIG_PW)
             throw new Error('You should not call the constructor directly. Use Config.getInstance() instead.');
 
         this.scaleType = values?.scaleType || this.scaleType;
@@ -34,4 +33,6 @@ class Config
     }
 }
 
-let CONFIG_PW = 'PeWet1427'
+let CONFIG_PW = 'PeWet1427';
+
+export { Config };

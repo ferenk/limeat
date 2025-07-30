@@ -4,6 +4,7 @@ import { FoodDbItemStore, FoodDbItem, KCalTextDbItem } from '../../data/requests
 import { log, error } from '../../core/log';
 
 import * as mongoDB from "mongodb";
+import { StringUtils } from "../../core/stringUtils";
 const path = require('path');
 
 export class MongoDb extends DbConnector
@@ -136,10 +137,10 @@ export class MongoDb extends DbConnector
         return resultArray;
     }
 
-    override async updateRow(tableName: string, user: string, date: string, food_data: string): Promise<string>
+    override async updateRow(tableName: string, user: string, date: string, saveDate: string, food_data: string): Promise<string>
     {
         const objKeys = new Map([ [ 'user', user], ['date', date], ]);
-        const fullObj = { user: user, date: date, food_data: food_data };
+        const fullObj = { user: user, date: date, saveDate: saveDate, food_data: food_data };
         return this.updateDocument(tableName, objKeys, fullObj);
     }
 
@@ -147,14 +148,16 @@ export class MongoDb extends DbConnector
     {
         try
         {
+            console.log(`updateDocument() called for table: ${tableName}, keys: ${StringUtils.jsonStringifyCircular(keys)}, obj: ${StringUtils.jsonStringifyCircular(obj)}`);
             const dbo = this.mongoDbClient.db(process.env.DB_MONGO_DBNAME);
             const foodRecordCollection = dbo.collection(tableName);
 
-            await foodRecordCollection.updateOne(
+            const retVal = await foodRecordCollection.updateOne(
                 keys,
                 { $set: obj },
                 { upsert: true }
             );
+            console.log('updateDocument result: ' + StringUtils.jsonStringifyCircular(retVal));
         }
         catch (e)
         {

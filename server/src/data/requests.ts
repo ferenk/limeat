@@ -3,12 +3,16 @@ export class ClientQuery
     clientId: string;
     user: string;
     date: string;
+    saveDate: string;
+    changeDate: string;
     data: string;
     food_data: string;
     constructor(user: string, date: string, data: string, food_data: string)
     {
         this.user = user;
         this.date = date;
+        this.changeDate = '';
+        this.saveDate = '';
         this.data = data;
         this.food_data = food_data;
         this.clientId = '';
@@ -51,10 +55,4 @@ export class FoodObjBase
     amount: number = 0;
     unit: string = '';
     kcal: number = 0;
-}
-
-export class FoodObjList
-{
-    user: string = '';
-    data: FoodObjBase[] = [];
 }

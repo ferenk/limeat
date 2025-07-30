@@ -1,13 +1,18 @@
 import { isError, copyText2Clipboard } from './util/util.mjs';
-import { nodeXHRComm } from './data/comm.mjs';
 
-import { Config } from './app/config.mjs'
+import { nodeXHRComm } from './comm/comm.mjs';
+import { LocalStorage } from "./comm/localStorage.mjs";
 import { FoodsDb } from './data/foodsDb.mjs';
+
+import { Config } from './app/config.mjs';
+
 import { Controller } from './controller.mjs';
 import { TextareaExt } from './views/textareaExt.mjs';
 import { TextareaHighlight } from './views/textareaHighlight.mjs';
 import { OutputTable } from './views/outputTable.mjs';
 import { MealListLang } from './data/mealListLang.mjs';
+
+import { g_config, g_appState, AppState, FoodLogEntry } from "./app/states.mjs";
 
 import { traceMethodCalls, enableCallTracker } from './util/callTracker.mjs'
 
@@ -18,14 +23,6 @@ import { SSEClient } from './net/sseClient.mjs';
 import { coolMessage } from './views/uiHelper.mjs';
 
 const HEROKU_CLOUD_URL = 'limeat.herokuapp.com';
-
-const g_config = Config.getInstance(
-    {
-        scaleType: 'barista',
-        clientId: localStorage.optClientId,
-        finalClientId: localStorage.optClientId
-    }
-);
 
 /** @type { TextareaExt } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'TextareExt'... (Proxy type problem))
@@ -42,12 +39,11 @@ const g_outputTable = traceMethodCalls(new OutputTable(), false);
 
 /** @type { MealListLang } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'MealListLang'... (Proxy type problem))
-const g_mealListLang = traceMethodCalls(new MealListLang(g_config, g_mealsDiaryText, g_mealsDiaryTextHighlight), false);
+g_appState.mealListLang = traceMethodCalls(new MealListLang(g_config, g_mealsDiaryText, g_mealsDiaryTextHighlight), false);
 
 /** @type { Controller } */
 // @ts-ignore:next-line (Type '{}' is missing the following properties from type 'Controller'... (Proxy type problem))
-//var g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang), false);
-const g_controller = new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_mealListLang);
+const g_controller = traceMethodCalls(new Controller(g_mealsDiaryText, g_mealsDiaryTextHighlight, g_outputTable, g_appState.mealListLang), false);
 
 let g_mobileMode = null;
 
@@ -70,7 +66,6 @@ function onCalcDbArrived(xhr, ev)
         let content = xhr.responseText;
         FoodsDb.getInstance().processDbFile(content);
         g_controller.onUserOrDateChanged();
-        g_controller.onFoodInputChanged();
     }
 }
 
@@ -80,18 +75,15 @@ function onCalcDbArrived(xhr, ev)
 function onSaveButtonPressed()
 {
     $('#btSave').html('SAVING...');
-    // save current day's food text to the DB
-    let currentDayStr = g_mealListLang.currentDayMoment.format('YYYY-MM-DD');
     // pre-process the current kcal data to be saved (all edit buffer)
     g_mealsDiaryText.updateRowsStr();
-    let preprocessedFoodInputText = g_mealsDiaryText.rowsStr.replaceAll('\n', '\\n')
-    nodeXHRComm('/node_api/save_foodrowdb',
-        {
-            user: $('#tUser').val(),
-            date: currentDayStr,
-            food_data: preprocessedFoodInputText,
-            clientId: g_config.finalClientId
-        }, onSaveFinished);
+
+    // update localStorage (DB save)
+    const logEntry = LocalStorage.updateEntryObj( g_appState.actFoodEntry );
+    LocalStorage.saveEntry(logEntry, 3)
+
+    // save to Mongo DB
+    nodeXHRComm('node_api/save_foodrowdb', logEntry, onSaveFinished);
 }
 
 /**
@@ -107,6 +99,10 @@ function onSaveFinished(xhr, ev)
         g_controller.lastDbFoodInput = g_mealsDiaryText.rowsStr;
         g_controller.lastDbUpdate = Number(new Date());
         g_saveButton.startCountdown('<span style="color: darkgreen"><b>SAVED!</b></span>', 3);
+
+        // saved successfully => remove unsaved changes backup for the day being saved recently
+        //?works without this? useLocalStorage('delete');
+
     // @ts-ignore:next-line (dynamic type check)
     } else if (isError(ev) || ev.type == 'error') {
         g_saveButton.startCountdown('<span style="color: darkred"><b>ERROR!</b></span>', 8);
@@ -210,15 +206,14 @@ async function onPageLoaded()
     /// @ts-ignore
 	window.addEventListener('unhandledrejection', onUnhandledError);
 
-    g_mealsDiaryText.initialize('#txtMealsDiary');
-    g_mealsDiaryTextHighlight.initialize('#txtMealsDiary');
+    g_mealsDiaryText.initialize(`#${Config.TEXTAREA_ID}`);
+    g_mealsDiaryTextHighlight.initialize(`#${Config.TEXTAREA_ID}`);
 
     g_outputTable.initialize('#tableOut');
     g_mealsDiaryText.on('input', g_controller.onFoodInputChanged.bind(g_controller));
     g_mealsDiaryText.on('cursor', g_controller.onCursorMoved.bind(g_controller));
 
-    // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix 4. date format 5. weekday abbreviation
-    g_controller.onUserOrDateChanged();
+    // TODO: from settings: 1. threshold time 2. use current date or the previously saved one 3. add day of week postfix . date format 5. weekday abbreviation
     $('#lSaveErrorMsg').hide();
     $('#btRefresh').click(() =>
     {
@@ -295,7 +290,6 @@ async function onPageLoaded()
         // @ts-ignore:next-line (<multiple types> cannot set to 'string')
         g_config.scaleType = ($('#optScaleType :selected').val());
         $('.scaleOpts').toggle(g_config.scaleType != 'barista');
-        g_controller.onFoodInputChanged();
     });
     $('.scaleOpts').hide();
 
@@ -338,14 +332,14 @@ async function onPageLoaded()
     $('#devOutputs').hide();
     if (location.hostname != HEROKU_CLOUD_URL)
     {
-        let headersDiv = document.getElementById('txtMealsDiary');
+        let headersDiv = document.getElementById(Config.TEXTAREA_ID);
         if (headersDiv != null)
             headersDiv.style.outline = '4px dashed rgba(255, 165, 18, 0.9)';
     }
 
     /** Button, feature: Export MD output to the clipboard */
     $('#btCopyMD').on('click', () => {
-        copyText2Clipboard(g_mealListLang.foodOutputStr);
+        copyText2Clipboard(g_appState.mealListLang.foodOutputStr);
     });
 
     // shortcuts (only ctrl-s is supported by now)
@@ -407,8 +401,7 @@ function onUnhandledError(errMsg, url, lineNumber /*, colno, error*/)
     console.error("ERROR:: onUnhandled() called");
 	// 1. errMsg is an Event
 	if (errMsg != null && errMsg instanceof PromiseRejectionEvent && errMsg.reason != null) {
-		console.error("ERROR: Unhandled Promise exception occured: " + errMsg.reason);
-		console.log(errMsg);
+		console.error(`ERROR: Unhandled Promise exception occured: ${errMsg} (reason: ${errMsg.reason})\r\nStack:\r\n${errMsg.reason.stack}`);
 		errMsg.preventDefault();
 	}
 	// 2. errMsg is an Error obj

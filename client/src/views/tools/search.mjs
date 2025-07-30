@@ -1,6 +1,6 @@
 export { SearchTools };
 
-import { nodeXHRComm } from '../../data/comm.mjs';
+import { nodeXHRComm } from '../../comm/comm.mjs';
 import { printMoment, parseIsoDate, toFixedFloat, copyText2Clipboard } from '../../util/util.mjs';
 import { searchForId, showMessage } from '../../util/ui/uiUtils.mjs';
 import { Meal, Food } from '../../data/foodData.mjs';
@@ -159,7 +159,7 @@ class SearchTools
     /**
      * Connects to the server and starts a search in the user's meal history
      * @param {Object} params
-     * @param {import('../../data/comm.mjs').XHRCommCallback} callback
+     * @param {import('../../comm/comm.mjs').XHRCommCallback} callback
      */
     startMealSearchQuery(params, callback)
     {

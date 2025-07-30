@@ -172,11 +172,11 @@ export class SQLiteDb extends DbConnector
     }
 
     // Just for debugging purposes:
-    override async updateRow(tableName: string, user: string, date: string, food_data: string): Promise<string>
+    override async updateRow(tableName: string, user: string, date: string, saveDate: string, food_data: string): Promise<string>
     {
         await this.knex(tableName).insert({ user: user, date: date, food_data: food_data })
             .onConflict(['user', 'date'])
-            .merge({ food_data: food_data })
+            .merge({ saveDate: saveDate, food_data: food_data })
             .catch(err => {
                 log(`ERROR (.catch() handler): ${err}`);
                 return `ERROR: ${err}`;

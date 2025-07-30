@@ -1,8 +1,9 @@
-export { Controller };
-
 import { traceMethodCalls } from './util/callTracker.mjs'
-import { nodeXHRComm } from './data/comm.mjs';
+
+import { nodeXHRComm } from './comm/comm.mjs';
 import { printMoment, parseIsoDate, toFixedFloat, getCurrentTimeStr, isError } from './util/util.mjs';
+import { LocalStorage } from "./comm/localStorage.mjs";
+
 import { showMessage } from './util/ui/uiUtils.mjs';
 
 import { TextareaExt } from './views/textareaExt.mjs';
@@ -12,12 +13,16 @@ import { Food } from './data/foodData.mjs';
 import { MealListLang } from './data/mealListLang.mjs';
 import { SearchTools } from './views/tools/search.mjs';
 import { AutoCompleteUi } from './views/tools/autoComplete.mjs';
+import { UserLogSync} from "./views/tools/userLogSync.mjs";
 
-import { coolConfirm } from './views/uiHelper.mjs';
+import { coolConfirm, coolMessage } from './views/uiHelper.mjs';
+import { g_appState, FoodLogEntry } from "./app/states.mjs";
 
 class Controller
 {
     saveButtonNormalMsg = "SAVE";
+    //conflictCheck = traceMethodCalls(new UserLogSync(), false);
+    conflictCheck = new UserLogSync();
 
     /** @type {String | null} */
     currentCursorSection = null;
@@ -55,10 +60,11 @@ class Controller
     }
 
     /* ------------------------
-       HIGH LEVEL logic
+        HIGH LEVEL logic
     */
     onFoodInputChanged()
     {
+        console.log('TRACE: onFoodInputChanged()');
         this.mealsDiaryText.mealLineFirst = this.mealsDiaryText.mealLineLast = -1;
         this.mealListLang.initCounters();
         this.updateSavedStateLight();
@@ -73,6 +79,10 @@ class Controller
         ///!!!
         this.mealsDiaryTextHighlight.render(this.mealsDiaryText.cursorPos[1]);
         this.autoComplete.updateInput(this.mealsDiaryText.rows[this.mealsDiaryText.cursorPos[1]], this.mealsDiaryText.cursorPos[0]);
+
+        // refresh local storage
+        const logEntryObj = LocalStorage.updateEntryObj( g_appState.actFoodEntry );
+        LocalStorage.saveEntry(logEntryObj, 1);
     }
 
     /**
@@ -189,18 +199,20 @@ class Controller
         }
     }
 
+    //todo check usages. applySettings seem strange for example!
     refreshDayFoods(justCompare = false)
     {
-        console.log(`refreshDayFoods(justCompare: ${justCompare})...`);
-        let currentDayStr = this.mealListLang.currentDayMoment.format('YYYY-MM-DD');
         let self = this;
+        let conflictCheck = this.conflictCheck;
+        console.log(`refreshDayFoods(justCompare: ${justCompare})...`);
+
+        // load daily log entry from the DB
+        let appState = { ...g_appState };
+        const paramLogEntry = LocalStorage.updateEntryObj( new FoodLogEntry() );
         nodeXHRComm(
-            '/node_api/read_foodrowdb',
-            {
-                user: $('#tUser').val(),
-                date: currentDayStr
-            },
-            (!justCompare ? self.onDailyFoodRecordArrived.bind(self) : self.onDailyFoodRecordArrived2.bind(self))
+            'node_api/read_foodrowdb',
+            paramLogEntry,
+            (!justCompare ? self.onDailyFoodRecordArrived.bind(self, appState, self) : self.onDailyFoodRecordArrived2.bind(self, appState))
         );
     }
 
@@ -290,36 +302,40 @@ class Controller
     /* ------------------------
        DATABASE communication
     */
-
-    /**
-     * Communication handler: Incoming whole daily food record
-     * @param {XMLHttpRequest} xhr
-     * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
-     */
-    onDailyFoodRecordArrived(xhr, ev)
-    {
+    async onDailyFoodRecordArrived(appState, controller, xhr, ev) {
         // @ts-ignore:next-line (dynamic type check)
         if (!isError(ev) && ev.type == 'load') {
-            let content = xhr.responseText;
-            content = content.replaceAll('\\n', '\n');
-            console.log('foodRecordRowArrived: ' + content);
+            let selEntry = null;
+            let remoteEntry = null;
+            try {
+                remoteEntry = JSON.parse(xhr.responseText)
+            } catch (e) {
+                // try to handle the result as an old log, load it as a plain text response
+                const selEntry = LocalStorage.updateEntryObj(new FoodLogEntry());
+                selEntry.food_data = xhr.responseText;
+                console.log(`Warning: While parsing the response from the server! - ${e}\r\nJSON data (length: ${xhr.responseText.length}): ${xhr.responseText}`);
+                console.log(`Warning: onDailyFoodRecordArrived(): old log format detected for day: ${selEntry.date}`);
+            }
 
-            this.mealsDiaryText.changeText(content, true);
-            this.lastDbFoodInput = content;      // it is the 'changed' text, so the 'unsaved' light will not be active
-            this.lastDbUpdate = Number(new Date());
-            this.onFoodInputChanged();
-            this.updateSavedStateLight();
-            setTimeout(() => { $('.btRefreshBg').removeClass('led-loading'); }, 200);
-            this.mealsDiaryTextHighlight.setUiEnabled(true);
+            //??? safety check - we can't suppose more as log can be even '' if the user pushed "Save" with an empty editor
+            //g_appState.jobsRunning.delete('updatingFoodLogs');
+
+            // check cache for the latest food logs version
+            const paramsEntry = LocalStorage.updateEntryObj(new FoodLogEntry());
+            const cachedEntry = LocalStorage.loadEntry(paramsEntry);
+
+            this.conflictCheck.checkForConflicts(appState, controller, remoteEntry, cachedEntry);
         }
     }
 
+
+
     /**
      * Communication handler: Incoming whole daily food record
      * @param {XMLHttpRequest} xhr
      * @param {ProgressEvent<XMLHttpRequestEventTarget> | Error} ev
      */
-    async onDailyFoodRecordArrived2(xhr, ev)
+    async onDailyFoodRecordArrived2(appState, xhr, ev)
     {
         // @ts-ignore (Property 'type' does not exist on type 'ProgressEvent<XMLHttpRequestEventTarget> | Error'.)
         if (!isError(ev) && ev.type == 'load')
@@ -348,6 +364,7 @@ class Controller
         }
     }
 
+
     /**
      * UI: Update the 'unsaved' light on the save button
      * @param {boolean} updateTextView if true, then the text box will be updated first
@@ -362,11 +379,15 @@ class Controller
             isSaved = (this.mealsDiaryText.rowsStr.localeCompare(this.lastDbFoodInput) == 0);
 
         if (isSaved == true) {
+            //?? remove food data from the local cache
             //! TODO: move the save button logics to a separate class
             $('#btSave').html(this.saveButtonNormalMsg);
             $('#btSave').removeClass('unsaved');
         }
         else {
+            // add food data to the local cache
+            //?unneded? updateLocalStorage('change');
+            // update save button
             $('#btSave').html('<font color="darkred">SAVE &#x25CF;</font>');
             $('#btSave').addClass('unsaved');
         }
@@ -494,3 +515,5 @@ class Controller
         $('#txtMealsDiary').toggleClass('focusedMode', focusedMode);
     }
 }
+
+export { Controller };

@@ -1,4 +1,5 @@
 import * as stackTraceParser from '../3rdparty/stack-trace-parser.esm.js';
+import { jsonStringifyCircular } from "./util.mjs";
 
 let PROXY_METHOD_NAME = 'PrOxY';
 let PROXY_METHOD_SEPARATOR = '___';
@@ -76,7 +77,7 @@ function traceMethodCalls(obj, printNullResults) {
                         // prepare & print call log
                         let indentSpaces = '    '.repeat(stackProcessed && stackProcessed.length > 0 ? stackProcessed.length - 1 : 0);
                         let argsShortened = args.map((item) => shortenStringParam(item));
-                        let argsShortenedStr = JSON.stringify(argsShortened).replace(/^\[/, '').replace(/\]$/, '');
+                        let argsShortenedStr = jsonStringifyCircular(argsShortened).replace(/^\[/, '').replace(/\]$/, '');
                         let methodName = `${target.constructor.name}.${propKey}`;
                         let methodCallLog = `${methodName}(${argsShortenedStr})`;
                         consoleLog(`${indentSpaces}${methodCallLog}`);

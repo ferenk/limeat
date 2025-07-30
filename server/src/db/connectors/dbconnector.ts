@@ -34,7 +34,7 @@ export class DbConnector
         return '';
     }
 
-    async updateRow(_tableName: string, _user: string, _date: string, _food_data: string): Promise<string>
+    async updateRow(_tableName: string, _user: string, _date: string, _saveDate: string, _food_data: string): Promise<string>
     {
         error('Abstract class - Methods are not implemented!');
         return '';

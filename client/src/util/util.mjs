@@ -1,11 +1,16 @@
 export {
-    getCurrentMoment, getCurrentTimeStr, printMoment, parseIsoDate, isNumeric, isError,
+    getCurrentMoment, getCurrentRawMoment, getCurrentTimeStr, printMoment, parseIsoDate, isNumeric, isError,
     toNumericOrZero, toFixedFloat, printToFixedFloat, safeEval,
-    copyText2Clipboard, replaceTextInTextarea
+    copyText2Clipboard, replaceTextInTextarea, jsonStringifyCircular
 };
 
 //import Duration from '../3rdparty/moment-with-locales.js';
 //!TMP import Moment from '../3rdparty/moment-with-locales.js';
+
+function getCurrentRawMoment()
+{
+    return moment();
+}
 
 /**
  *
@@ -224,3 +229,20 @@ function insertText2TextArea(textarea, text) {      // @ts-ignore
     }
 }
 
+function jsonStringifyCircular(obj)
+{
+    let cache = [];
+    const stringified = JSON.stringify(obj, (_key, value) => {
+        if (value !== null && typeof value === 'object') {
+            if (cache?.includes(value)) {
+                // Circular reference found, discard key
+                return '';
+            }
+            // Store value in our collection
+            cache?.push(value);
+        }
+        return value;
+    }, 4);
+    cache = null;
+    return stringified;
+}
