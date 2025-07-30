@@ -7,7 +7,7 @@ export TARGET_SUBFOLDER=client/src
 export TARGET_SUBFOLDER_TO_CLEAN=client
 
 #get the list of the recent tags (only the ones beginning with a letter and a number, e.g v0.5)
-export recent_tags=`git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n $TAGS_COUNT | grep -e '[a-zA-Z][0-9].*'`
+export recent_tags=`git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n $TAGS_COUNT | grep -e '^[a-zA-Z][0-9\.]*$'`
 echo Recent tags: $recent_tags
 
 # clean the results of the previos execution

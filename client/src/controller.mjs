@@ -308,7 +308,8 @@ class Controller
             let selEntry = null;
             let remoteEntry = null;
             try {
-                remoteEntry = JSON.parse(xhr.responseText)
+                remoteEntry = JSON.parse(xhr.responseText);
+                remoteEntry.food_data = remoteEntry.food_data.replaceAll('\\n', '\n');
             } catch (e) {
                 // try to handle the result as an old log, load it as a plain text response
                 const selEntry = LocalStorage.updateEntryObj(new FoodLogEntry());
@@ -340,27 +341,31 @@ class Controller
         // @ts-ignore (Property 'type' does not exist on type 'ProgressEvent<XMLHttpRequestEventTarget> | Error'.)
         if (!isError(ev) && ev.type == 'load')
         {
-            let content = xhr.responseText;
-            content = content.replaceAll('\\n', '\n');
+            try {
+                const remoteEntry = JSON.parse(xhr.responseText);
+                let content = remoteEntry.food_data.replaceAll('\\n', '\n');
 
-            this.lastDbUpdate = Number(new Date());
-            let isServerSideChanged = (this.lastDbFoodInput.localeCompare(content) != 0);
-            if (isServerSideChanged)
-            {
-                let reloadAnswer = await coolConfirm(
-                    'warning',
-                    'Update detected',
-                    `Your food records has been updated on the server.<br>Refresh here, too?`,
-                    null,
-                    'Refresh',
-                    'Skip',
-                    true);
-                if (reloadAnswer)
-                    this.refreshDayFoods();
+                this.lastDbUpdate = Number(new Date());
+                let isServerSideChanged = (this.lastDbFoodInput.localeCompare(content) != 0);
+                if (isServerSideChanged)
+                {
+                    let reloadAnswer = await coolConfirm(
+                        'warning',
+                        'Update detected',
+                        `Your food records has been updated on the server.<br>Refresh here, too?`,
+                        null,
+                        'Refresh',
+                        'Skip',
+                        true);
+                    if (reloadAnswer)
+                        this.refreshDayFoods();
+                }
+
+                setTimeout(() => { $('.btRefreshBg').removeClass('led-loading'); }, 200);
+                this.mealsDiaryTextHighlight.setUiEnabled(true);
+            } catch (e) {
+                console.log(`Warning: While parsing the response from the server! - ${e}\r\nJSON data (length: ${xhr.responseText.length}): ${xhr.responseText}`);
             }
-
-            setTimeout(() => { $('.btRefreshBg').removeClass('led-loading'); }, 200);
-            this.mealsDiaryTextHighlight.setUiEnabled(true);
         }
     }
 
