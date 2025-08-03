@@ -255,7 +255,9 @@ class SearchTools
             for (let foundMealsObjIter of foundMealsObj)
             {
                 let dayText = foundMealsObjIter.food_data;
-                let dayTextArr = dayText.split('\\n');
+                let dayTextArr = dayText.split('\n');
+                if (dayTextArr.length == 1)
+                    dayTextArr = dayText.split('\\n');
                 /** @type {Map<string, [Number|undefined, number|undefined] ?>} */
                 let lastFoodMap = new Map();
                 for (let iDayRow = dayTextArr.length - 1; iDayRow >= 0; iDayRow--)
