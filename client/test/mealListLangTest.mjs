@@ -6,10 +6,10 @@ import { MealListLang } from '../src/data/mealListLang.mjs';
 import { HtmlBuffer } from '../src/util/text/htmlBuffer.mjs';
 import { TextareaHighlight } from '../src/views/textareaHighlight.mjs';
 
-//! import moment from '../src/3rdparty/moment-with-locales.js';
+import moment from '../src/3rdparty/moment-with-locales.js';
 // /** @type { Moment } */
 /** @ts-ignore */ /* warning: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature. */
-//! global.moment = moment;
+global.moment = moment;     // needed for util.mjs - which cannot include it as a dependency in browser mode
 
 import jsdom from 'jsdom';
 import { Config } from '../src/app/config.mjs';

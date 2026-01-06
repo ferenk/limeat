@@ -345,9 +345,14 @@ class TextareaExt extends TextContainer {
      */
     appendNewText(newText, updateUi = false)
     {
-        // append text (COND: if the text buffer is empty or it ends with a different text)
+        // append text (COND: if the text buffer is empty or it ends with a different text - it is usually a timestamp)
         if (this.rows.length == 0 || this.rows[this.rows.length - 1].localeCompare(newText) != 0)
         {
+            // remove the last line if it is empty (or contains only whitespaces)
+            if (this.rows.length > 0 && this.rows[this.rows.length - 1].match(/^[ \t]*$/)) {
+                this.rows.pop();
+            }
+            // add the new line
             this.rows.push(newText);
         }
 
