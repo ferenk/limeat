@@ -1,5 +1,6 @@
-import { jest } from '@jest/globals';
-jest.useFakeTimers();
+import { expect, test, vitest } from 'vitest'
+
+vitest.useFakeTimers();
 
 import { TextContainer } from '../src/util/text/textContainers.mjs';
 import { MealListLang } from '../src/data/mealListLang.mjs';

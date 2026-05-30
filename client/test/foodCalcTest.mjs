@@ -1,3 +1,5 @@
+import { expect, test } from 'vitest'
+
 import { processQuantity } from '../src/data/foodsLang.mjs';
 import { FoodsDbItem  } from '../src/data/foodsDb.mjs';
 
