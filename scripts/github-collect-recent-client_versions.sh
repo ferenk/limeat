@@ -7,26 +7,34 @@ export TARGET_SUBFOLDER=client/src
 export TARGET_SUBFOLDER_TO_CLEAN=client
 
 #get the list of the recent tags (only the ones beginning with a letter and a number, e.g v0.5)
+echo -n "1. Getting the list of the recent tags..."
 export recent_tags=`git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n $TAGS_COUNT | grep -e '^[a-zA-Z][0-9\.]*$'`
-echo Recent tags: $recent_tags
+echo " done"; echo "$recent_tags"
 
 # clean the results of the previos execution
+echo -n "2. Clean the previous results..."
 rm -rf $TARGET_FOLDER
 mkdir $TARGET_FOLDER
+echo " done"
 
 # Collect all recently tagged versions
 #    Code is based on the following simple, static commands:
 #        git --work-tree=client_versions checkout v0.1 -- client
 #        mv client_versions/client client_versions/v0.1
+echo "3. Collect all recently tagged versions..."
 for tag in $recent_tags; do \
   echo Getting tag $tag...; \
   git --work-tree=$TARGET_FOLDER checkout $tag -- $TARGET_SUBFOLDER;
   mv $TARGET_FOLDER/$TARGET_SUBFOLDER $TARGET_FOLDER/$tag;
 done
+echo "done"
 
+echo -n "4. Clean the temporal folder..."
 rm -rf $TARGET_FOLDER/$TARGET_SUBFOLDER_TO_CLEAN
+echo " done"
 
-echo; echo -n "Creating tar.bz2 archive..."
+echo; echo -n "5. Create tar.bz2 archive..."
 tar -cjf "$TARGET_FOLDER".tar.bz2 $TARGET_FOLDER
+
 echo " done (verified: `ls "$TARGET_FOLDER".tar.bz2 2>&1`)"
 

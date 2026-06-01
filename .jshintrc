@@ -1,5 +1,5 @@
 {
-  "esversion"     : 11,
+  "esversion"     : 2022,
   "maxerr"        : 9999,       // {int} Maximum error before stopping
 
   // Enforcing
@@ -70,7 +70,7 @@
   "jquery"        : true,    // jQuery
   "mocha"         : true,     // Mocha
   "mootools"      : false,    // MooTools
-  "node"          : false,    // Node.js
+  "node"          : true,    // Node.js
   "nonstandard"   : false,    // Widely adopted globals (escape, unescape, etc)
   "phantom"       : false,    // PhantomJS
   "prototypejs"   : false,    // Prototype and Scriptaculous

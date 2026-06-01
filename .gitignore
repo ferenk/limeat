@@ -16,9 +16,10 @@ package-lock.json
 tmp/
 client_versions*
 
-# IDE(A) configuration
+# IDE(A), tools configuration
 .idea/
 .vscode/
+client/coverage
 
 # Configuration files, secrets
 app.env
@@ -28,11 +29,15 @@ app.env
 # Temporal/generated files
 *.tmp
 *.tmp.*
+*.bak
+*.dis
+*.disabled*
 *.d.*ts
 *.js.map
 *.tsbuildinfo
 *log
 *out
+**/*quokka*.*js
 dist/
 .scannerwork/
 /server/**/*.js

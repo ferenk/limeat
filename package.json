@@ -8,13 +8,15 @@
   "scripts": {
     "start": "ts-node --files --cwd server/src ./index.ts",
     "starty": "ts-node --files -H -T ./index.ts server/src",
+    "logs": "heroku logs --app limeat -n 5000",
     "debug": "node server/src/index.js     --inspect=127.0.0.1:11977",
     "debug-brk": "node server/src/index.js --inspect-brk=127.0.0.1:11977",
     "test": "vitest --reporter verbose",
     "checkdis": "tsc --noEmit && jshint --extra-ext .mjs client",
     "check": "jshint --extra-ext .mjs client",
     "checkDisabled": "tsc --noEmit && tsc --noEmit -p client && tsc --noEmit -p server",
-    "heroku-postbuild": "bash scripts/heroku-fetch-latest-frontend-versions.sh"
+    "heroku-postbuild": "bash scripts/heroku-fetch-latest-frontend-versions.sh",
+    "clean:generated": "node scripts/clean-generated.js"
   },
   "jest": {
     "globals": {
@@ -56,6 +58,7 @@
     "install": "^0.13.0",
     "jquery": "^3.5.1",
     "jsdom": "^20.0.0",
+    "jshint": "^2.13.6",
     "npm": "^8.15.1",
     "readline-sync": "^1.4.10",
     "typescript": "^5.7.3",

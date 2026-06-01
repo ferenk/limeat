@@ -14,7 +14,7 @@ class Config
     static getInstance(values = null)
     {
         if (!Config.instance)
-            Config.instance = new Config(CONFIG_PW, values);
+            Config.instance = new Config(PRIVATE_CONFIG_CONSTRUCTOR_KEY, values);
         return Config.instance;
     }
 
@@ -24,7 +24,7 @@ class Config
      */
     constructor(pw = '', values = null)
     {
-        if (pw !== CONFIG_PW)
+        if (pw !== PRIVATE_CONFIG_CONSTRUCTOR_KEY)
             throw new Error('You should not call the constructor directly. Use Config.getInstance() instead.');
 
         this.scaleType = values?.scaleType || this.scaleType;
@@ -33,6 +33,6 @@ class Config
     }
 }
 
-let CONFIG_PW = 'PeWet1427';
+let PRIVATE_CONFIG_CONSTRUCTOR_KEY = Symbol();
 
 export { Config };
