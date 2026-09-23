@@ -26,8 +26,8 @@ From WebStorm (JetBrains)
 ## Update process of the "client version snapshot list" (automatic github action + heroku post build step):
 
 ### As a developer you have to do the following actions to have a new "client snapshot"
-1. Prepare, test the changes, commit and push to main (for new developers a PR is recommended)
-2. Create a new tag in the form vN1.N2[.N3] form (e.g. v0.51) and push it, too.
+1. Prepare, test the changes, commit and push to main (for contributors a PR is needed)
+2. Create a new Git tag in the form vN1.N2[.N3] form (e.g. v0.51) and push it, too.
 3. Deploy the new version to heroku. It will automatically use the tar.bz2 created by the github action.
 
 ### What the update process does internally   

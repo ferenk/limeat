@@ -26,6 +26,9 @@ class MealListLang
     /** @type {TextareaExt | null} */
     mealLogText = null;
 
+    /** @type num For foward/backward food lookups in the daily text */
+    minimalMatchLen = 5;
+
     /* Output text generation */
     /** @type { Number } */
     currentDayPart = 0;
@@ -95,7 +98,16 @@ class MealListLang
         /** @type { Meal[] } */
         let dailyMealLog = [];
 
-        for (let iCurrentRow = 0; iCurrentRow < (logText?.getRowCount() || 0); iCurrentRow++)
+        // Support for "partial food names": food DB doesn't have them but they are substrings of ONE food from today.
+        // 1. Preprocess the full text to fill lastFoodAmounts map which contains all food which can be found in the DB.
+        for (let iCurrentRow = 0; iCurrentRow < (logText?.getRowCount() ?? 0); iCurrentRow++)
+        {
+            let foodLine = logText?.getRow(iCurrentRow) || '';
+            this.parseMeal(foodLine, lastFoodAmounts);
+        }
+
+        // 2. Process the full text again and use the previously collected lastFoodAmounts map.
+        for (let iCurrentRow = 0; iCurrentRow < (logText?.getRowCount() ?? 0); iCurrentRow++)
         {
             let foodLine = logText?.getRow(iCurrentRow) || '';
             let processedMeal = this.parseMeal(foodLine, lastFoodAmounts);
@@ -113,13 +125,13 @@ class MealListLang
         this.addTableTrailer();
     }
 
-     // * @param {number} iCurrentRow
+    // * @param {number} iCurrentRow
     /**
      * @param {string} foodLine
      * @param {Map<string, [Number|undefined, number|undefined]>} lastFoodAmounts
      * @returns {Meal} the processed line
      */
-    parseMeal(foodLine, lastFoodAmounts = new Map())
+    parseMeal(foodLine, lastFoodAmounts)
     {
         let meal = new Meal();
         meal.inputLine = foodLine;
@@ -268,7 +280,35 @@ class MealListLang
 
             if (!newFoodPart.isInvalid && newFoodPart.name != null && newFoodPart.name != '')
             {
-                let foodPartPrevState = lastFoodAmounts.get(newFoodPart.name);
+                // Partially mentioned food names / calories: lookups to find the full names which have calories data.
+                // Calories records will also be available before and after their declaration.
+                let newFoodPartEffectiveName = newFoodPart.name;
+                if (newFoodPart.name.length >= this.minimalMatchLen && newFoodPart.kcal === undefined)
+                {
+                    let nameFound = null, noNameFound = 0;
+                    for(const chkFoodName of lastFoodAmounts.keys())
+                    {
+                        if (chkFoodName.search(newFoodPart.name) >= 0)
+                        {
+                            if (++ noNameFound > 1)
+                            {
+                                console.warn(`Duplicate "parent" name found for ${newFoodPart.name}. `
+                                      + `1st: ${nameFound}, 2nd: ${chkFoodName}`);
+                            }
+                            nameFound = chkFoodName;
+                        }
+
+                    }
+                    if (noNameFound === 1)
+                    {
+                        newFoodPartEffectiveName = nameFound;
+                        const chkFoodAmount = lastFoodAmounts.get(nameFound);
+                        newFoodPart.kcal = chkFoodAmount[1];
+                        newFoodPart.kcalunit = 'kcal/100g';
+                    }
+                }
+
+                const foodPartPrevState = lastFoodAmounts.get(newFoodPartEffectiveName);
                 if (foodPartPrevState != null)
                 {
                     if (newFoodPart.kcal == null && foodPartPrevState[1] != null)
@@ -287,7 +327,8 @@ class MealListLang
                 let kcalPerGrams;
                 if (newFoodPart.kcalunit === 'kcal/100g')
                     kcalPerGrams = newFoodPart.kcal;
-                lastFoodAmounts.set(newFoodPart.name, [newFoodPart.leftoverQuantity, kcalPerGrams, ]);
+                if (kcalPerGrams != null)
+                    lastFoodAmounts.set(newFoodPartEffectiveName, [newFoodPart.leftoverQuantity, kcalPerGrams, ]);
             }
 
             meal.foodParts.push(newFoodPart);
